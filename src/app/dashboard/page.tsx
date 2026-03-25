@@ -43,19 +43,13 @@ export default function DashboardPage() {
       </div>
 
       {/* CHARTS SECTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="w-full">
         <BarChartCard data={BAR_DATA} />
-        <DonutChartCard data={PIE_DATA} total="100%" />
       </div>
 
       {/* BOTTOM SECTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <DataTable />
-        </div>
-        <div>
-          <ProgressList />
-        </div>
+      <div className="w-full">
+        <DataTable />
       </div>
     </div>
   );
