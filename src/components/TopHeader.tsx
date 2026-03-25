@@ -15,6 +15,7 @@ import {
   Terminal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const MENU_ITEMS = [
   { id: "trending", label: "TRENDING", icon: Activity, href: "/" },
