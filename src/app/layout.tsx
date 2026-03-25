@@ -20,9 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
       <body className="bg-background text-white font-sans selection:bg-white/10 selection:text-white">
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen relative overflow-x-hidden">
           <TopHeader />
-          <main className="flex-1 overflow-y-auto pt-20 px-6 lg:px-10 pb-20">
+          <main className="flex-1 overflow-y-auto pt-32 px-6 lg:px-10 pb-20 relative z-10">
             {children}
           </main>
         </div>

@@ -9,12 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#000000",
-        panel: "#09090b",
-        accent: "#ffffff",
-        secondary: "#71717a",
-        border: "rgba(255, 255, 255, 0.1)",
+        background: "#09090b",
+        panel: "#121217",
+        accent: "#fafaf9",
+        secondary: "#a1a1aa",
+        border: "rgba(255, 255, 255, 0.08)",
         surface: "rgba(255, 255, 255, 0.03)",
+        ring: "rgba(255, 255, 255, 0.15)",
       },
       fontFamily: {
         mono: ["var(--font-geist-mono)", "monospace"],
