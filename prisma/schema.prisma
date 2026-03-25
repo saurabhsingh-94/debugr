@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  votes     Vote[]
+}
+
+model Problem {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  tags        String[]
+  referenceId String?
+  createdAt   DateTime @default(now())
+  votes       Vote[]
+  cluster     Cluster? @relation(fields: [clusterId], references: [id])
+  clusterId   String?
+}
+
+model Cluster {
+  id             String                @id @default(cuid())
+  title          String
+  priorityScore  Int                   @default(0)
+  problemCount   Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  problems       Problem[]
+  scoreHistory   ClusterScoreHistory[]
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  problemId String
+  painScore Int      @default(1) // 1-10
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  problem   Problem  @relation(fields: [problemId], references: [id])
+
+  @@unique([userId, problemId])
+}
+
+model ClusterScoreHistory {
+  id         String   @id @default(cuid())
+  clusterId  String
+  score      Decimal  @db.Decimal(10, 2)
+  recordedAt DateTime @default(now())
+  cluster    Cluster  @relation(fields: [clusterId], references: [id])
+}
+
+model Prompt {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  price     Decimal? @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+}
