@@ -104,41 +104,51 @@ export default function TopNavbar() {
                 <>
                   <div className="fixed inset-0 z-[-1]" onClick={() => setIsProfileOpen(false)} />
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10, filter: "blur(10px)" }}
-                    animate={{ opacity: 1, scale: 1, y: 5, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10, filter: "blur(10px)" }}
-                    className="absolute right-0 top-full mt-2 w-64 bg-[#0a0f14] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 overflow-hidden z-[100] backdrop-blur-2xl"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute right-0 top-full mt-2 w-[220px] bg-[#111827] rounded-xl shadow-xl border border-white/10 overflow-hidden z-[100]"
                   >
-                    <div className="p-5 bg-white/[0.02] border-b border-white/5">
+                    <div className="p-4 border-b border-white/10">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center">
-                          <UserCircle className="w-6 h-6 text-zinc-500" />
+                        <div className="w-8 h-8 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center overflow-hidden">
+                           <UserCircle className="w-5 h-5 text-zinc-500" />
                         </div>
                         <div className="flex flex-col truncate">
-                          <span className="text-sm font-black text-white px-1">Saurabh S.</span>
-                          <span className="text-[10px] text-zinc-600 font-mono">@curator_root</span>
+                          <span className="text-sm font-bold text-white truncate leading-tight">Saurabh S.</span>
+                          <span className="text-[10px] text-zinc-500 truncate font-mono">@curator_root</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-2 space-y-0.5">
+                    <div className="p-1">
+                       <Link 
+                         href="/profile" 
+                         className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition-all group/item"
+                         onClick={() => setIsProfileOpen(false)}
+                       >
+                         <UserCircle className="w-4 h-4 text-zinc-600 group-hover/item:text-cyan-400 transition-colors" />
+                         View Profile
+                       </Link>
                        {[
-                         { label: "Dashboard", icon: LayoutDashboard },
-                         { label: "My Signals", icon: Activity },
-                         { label: "Settings", icon: Settings },
+                         { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+                         { label: "Settings", href: "/settings", icon: Settings },
                        ].map((item) => (
-                         <button 
+                         <Link 
                            key={item.label}
-                           className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded-xl text-[11px] font-bold text-zinc-500 hover:text-white transition-all group/item"
+                           href={item.href}
+                           className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition-all group/item"
+                           onClick={() => setIsProfileOpen(false)}
                          >
-                           <item.icon className="w-4 h-4 text-zinc-700 group-hover/item:text-cyan-400 transition-colors" />
+                           <item.icon className="w-4 h-4 text-zinc-600 group-hover/item:text-cyan-400 transition-colors" />
                            {item.label}
-                         </button>
+                         </Link>
                        ))}
                     </div>
 
-                    <div className="p-2 border-t border-white/10">
-                       <button className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-red-500/10 rounded-xl text-[11px] font-bold text-zinc-600 hover:text-red-400 transition-all group/item">
+                    <div className="p-1 border-t border-white/10">
+                       <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-red-500/10 rounded-lg text-xs font-medium text-zinc-500 hover:text-red-400 transition-all group/item">
                          <LogOut className="w-4 h-4 text-zinc-800 group-hover/item:text-red-500 transition-colors" />
                          Sign out
                        </button>

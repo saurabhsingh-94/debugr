@@ -14,6 +14,7 @@ interface SignalCardProps {
   mergedFrom?: number;
   isUnique?: boolean;
   commentCount: number;
+  variant?: "default" | "profile";
 }
 
 export default function SignalCard({
@@ -25,17 +26,27 @@ export default function SignalCard({
   mergedFrom,
   isUnique,
   commentCount,
+  variant = "default",
 }: SignalCardProps) {
+  const isProfile = variant === "profile";
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
-      whileHover={{ y: -6, scale: 1.01 }}
-      className="terminal-panel rounded-3xl p-8 flex gap-8 group transition-shadow duration-500 relative overflow-hidden ring-1 ring-white/10 hover:ring-white/20"
+      whileHover={{ y: -4, scale: 1.005 }}
+      className={cn(
+        "terminal-panel flex gap-8 group transition-shadow duration-500 relative overflow-hidden ring-1 ring-white/10 hover:ring-white/20",
+        isProfile ? "rounded-2xl p-6 shadow-lg" : "rounded-3xl p-8 shadow-2xl"
+      )}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+      {!isProfile && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+        </>
+      )}
       
       {/* LEFT: VOTES */}
       <div className="flex flex-col items-center gap-3 min-w-[72px] bg-white/[0.02] rounded-2xl p-4 border border-white/5 group-hover:bg-white/[0.04] transition-all duration-500">
