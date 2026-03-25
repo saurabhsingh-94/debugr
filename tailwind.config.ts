@@ -9,18 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#0a0f14",
-        panel: "#111827",
-        accent: "#22d3ee",
-        secondary: "#8b5cf6",
-        steam: {
-          darkest: "#0a0f14",
-          dark: "#111827",
-          medium: "#1b2838",
-          light: "#c7d5e0",
-          accent: "#22d3ee",
-          purple: "#8b5cf6",
-        }
+        background: "#000000",
+        panel: "#09090b",
+        accent: "#ffffff",
+        secondary: "#71717a",
+        border: "rgba(255, 255, 255, 0.1)",
+        surface: "rgba(255, 255, 255, 0.03)",
       },
       fontFamily: {
         mono: ["var(--font-geist-mono)", "monospace"],

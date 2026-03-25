@@ -47,17 +47,26 @@ const MOCK_SIGNALS = [
 
 export default function Home() {
   return (
-    <div className="max-w-[1200px] mx-auto flex gap-10">
-      <div className="flex-1 space-y-6">
-        {MOCK_SIGNALS.map((signal) => (
-          <SignalCard key={signal.id} {...signal} />
-        ))}
+    <div className="max-w-7xl mx-auto flex justify-center px-4">
+      <div className="flex w-full gap-10">
+        <div className="flex-1 max-w-3xl space-y-6">
+          <div className="flex items-center justify-between pb-8">
+            <h2 className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 uppercase">ACTIVE_THREADS</h2>
+            <div className="h-px flex-1 bg-white/5 mx-6" />
+          </div>
+          
+          {MOCK_SIGNALS.map((signal) => (
+            <SignalCard key={signal.id} {...signal} />
+          ))}
+          
+          {/* Empty state / footer spacer */}
+          <div className="h-20" />
+        </div>
         
-        {/* Empty state / footer spacer */}
-        <div className="h-20" />
+        <div className="hidden xl:block w-80">
+          <RightPanel />
+        </div>
       </div>
-      
-      <RightPanel />
       <FAB />
     </div>
   );

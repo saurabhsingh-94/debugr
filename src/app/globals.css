@@ -3,29 +3,30 @@
 @tailwind utilities;
 
 :root {
-  --background: #0a0f14;
-  --panel: #111827;
-  --accent: #22d3ee;
-  --secondary: #8b5cf6;
+  --background: #000000;
+  --panel: #09090b;
+  --accent: #ffffff;
+  --secondary: #71717a;
+  --border: rgba(255, 255, 255, 0.1);
 }
 
 body {
   background-color: var(--background);
-  color: #c7d5e0;
+  color: #ffffff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 @layer components {
   .terminal-panel {
-    @apply bg-panel border border-white/5 shadow-lg;
+    @apply bg-panel border border-white/10 shadow-sm backdrop-blur-sm;
   }
   
   .terminal-glow {
-    @apply hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all duration-200;
+    @apply hover:border-white/20 transition-all duration-200;
   }
   
   .terminal-accent-glow {
-    @apply shadow-[0_0_10px_rgba(34,211,238,0.3)];
+    @apply shadow-[0_0_20px_rgba(255,255,255,0.05)];
   }
 }
