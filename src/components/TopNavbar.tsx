@@ -14,7 +14,9 @@ import {
   BarChart3,
   UserCircle,
   Settings,
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -32,22 +34,33 @@ const NAV_ITEMS = [
 
 export default function TopNavbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
   return (
-    <div className="fixed top-0 left-0 right-0 px-8 py-6 z-50 pointer-events-none">
-      <header className="h-16 w-full max-w-7xl mx-auto flex items-center justify-between px-6 rounded-2xl border border-white/10 bg-[#0a0f14]/90 backdrop-blur-xl shadow-2xl pointer-events-auto relative">
+    <div className="fixed top-0 left-0 right-0 px-4 md:px-8 py-4 md:py-6 z-50 pointer-events-none">
+      <header className="h-16 w-full max-w-7xl mx-auto flex items-center justify-between px-4 md:px-6 rounded-2xl border border-white/10 bg-[#0a0f14]/90 backdrop-blur-xl shadow-2xl pointer-events-auto relative">
         
         {/* LEFT: LOGO */}
-        <div className="flex items-center gap-3 min-w-[140px]">
-          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 shadow-inner">
-            <div className="w-3.5 h-3.5 rounded-sm bg-gradient-to-br from-cyan-400 to-blue-600" />
-          </div>
-          <span className="text-sm font-black tracking-[0.2em] text-white uppercase italic">ZOLVEX</span>
+        <div className="flex items-center gap-3 min-w-[100px] md:min-w-[140px]">
+          {/* Mobile Menu Toggle */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors"
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 shadow-inner group-hover:border-cyan-500/30 transition-all">
+              <div className="w-3.5 h-3.5 rounded-sm bg-gradient-to-br from-cyan-400 to-blue-600" />
+            </div>
+            <span className="hidden sm:block text-sm font-black tracking-[0.2em] text-white uppercase italic">ZOLVEX</span>
+          </Link>
         </div>
 
-        {/* CENTER: CONSOLIDATED NAV */}
-        <nav className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/5 shadow-inner">
+        {/* CENTER: CONSOLIDATED NAV (Desktop) */}
+        <nav className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/5 shadow-inner">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -75,8 +88,8 @@ export default function TopNavbar() {
         </nav>
 
         {/* RIGHT: CONTROLS */}
-        <div className="flex items-center gap-4 min-w-[140px] justify-end">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2 md:gap-4 min-w-[100px] md:min-w-[140px] justify-end">
+          <div className="hidden sm:flex items-center gap-1">
             <button className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all">
               <Search className="w-4 h-4" />
             </button>
@@ -86,7 +99,7 @@ export default function TopNavbar() {
             </button>
           </div>
 
-          <div className="h-4 w-px bg-white/10" />
+          <div className="hidden sm:block h-4 w-px bg-white/10" />
 
           {/* PROFILE DROPDOWN */}
           <div className="relative">
@@ -160,6 +173,90 @@ export default function TopNavbar() {
           </div>
         </div>
       </header>
+
+      {/* MOBILE MENU DRAWER */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[-1] md:hidden"
+            />
+            
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: -300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -300, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-[280px] bg-[#0a0f14] border-r border-white/10 p-6 pt-24 z-[-1] md:hidden shadow-2xl overflow-y-auto"
+            >
+              <div className="space-y-6">
+                 <div className="space-y-2">
+                   <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.25em] px-4">Navigation</h3>
+                   <div className="space-y-1">
+                      {NAV_ITEMS.map((item) => {
+                        const isActive = pathname === item.href;
+                        return (
+                          <Link
+                            key={item.label}
+                            href={item.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={cn(
+                              "flex items-center gap-4 px-4 py-3 rounded-xl transition-all",
+                              isActive
+                                ? "bg-white/5 text-white ring-1 ring-white/10"
+                                : "text-zinc-500 hover:text-white hover:bg-white/[0.02]"
+                            )}
+                          >
+                            <item.icon className={cn("w-5 h-5", isActive ? "text-cyan-400" : "text-zinc-700")} />
+                            <span className="text-sm font-bold uppercase tracking-widest">{item.label}</span>
+                          </Link>
+                        );
+                      })}
+                   </div>
+                 </div>
+
+                 <div className="space-y-2 pt-6 border-t border-white/5">
+                    <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.25em] px-4">Account</h3>
+                    <div className="space-y-1">
+                       {[
+                         { label: "Search", icon: Search },
+                         { label: "Notifications", icon: Bell },
+                         { label: "Settings", icon: Settings },
+                       ].map((item) => (
+                         <button
+                           key={item.label}
+                           className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-zinc-500 hover:text-white hover:bg-white/[0.02] transition-all"
+                         >
+                           <item.icon className="w-5 h-5 text-zinc-700" />
+                           <span className="text-sm font-bold uppercase tracking-widest">{item.label}</span>
+                         </button>
+                       ))}
+                    </div>
+                 </div>
+
+                 {/* Bottom User Card in Menu */}
+                 <div className="mt-10 p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center">
+                          <UserCircle className="w-6 h-6 text-zinc-500" />
+                       </div>
+                       <div className="flex flex-col truncate">
+                          <span className="text-xs font-black text-white px-1">Saurabh S.</span>
+                          <span className="text-[9px] text-zinc-600 font-mono tracking-tighter">@curator_root</span>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

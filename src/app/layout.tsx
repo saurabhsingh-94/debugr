@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className="bg-background text-white font-sans selection:bg-accent-cyan/10 selection:text-white antialiased">
         <div className="flex flex-col min-h-screen">
           <TopNavbar />
-          <main className="flex-1 p-10 bg-background max-w-7xl mx-auto w-full">
+          <main className="flex-1 p-4 md:p-10 bg-background max-w-7xl mx-auto w-full">
             {children}
           </main>
         </div>

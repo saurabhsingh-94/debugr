@@ -37,8 +37,8 @@ export default function SignalCard({
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
       whileHover={{ y: -4, scale: 1.005 }}
       className={cn(
-        "terminal-panel flex gap-8 group transition-shadow duration-500 relative overflow-hidden ring-1 ring-white/10 hover:ring-white/20",
-        isProfile ? "rounded-2xl p-6 shadow-lg" : "rounded-3xl p-8 shadow-2xl"
+        "terminal-panel flex flex-col md:flex-row gap-4 md:gap-8 group transition-shadow duration-500 relative overflow-hidden ring-1 ring-white/10 hover:ring-white/20",
+        isProfile ? "rounded-2xl p-4 md:p-6 shadow-lg" : "rounded-3xl p-6 md:p-8 shadow-2xl"
       )}
     >
       {!isProfile && (
@@ -49,22 +49,25 @@ export default function SignalCard({
       )}
       
       {/* LEFT: VOTES */}
-      <div className="flex flex-col items-center gap-3 min-w-[72px] bg-white/[0.02] rounded-2xl p-4 border border-white/5 group-hover:bg-white/[0.04] transition-all duration-500">
-        <button className="p-2 hover:text-white transition-all text-zinc-600 hover:bg-white/5 rounded-xl active:scale-90">
-          <ChevronUp className="w-6 h-6" />
+      <div className={cn(
+        "flex md:flex-col items-center justify-between md:justify-center gap-3 bg-white/[0.02] rounded-2xl p-3 md:p-4 border border-white/5 group-hover:bg-white/[0.04] transition-all duration-500",
+        "min-w-0 md:min-w-[72px]"
+      )}>
+        <button className="p-1.5 md:p-2 hover:text-white transition-all text-zinc-600 hover:bg-white/5 rounded-xl active:scale-90">
+          <ChevronUp className="w-5 h-5 md:w-6 md:h-6" />
         </button>
-        <span className="text-2xl font-bold tracking-tighter text-white/90 font-mono">
+        <span className="text-xl md:text-2xl font-bold tracking-tighter text-white/90 font-mono">
           {votes >= 1000 ? `${(votes / 1000).toFixed(1)}k` : votes}
         </span>
-        <button className="p-2 hover:text-white transition-all text-zinc-600 hover:bg-white/5 rounded-xl opacity-40 hover:opacity-100 active:scale-90">
-          <ChevronDown className="w-6 h-6" />
+        <button className="p-1.5 md:p-2 hover:text-white transition-all text-zinc-600 hover:bg-white/5 rounded-xl opacity-40 hover:opacity-100 active:scale-90">
+          <ChevronDown className="w-5 h-5 md:w-6 md:h-6" />
         </button>
       </div>
 
       {/* CENTER: CONTENT */}
-      <div className="flex-1 space-y-6">
-        <div className="flex items-start justify-between gap-8">
-          <h3 className="text-2xl font-bold text-white/90 leading-tight group-hover:text-white transition-colors tracking-tight">
+      <div className="flex-1 space-y-4 md:space-y-6">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <h3 className="text-xl md:text-2xl font-bold text-white/90 leading-tight group-hover:text-white transition-colors tracking-tight">
             {title}
           </h3>
           
@@ -101,34 +104,34 @@ export default function SignalCard({
           
           <div className="flex-1" />
           
-          <div className="flex items-center gap-10 text-zinc-600">
-            <div className="flex items-center gap-6">
-              <div className="flex flex-col items-end gap-1.5">
-                <span className="text-[8px] font-bold uppercase tracking-[0.3em] text-zinc-800">PAIN_METRIC</span>
-                <div className="w-32 h-1 bg-white/[0.03] rounded-full overflow-hidden relative ring-1 ring-white/5">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${painScore * 10}%` }}
-                    transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
-                    className="h-full bg-gradient-to-r from-zinc-500 to-white/60 absolute left-0 top-0 shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                  />
-                </div>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-10 text-zinc-600 pt-4">
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-start md:items-end gap-1.5 flex-1 md:flex-none">
+              <span className="text-[8px] font-bold uppercase tracking-[0.3em] text-zinc-800">PAIN_METRIC</span>
+              <div className="w-full md:w-32 h-1 bg-white/[0.03] rounded-full overflow-hidden relative ring-1 ring-white/5">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${painScore * 10}%` }}
+                  transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
+                  className="h-full bg-gradient-to-r from-zinc-500 to-white/60 absolute left-0 top-0 shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                />
               </div>
-              <span className="text-sm font-bold text-white/70 font-mono tracking-tighter">{painScore.toFixed(1)}</span>
             </div>
-            
-            <div className="flex items-center gap-6 border-l border-white/10 pl-10">
-              <div className="flex items-center gap-3 group/msg cursor-pointer">
-                <div className="w-10 h-10 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center group-hover/msg:border-white/20 transition-all">
-                  <MessageSquare className="w-4 h-4 group-hover/msg:text-white transition-colors" />
-                </div>
-                <span className="text-[12px] font-bold font-mono group-hover/msg:text-white transition-colors tracking-tighter">{commentCount}</span>
-              </div>
-              <button className="w-10 h-10 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center hover:border-white/20 transition-all group/share">
-                <Share2 className="w-4 h-4 group-hover/share:text-white transition-colors" />
-              </button>
-            </div>
+            <span className="text-sm font-bold text-white/70 font-mono tracking-tighter">{painScore.toFixed(1)}</span>
           </div>
+          
+          <div className="flex items-center justify-between md:justify-start gap-4 md:gap-6 md:border-l md:border-white/10 md:pl-10">
+            <div className="flex items-center gap-3 group/msg cursor-pointer">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center group-hover/msg:border-white/20 transition-all">
+                <MessageSquare className="w-4 h-4 group-hover/msg:text-white transition-colors" />
+              </div>
+              <span className="text-[12px] font-bold font-mono group-hover/msg:text-white transition-colors tracking-tighter">{commentCount}</span>
+            </div>
+            <button className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center hover:border-white/20 transition-all group/share">
+              <Share2 className="w-4 h-4 group-hover/share:text-white transition-colors" />
+            </button>
+          </div>
+        </div>
         </div>
       </div>
     </motion.div>
