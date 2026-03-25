@@ -31,14 +31,21 @@ export default function TopHeader() {
     <div className="fixed top-0 left-0 right-0 px-6 py-4 z-50 pointer-events-none">
       <header className="h-14 max-w-7xl mx-auto bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-2xl flex items-center justify-between px-6 pointer-events-auto shadow-2xl ring-1 ring-white/5">
         <div className="flex items-center gap-10">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-white/20 transition-all">
-              <Terminal className="w-4 h-4 text-white" />
+          <Link href="/" className="flex items-center gap-3 group pointer-events-auto">
+            <motion.div 
+              whileHover={{ rotate: 90, scale: 1.1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center group-hover:border-white/30 transition-all shadow-[0_0_20px_rgba(255,255,255,0.03)]"
+            >
+              <Terminal className="w-5 h-5 text-white" />
+            </motion.div>
+            <div className="flex flex-col">
+              <span className="text-base font-black tracking-[0.3em] uppercase italic text-white/90 leading-none">DEBUGR</span>
+              <span className="text-[7px] font-bold tracking-[0.4em] uppercase text-zinc-600 mt-1">AI_PROBLEM_INTEL</span>
             </div>
-            <span className="text-sm font-bold tracking-[0.2em] uppercase italic text-white/90">DEBUGR</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2 pointer-events-auto">
             {MENU_ITEMS.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -46,10 +53,10 @@ export default function TopHeader() {
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "px-4 py-1.5 rounded-xl text-[10px] font-bold tracking-[0.15em] transition-all duration-300",
+                    "px-5 py-2 rounded-2xl text-[10px] font-bold tracking-[0.2em] transition-all duration-500 ease-out",
                     isActive 
-                      ? "text-white bg-white/10 shadow-inner ring-1 ring-white/10" 
-                      : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+                      ? "text-white bg-white/10 shadow-inner ring-1 ring-white/20 backdrop-blur-md" 
+                      : "text-zinc-500 hover:text-white hover:bg-white/[0.04]"
                   )}
                 >
                   {item.label}
