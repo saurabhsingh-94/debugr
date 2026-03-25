@@ -1,5 +1,5 @@
 {
-  "name": "zolvex",
+  "name": "debugr",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,9 +15,10 @@
     "framer-motion": "^11.11.10",
     "lucide-react": "^0.454.0",
     "next": "15.0.0",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "tailwind-merge": "^2.5.4"
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tailwind-merge": "^2.5.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",
