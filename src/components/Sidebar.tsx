@@ -3,81 +3,77 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-  BarChart3, 
+  Home, 
+  LayoutDashboard, 
   Activity, 
-  User, 
-  Code2, 
+  Layers, 
+  MessageSquare, 
   Zap, 
-  Cpu,
-  Terminal
+  LifeBuoy,
+  UserCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
 
 const MENU_ITEMS = [
-  { id: "trending", label: "Trending Signals", icon: Activity, href: "/" },
-  { id: "all", label: "All Signals", icon: BarChart3, href: "/all" },
-  { id: "my", label: "My Signals", icon: User, href: "/my" },
-  { id: "marketplace", label: "Prompt Exchange", icon: Code2, href: "/marketplace" },
-  { id: "bounties", label: "Bounties", icon: Zap, href: "/bounties" },
+  { label: "Home", icon: Home, href: "/" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Signals", icon: Activity, href: "/signals" },
+  { label: "Clusters", icon: Layers, href: "/clusters" },
+  { label: "Prompt Exchange", icon: MessageSquare, href: "/prompts" },
+  { label: "Bounties", icon: Zap, href: "/bounties" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 fixed inset-y-0 left-0 bg-panel border-r border-white/5 flex flex-col z-50">
-      <div className="p-6">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="p-2 bg-accent/10 rounded-lg">
-            <Terminal className="w-5 h-5 text-accent shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
-          </div>
-          <h1 className="text-xl font-black tracking-tighter text-white uppercase italic">
-            DEBUGR
-          </h1>
-        </div>
-        <p className="text-[10px] font-mono text-secondary tracking-widest uppercase opacity-80">
-          Terminal Curator v1.0
-        </p>
+    <aside className="w-64 fixed left-0 top-0 bottom-0 bg-sidebar border-r border-border flex flex-col z-50">
+      <div className="p-8">
+        <h1 className="text-xl font-black tracking-[0.2em] text-white">ZOLVEX</h1>
       </div>
 
-      <nav className="flex-1 px-4 py-6 space-y-1">
+      <nav className="flex-1 px-4 space-y-1">
         {MENU_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
-              key={item.id}
+              key={item.label}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all group relative overflow-hidden",
+                "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all",
                 isActive 
-                  ? "text-accent bg-accent/5 border border-accent/10 shadow-[0_0_15px_rgba(34,211,238,0.05)]" 
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
+                  ? "bg-white/5 text-accent-cyan" 
+                  : "text-zinc-500 hover:text-white hover:bg-white/[0.02]"
               )}
             >
-              {isActive && (
-                <div className="absolute left-0 top-1/4 bottom-1/4 w-0.5 bg-accent shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-              )}
-              <item.icon className={cn(
-                "w-4 h-4 transition-colors",
-                isActive ? "text-accent" : "text-gray-500 group-hover:text-white"
-              )} />
+              <item.icon className={cn("w-4 h-4", isActive ? "text-accent-cyan" : "text-zinc-500")} />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-6 border-t border-white/5">
-        <div className="flex items-center justify-between p-3 rounded-lg bg-black/20 text-[10px] font-mono">
-          <span className="text-gray-500 uppercase tracking-tighter">System Status</span>
-          <div className="flex items-center gap-1.5 text-green-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span>NODES ONLINE</span>
+      <div className="p-4 mt-auto">
+        <div className="bg-card/50 border border-border rounded-xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <LifeBuoy className="w-4 h-4 text-accent-cyan" />
+            <span className="text-xs font-bold text-white uppercase tracking-wider">Support</span>
           </div>
+          <p className="text-[10px] text-zinc-500 leading-relaxed mb-3">Need help with analytics? Contact our expert team.</p>
+          <button className="w-full py-1.5 bg-white/5 hover:bg-white/10 border border-border rounded-lg text-[10px] font-bold text-white transition-all uppercase tracking-widest">
+            Open Ticket
+          </button>
         </div>
+
+        <button className="flex items-center gap-3 p-2 w-full hover:bg-white/[0.02] rounded-xl transition-all group">
+          <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center border border-border group-hover:border-zinc-700 transition-all">
+            <UserCircle className="w-6 h-6 text-zinc-500" />
+          </div>
+          <div className="flex flex-col items-start truncate text-left">
+            <span className="text-xs font-bold text-white truncate">Saurabh S.</span>
+            <span className="text-[10px] text-zinc-600 truncate uppercase tracking-tighter">Pro Plan</span>
+          </div>
+        </button>
       </div>
     </aside>
   );

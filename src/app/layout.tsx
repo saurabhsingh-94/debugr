@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
-import TopHeader from "@/components/TopHeader";
+import TopNavbar from "@/components/TopNavbar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
@@ -19,12 +19,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
-      <body className="bg-background text-white font-sans selection:bg-white/10 selection:text-white">
-        <div className="flex flex-col min-h-screen relative overflow-x-hidden">
-          <TopHeader />
-          <main className="flex-1 overflow-y-auto pt-32 px-6 lg:px-10 pb-20 relative z-10">
-            {children}
-          </main>
+      <body className="bg-background text-white font-sans selection:bg-accent-cyan/10 selection:text-white antialiased">
+        <div className="flex min-h-screen">
+          <Sidebar />
+          <div className="flex-1 ml-64 flex flex-col min-w-0">
+            <TopNavbar />
+            <main className="flex-1 p-10 bg-background">
+              {children}
+            </main>
+          </div>
         </div>
       </body>
     </html>
