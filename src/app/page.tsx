@@ -1,4 +1,4 @@
-import ScrollIntroduction from "@/components/ScrollIntroduction";
+import SwordSection from "@/components/SwordSection";
 import SignalCard from "@/components/SignalCard";
 
 const MOCK_SIGNALS = [
@@ -37,8 +37,8 @@ const MOCK_SIGNALS = [
 export default function Home() {
   return (
     <div className="relative">
-      {/* 1. CINEMATIC SCROLL INTRO */}
-      <ScrollIntroduction />
+      {/* 1. MINIMALIST CINEMATIC INTRO */}
+      <SwordSection />
 
       {/* 2. MAIN FEED CONTENT */}
       <div className="relative z-10 px-4 md:px-0 max-w-4xl mx-auto pt-20">
