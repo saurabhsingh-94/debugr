@@ -33,7 +33,7 @@ export default function TopNavbar() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed top-0 left-64 right-0 px-8 py-6 z-50 pointer-events-none">
+    <div className="fixed top-0 left-0 right-0 px-8 py-6 z-50 pointer-events-none">
       <header className="h-16 w-full max-w-7xl mx-auto flex items-center justify-between px-6 rounded-2xl border border-white/10 bg-gradient-to-r from-green-400/10 via-purple-500/10 to-blue-500/10 backdrop-blur-xl bg-black/20 shadow-2xl pointer-events-auto relative overflow-visible">
         
         {/* LEFT: LOGO */}
