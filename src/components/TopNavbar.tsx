@@ -5,15 +5,16 @@ import {
   Search, 
   Bell, 
   ChevronDown, 
+  Home,
   LayoutDashboard, 
   Activity, 
   Layers, 
   Zap, 
+  MessageSquare,
   BarChart3,
-  User,
+  UserCircle,
   Settings,
-  LogOut,
-  UserCircle
+  LogOut
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -21,11 +22,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
+  { label: "Home", href: "/", icon: Home },
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Signals", href: "/signals", icon: Activity },
   { label: "Clusters", href: "/clusters", icon: Layers },
+  { label: "Exchange", href: "/exchange", icon: MessageSquare },
   { label: "Bounties", href: "/bounties", icon: Zap },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
 ];
 
 export default function TopNavbar() {
@@ -34,18 +36,18 @@ export default function TopNavbar() {
 
   return (
     <div className="fixed top-0 left-0 right-0 px-8 py-6 z-50 pointer-events-none">
-      <header className="h-16 w-full max-w-7xl mx-auto flex items-center justify-between px-6 rounded-2xl border border-white/10 bg-[#0a0f14]/80 backdrop-blur-xl shadow-2xl pointer-events-auto relative overflow-visible">
+      <header className="h-16 w-full max-w-7xl mx-auto flex items-center justify-between px-6 rounded-2xl border border-white/10 bg-[#0a0f14]/90 backdrop-blur-xl shadow-2xl pointer-events-auto relative">
         
         {/* LEFT: LOGO */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
-            <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-green-400 to-blue-500" />
+        <div className="flex items-center gap-3 min-w-[140px]">
+          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10 shadow-inner">
+            <div className="w-3.5 h-3.5 rounded-sm bg-gradient-to-br from-cyan-400 to-blue-600" />
           </div>
           <span className="text-sm font-black tracking-[0.2em] text-white uppercase italic">ZOLVEX</span>
         </div>
 
-        {/* CENTER: NAV PILLS */}
-        <nav className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/5 backdrop-blur-md">
+        {/* CENTER: CONSOLIDATED NAV */}
+        <nav className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/5 shadow-inner">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -53,17 +55,18 @@ export default function TopNavbar() {
                 key={item.label}
                 href={item.href}
                 className={cn(
-                  "px-4 py-1.5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all duration-300 relative",
+                  "px-4 py-1.5 rounded-lg text-[10px] font-black tracking-widest uppercase transition-all duration-300 relative flex items-center gap-2",
                   isActive 
-                    ? "text-white bg-white/10 shadow-lg ring-1 ring-white/10" 
-                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                    ? "text-white bg-white/10 shadow-md ring-1 ring-white/10" 
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]"
                 )}
               >
-                {item.label}
+                <item.icon className={cn("w-3.5 h-3.5", isActive ? "text-cyan-400" : "text-zinc-600")} />
+                <span className="hidden lg:block">{item.label}</span>
                 {isActive && (
                   <motion.div 
-                    layoutId="nav-glow"
-                    className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-4 h-[1px] bg-white shadow-[0_0_8px_white]"
+                    layoutId="nav-glow-indicator"
+                    className="absolute -bottom-[2px] left-1/2 -translate-x-1/2 w-3 h-[1.5px] bg-cyan-400 shadow-[0_0_10px_#22d3ee]"
                   />
                 )}
               </Link>
@@ -72,14 +75,14 @@ export default function TopNavbar() {
         </nav>
 
         {/* RIGHT: CONTROLS */}
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2">
-            <button className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-all">
+        <div className="flex items-center gap-4 min-w-[140px] justify-end">
+          <div className="flex items-center gap-1">
+            <button className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all">
               <Search className="w-4 h-4" />
             </button>
-            <button className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-all relative">
+            <button className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all relative">
               <Bell className="w-4 h-4" />
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-green-500 rounded-full border border-black" />
+              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-cyan-500 rounded-full border-[1.5px] border-[#0a0f14]" />
             </button>
           </div>
 
@@ -89,60 +92,53 @@ export default function TopNavbar() {
           <div className="relative">
             <button 
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-2 group p-1 pr-3 rounded-xl hover:bg-white/5 transition-all"
+              className="flex items-center gap-2 group p-0.5 rounded-full hover:bg-white/5 transition-all"
             >
-              <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-white/30 transition-all">
-                <UserCircle className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
+              <div className="w-8 h-8 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center overflow-hidden transition-all group-hover:border-cyan-500/50">
+                <UserCircle className="w-5 h-5 text-zinc-600 group-hover:text-zinc-300" />
               </div>
-              <ChevronDown className={cn("w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-all", isProfileOpen && "rotate-180")} />
             </button>
 
             <AnimatePresence>
               {isProfileOpen && (
                 <>
-                  {/* Backdrop for closing */}
                   <div className="fixed inset-0 z-[-1]" onClick={() => setIsProfileOpen(false)} />
-                  
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 5 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    className="absolute right-0 top-full mt-2 w-60 bg-[#111827] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden z-[100]"
+                    initial={{ opacity: 0, scale: 0.95, y: 10, filter: "blur(10px)" }}
+                    animate={{ opacity: 1, scale: 1, y: 5, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10, filter: "blur(10px)" }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-[#0a0f14] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 overflow-hidden z-[100] backdrop-blur-2xl"
                   >
-                    <div className="p-4 bg-white/5 border-b border-white/10">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center">
-                          <UserCircle className="w-6 h-6 text-zinc-400" />
+                    <div className="p-5 bg-white/[0.02] border-b border-white/5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center">
+                          <UserCircle className="w-6 h-6 text-zinc-500" />
                         </div>
                         <div className="flex flex-col truncate">
-                          <span className="text-sm font-bold text-white truncate leading-none mb-1">Saurabh S.</span>
-                          <span className="text-xs text-zinc-500 truncate font-mono">@curator_root</span>
+                          <span className="text-sm font-black text-white px-1">Saurabh S.</span>
+                          <span className="text-[10px] text-zinc-600 font-mono">@curator_root</span>
                         </div>
                       </div>
-                      <Link href="/profile" className="block w-full text-center py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[10px] font-bold text-white transition-all uppercase tracking-widest">
-                        View Profile
-                      </Link>
                     </div>
 
-                    <div className="p-2">
+                    <div className="p-2 space-y-0.5">
                        {[
                          { label: "Dashboard", icon: LayoutDashboard },
-                         { label: "Manage Signals", icon: Activity },
+                         { label: "My Signals", icon: Activity },
                          { label: "Settings", icon: Settings },
                        ].map((item) => (
                          <button 
                            key={item.label}
-                           className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded-xl text-xs font-medium text-zinc-400 hover:text-white transition-all group/item"
+                           className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 rounded-xl text-[11px] font-bold text-zinc-500 hover:text-white transition-all group/item"
                          >
-                           <item.icon className="w-4 h-4 text-zinc-600 group-hover/item:text-accent-cyan transition-colors" />
+                           <item.icon className="w-4 h-4 text-zinc-700 group-hover/item:text-cyan-400 transition-colors" />
                            {item.label}
                          </button>
                        ))}
                     </div>
 
                     <div className="p-2 border-t border-white/10">
-                       <button className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-red-500/10 rounded-xl text-xs font-medium text-zinc-500 hover:text-red-400 transition-all group/item">
+                       <button className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-red-500/10 rounded-xl text-[11px] font-bold text-zinc-600 hover:text-red-400 transition-all group/item">
                          <LogOut className="w-4 h-4 text-zinc-800 group-hover/item:text-red-500 transition-colors" />
                          Sign out
                        </button>
