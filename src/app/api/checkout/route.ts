@@ -2,7 +2,6 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { cashfree } from "@/lib/cashfree";
 import { NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -38,7 +37,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Prompt already purchased" }, { status: 400 });
     }
 
-    const orderId = `order_${uuidv4()}`;
+    const orderId = `order_${Date.now()}`;
 
     // Create pending transaction
     await prisma.transaction.create({
