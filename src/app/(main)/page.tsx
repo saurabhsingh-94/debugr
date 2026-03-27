@@ -18,7 +18,7 @@ export default function Home() {
   return (
     <div className="max-w-[640px] mx-auto w-full space-y-0">
       {/* FEED HEADER */}
-      <div className="flex items-center border-b border-white/5 mb-0 sticky top-0 z-30 bg-[#05050a]/80 backdrop-blur-xl">
+      <div className="flex items-center border-b border-white/5 mb-8 sticky top-0 z-30 bg-[#05050a]/80 backdrop-blur-xl">
         {filters.map(({ label, icon: Icon }) => (
           <button
             key={label}
@@ -40,12 +40,12 @@ export default function Home() {
       </div>
 
       {/* CREATE POST */}
-      <div className="border-b border-white/5">
+      <div className="border-b border-white/5 mb-10">
         <CreatePost />
       </div>
 
       {/* FEED */}
-      <div className="divide-y divide-white/[0.04]">
+      <div className="divide-y divide-white/[0.04] mt-4">
         <PostFeed />
       </div>
     </div>
