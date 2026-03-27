@@ -13,29 +13,28 @@ import {
   Cpu,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSession } from "next-auth/react";
 import ProfileClient from "@/components/ProfileClient";
 import { syncUser } from "@/app/actions";
 
 export default function ProfilePage() {
-  const [sessionUser, setSessionUser] = useState<any>(null);
+  const { data: session, status } = useSession();
   const [prismaUser, setPrismaUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const supabase = createClient();
+  const sessionUser = session?.user;
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setSessionUser(user);
+      if (sessionUser) {
         const pUser = await syncUser();
         setPrismaUser(pUser);
       }
-      setIsLoading(false);
     };
-    fetchProfile();
-  }, [supabase.auth]);
+    if (status !== "loading") {
+      fetchProfile();
+    }
+  }, [sessionUser, status]);
+
+  const isLoading = status === "loading";
 
   if (isLoading) {
      return (
@@ -65,14 +64,14 @@ export default function ProfilePage() {
   ];
 
   const profileData = {
-    name: prismaUser?.name || sessionUser?.user_metadata?.full_name || sessionUser?.user_metadata?.name || "Unidentified Agent",
+    name: (prismaUser as any)?.name || sessionUser?.name || "Unidentified Agent",
     email: sessionUser.email!,
-    avatarUrl: prismaUser?.avatarUrl || sessionUser?.user_metadata?.avatar_url || sessionUser?.user_metadata?.picture || null,
-    bio: prismaUser?.bio || null,
-    github: prismaUser?.githubProfile,
-    x: prismaUser?.xProfile,
-    instagram: prismaUser?.instagramProfile,
-    username: prismaUser?.username,
+    avatarUrl: (prismaUser as any)?.avatarUrl || sessionUser?.image || null,
+    bio: (prismaUser as any)?.bio || null,
+    github: (prismaUser as any)?.githubProfile,
+    x: (prismaUser as any)?.xProfile,
+    instagram: (prismaUser as any)?.instagramProfile,
+    username: (prismaUser as any)?.username,
   };
 
   return (

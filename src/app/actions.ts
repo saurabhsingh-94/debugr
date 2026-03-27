@@ -197,3 +197,20 @@ export async function postPrompt(formData: FormData) {
   revalidatePath("/marketplace");
   revalidatePath("/profile");
 }
+
+export async function getUserByUsername(username: string) {
+  return await (prisma.user as any).findUnique({
+    where: { username },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      username: true,
+      bio: true,
+      avatarUrl: true,
+      githubProfile: true,
+      xProfile: true,
+      instagramProfile: true,
+    }
+  });
+}

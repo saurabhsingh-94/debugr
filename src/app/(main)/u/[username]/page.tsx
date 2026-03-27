@@ -12,7 +12,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { getUserByUsername } from "@/app/actions";
 import ProfileClient from "@/components/ProfileClient";
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -21,19 +21,13 @@ export default function PublicProfilePage() {
   const { username } = useParams();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
     const fetchUser = async () => {
-      // Find user by username in Prisma via a standard API or action
-      // For now, we simulate with a search on user metadata or a dedicated endpoint
-      const { data, error } = await supabase
-        .from('User') // Assuming Prisma table name in direct query if enabled, or use a server action
-        .select('*')
-        .eq('username', username)
-        .single();
-      
-      if (data) setUser(data);
+      if (typeof username === "string") {
+        const data = await getUserByUsername(username);
+        if (data) setUser(data);
+      }
       setIsLoading(false);
     };
     fetchUser();
@@ -71,10 +65,11 @@ export default function PublicProfilePage() {
   const profileData = {
     name: user.name || "Unidentified Agent",
     email: user.email,
-    avatarUrl: user.avatarUrl,
+    avatarUrl: user.avatarUrl || user.image,
     bio: user.bio,
     github: user.githubProfile,
     x: user.xProfile,
+    instagram: user.instagramProfile,
     username: user.username,
   };
 

@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   XCircle
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { updateUserProfile, syncUser } from "@/app/actions";
 import toast from "react-hot-toast";
 import Image from "next/image";
@@ -30,7 +29,6 @@ export default function ChooseUsernamePage() {
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
