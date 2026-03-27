@@ -108,7 +108,7 @@ export default function CreateSignalModal({ isOpen, onClose }: CreateSignalModal
                 <input
                   value={formData.tags}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder="nextjs, prisma, supabase (comma separated)"
+                  placeholder="nextjs, prisma, neon (comma separated)"
                   className="w-full bg-white/5 border border-white/5 rounded-xl py-3.5 px-5 text-xs text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-accent-cyan/30 transition-all"
                 />
               </div>
