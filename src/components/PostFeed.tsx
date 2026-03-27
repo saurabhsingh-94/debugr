@@ -111,8 +111,8 @@ function PostCard({ post }: { post: any }) {
             <span className="text-[15px] text-zinc-600">@{post?.author?.username || "user"}</span>
             <span className="text-zinc-700">·</span>
             <span className="text-[15px] text-zinc-600">{timeAgo}</span>
-            <button className="ml-auto p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-violet-400/10 text-zinc-700 hover:text-violet-400 transition-all">
-              <MoreHorizontal className="w-4 h-4" />
+            <button className="ml-auto p-2 rounded-full opacity-0 group-hover:opacity-100 hover:bg-violet-400/10 text-zinc-600 hover:text-violet-400 transition-all">
+              <MoreHorizontal className="w-[18px] h-[18px]" />
             </button>
           </div>
 
@@ -137,25 +137,25 @@ function PostCard({ post }: { post: any }) {
           {/* Actions */}
           <div className="flex items-center justify-between -ml-2">
             <div className="flex items-center gap-0">
-              <ActionBtn icon={<MessageSquare className="w-4 h-4" />} label={post.commentCount || 0} color="hover:text-violet-400 hover:bg-violet-400/10" onClick={() => {}} />
-              <ActionBtn icon={<Repeat2 className="w-4 h-4" />} label={post.repostCount || 0} color="hover:text-emerald-400 hover:bg-emerald-400/10" onClick={() => {}} />
+              <ActionBtn icon={<MessageSquare className="w-[18px] h-[18px]" />} label={post.commentCount || 0} color="hover:text-violet-400 hover:bg-violet-400/10" onClick={() => {}} />
+              <ActionBtn icon={<Repeat2 className="w-[18px] h-[18px]" />} label={post.repostCount || 0} color="hover:text-emerald-400 hover:bg-emerald-400/10" onClick={() => {}} />
               <button
                 onClick={() => setLiked(!liked)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all group/heart ${liked ? "text-rose-400" : "text-zinc-600 hover:text-rose-400 hover:bg-rose-400/10"}`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all group/heart ${liked ? "text-rose-500" : "text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10"}`}
               >
-                <Heart className={`w-4 h-4 transition-transform group-hover/heart:scale-110 ${liked ? "fill-rose-400" : ""}`} />
+                <Heart className={`w-[18px] h-[18px] transition-transform group-hover/heart:scale-110 ${liked ? "fill-rose-500" : ""}`} />
                 <span className="text-sm font-medium">{(post.likeCount || 0) + (liked ? 1 : 0) || ""}</span>
               </button>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => setBookmarked(!bookmarked)}
-                className={`p-2 rounded-full transition-all ${bookmarked ? "text-violet-400" : "text-zinc-700 hover:text-violet-400 hover:bg-violet-400/10"}`}
+                className={`p-2.5 rounded-full transition-all ${bookmarked ? "text-violet-400" : "text-zinc-600 hover:text-violet-400 hover:bg-violet-400/10"}`}
               >
-                <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-violet-400" : ""}`} />
+                <Bookmark className={`w-[18px] h-[18px] ${bookmarked ? "fill-violet-400" : ""}`} />
               </button>
-              <button className="p-2 rounded-full text-zinc-700 hover:text-violet-400 hover:bg-violet-400/10 transition-all">
-                <Share2 className="w-4 h-4" />
+              <button className="p-2.5 rounded-full text-zinc-600 hover:text-violet-400 hover:bg-violet-400/10 transition-all">
+                <Share2 className="w-[18px] h-[18px]" />
               </button>
             </div>
           </div>
@@ -176,7 +176,7 @@ function ActionBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all text-zinc-600 ${color}`}
+      className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all text-zinc-500 ${color}`}
     >
       {icon}
       {label > 0 && <span className="text-sm font-medium">{label}</span>}
