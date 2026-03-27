@@ -1,76 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  username      String?   @unique
-  bio           String?
-  website       String?   @unique
-  location      String?
-  theme         String    @default("dark")
-
-  githubProfile    String?
-  xProfile         String?
-  instagramProfile String?
-  avatarUrl        String?
-
+  id                    String           @id @default(cuid())
+  name                  String?
+  email                 String?          @unique
+  emailVerified         DateTime?
+  image                 String?
+  username              String?          @unique
+  bio                   String?
+  website               String?          @unique
+  location              String?
+  theme                 String           @default("dark")
+  githubProfile         String?
+  xProfile              String?
+  instagramProfile      String?
+  avatarUrl             String?
   cashfreeBeneficiaryId String?
-  createdAt             DateTime @default(now())
-
-  accounts      Account[]
-  sessions      Session[]
-  posts         Post[]
-  prompts       Prompt[]         @relation("CreatedPrompts")
-  purchases     Purchase[]
-  earnings      CreatorEarning[]
-  payouts       Payout[]
-  signals       Signal[]
-  bounties      Bounty[]
-  intelAssets   IntelAsset[]
-  receivedNotifications Notification[] @relation("Receiver")
-  actedNotifications    Notification[] @relation("Actor")
-
-  likes     Like[]
-  comments  Comment[]
-  bookmarks Bookmark[]
-
-  following Follow[] @relation("Following")
-  followers Follow[] @relation("Followers")
+  createdAt             DateTime         @default(now())
+  accounts              Account[]
+  bookmarks             Bookmark[]
+  bounties              Bounty[]
+  comments              Comment[]
+  earnings              CreatorEarning[]
+  following             Follow[]         @relation("Following")
+  followers             Follow[]         @relation("Followers")
+  intelAssets           IntelAsset[]
+  likes                 Like[]
+  actedNotifications    Notification[]   @relation("Actor")
+  receivedNotifications Notification[]   @relation("Receiver")
+  payouts               Payout[]
+  posts                 Post[]
+  prompts               Prompt[]         @relation("CreatedPrompts")
+  purchases             Purchase[]
+  sessions              Session[]
+  signals               Signal[]
+  isPrivate             Boolean          @default(false)
+  gender                String?
 }
 
 model Prompt {
-  id             String   @id @default(cuid())
+  id             String           @id @default(cuid())
   title          String
-  description    String?  @db.Text
-  previewContent String   @db.Text
-  fullContent    String   @db.Text
-  content        String?  @db.Text
-  category       String?  @default("general")
-  aiModel        String?  @default("GPT-4")
+  description    String?
+  previewContent String
+  fullContent    String
+  content        String?
+  category       String?          @default("general")
+  aiModel        String?          @default("GPT-4")
   price          Float
-  currency       String   @default("INR")
-  thumbnailUrl   String?  @db.Text
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  authorId String
-  author   User             @relation("CreatedPrompts", fields: [authorId], references: [id])
-  purchases Purchase[]
-  earnings  CreatorEarning[]
-
-  likes     Like[]
-  comments  Comment[]
-  bookmarks Bookmark[]
+  currency       String           @default("INR")
+  thumbnailUrl   String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  authorId       String
+  bookmarks      Bookmark[]
+  comments       Comment[]
+  earnings       CreatorEarning[]
+  likes          Like[]
+  author         User             @relation("CreatedPrompts", fields: [authorId], references: [id])
+  purchases      Purchase[]
 }
 
 model Signal {
@@ -80,9 +75,8 @@ model Signal {
   priority  String
   strength  String
   createdAt DateTime @default(now())
-
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
 }
 
 model Bounty {
@@ -92,9 +86,8 @@ model Bounty {
   difficulty String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model IntelAsset {
@@ -102,11 +95,10 @@ model IntelAsset {
   title       String
   price       String
   category    String
-  description String   @db.Text
+  description String
   createdAt   DateTime @default(now())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Purchase {
@@ -114,9 +106,8 @@ model Purchase {
   userId    String
   promptId  String
   createdAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  prompt Prompt @relation(fields: [promptId], references: [id])
+  prompt    Prompt   @relation(fields: [promptId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, promptId])
 }
@@ -138,9 +129,8 @@ model CreatorEarning {
   amount    Float
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  prompt Prompt @relation(fields: [promptId], references: [id])
+  prompt    Prompt   @relation(fields: [promptId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Payout {
@@ -150,8 +140,7 @@ model Payout {
   month     String
   status    String   @default("PROCESSING")
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, month])
 }
@@ -162,15 +151,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -184,18 +172,16 @@ model Session {
 }
 
 model Post {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
-  viewCount Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  likes     Like[]
-  comments  Comment[]
+  id        String     @id @default(cuid())
+  content   String
+  viewCount Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  authorId  String
   bookmarks Bookmark[]
+  comments  Comment[]
+  likes     Like[]
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model Like {
@@ -204,10 +190,9 @@ model Like {
   postId    String?
   promptId  String?
   createdAt DateTime @default(now())
-
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  prompt Prompt? @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  prompt    Prompt?  @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@unique([userId, promptId])
@@ -215,15 +200,14 @@ model Like {
 
 model Comment {
   id        String   @id @default(cuid())
-  content   String   @db.Text
+  content   String
   userId    String
   postId    String?
   promptId  String?
   createdAt DateTime @default(now())
-
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  prompt Prompt? @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  prompt    Prompt?  @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Bookmark {
@@ -232,10 +216,9 @@ model Bookmark {
   postId    String?
   promptId  String?
   createdAt DateTime @default(now())
-
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  prompt Prompt? @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  prompt    Prompt?  @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@unique([userId, promptId])
@@ -246,9 +229,8 @@ model Follow {
   followerId  String
   followingId String
   createdAt   DateTime @default(now())
-
-  follower  User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
-  following User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])
 }
@@ -262,9 +244,8 @@ model Notification {
   promptId  String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  user      User     @relation("Receiver", fields: [userId], references: [id], onDelete: Cascade)
   actor     User     @relation("Actor", fields: [actorId], references: [id], onDelete: Cascade)
+  user      User     @relation("Receiver", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {

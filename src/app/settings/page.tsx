@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   Loader2,
   Settings as SettingsIcon,
+  LogOut,
   Fingerprint,
   Github,
   Twitter,
@@ -32,7 +33,7 @@ import {
   Target
 } from "lucide-react";
 import Link from "next/link";
-import { useSession, signIn } from "next-auth/react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { updateUserProfile, syncUser } from "@/app/actions";
 import toast from "react-hot-toast";
 import Image from "next/image";
@@ -52,20 +53,11 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: { 
-    opacity: 1, 
-    x: 0,
-    transition: { duration: 0.5 }
-  }
-};
-
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("Profile");
+  const [activeTab, setActiveTab] = useState("Account");
   const { theme, setTheme } = useTheme();
   
   const [formData, setFormData] = useState({
@@ -127,6 +119,7 @@ export default function SettingsPage() {
   const SETTINGS_TABS = [
     { label: "Account", icon: User },
     { label: "Appearance", icon: Palette },
+    { label: "Expertise", icon: Target },
     { label: "Security", icon: Key },
     { label: "Privacy", icon: Eye },
     { label: "Payments", icon: CreditCard },
@@ -144,7 +137,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08080A] pt-32 pb-32 px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#08080A] pt-32 pb-32 px-6 relative overflow-hidden font-grotesk">
       {/* Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-violet-600/10 blur-[120px] rounded-full" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
@@ -163,8 +156,8 @@ export default function SettingsPage() {
                 <ArrowLeft className="w-6 h-6 text-zinc-400 group-hover:text-white group-hover:-translate-x-1 transition-all" />
               </Link>
               <div>
-                <h1 className="text-5xl font-black tracking-tighter text-white uppercase leading-none">Settings</h1>
-                <p className="text-zinc-500 font-medium mt-3 tracking-wide">Customize your experience and identity</p>
+                <h1 className="text-5xl font-black tracking-tighter text-white uppercase leading-none italic">Settings</h1>
+                <p className="text-zinc-500 font-bold mt-3 tracking-widest uppercase text-[10px]">Customize your experience and identity</p>
               </div>
             </div>
             <div className="flex items-center gap-3 px-6 py-3 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl backdrop-blur-xl">
@@ -175,25 +168,37 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
             {/* Nav Sidebar */}
-            <div className="lg:col-span-1 space-y-3">
-               {SETTINGS_TABS.map((tab) => (
-                 <button
-                   key={tab.label}
-                   onClick={() => setActiveTab(tab.label)}
-                   className={cn(
-                     "w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all group",
-                     activeTab === tab.label 
-                      ? "bg-white/10 text-white border border-white/10 shadow-2xl backdrop-blur-2xl" 
-                      : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] border border-transparent"
-                   )}
-                 >
-                   <div className="flex items-center gap-4">
-                     <tab.icon className={cn("w-5 h-5 transition-colors", activeTab === tab.label ? "text-violet-400" : "text-zinc-600 group-hover:text-zinc-400")} />
-                     <span className="text-[13px] font-bold tracking-tight">{tab.label}</span>
-                   </div>
-                   <ChevronRight className={cn("w-4 h-4 transition-transform", activeTab === tab.label ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-40")} />
-                 </button>
-               ))}
+            <div className="lg:col-span-1 space-y-6">
+                <div className="space-y-2">
+                   {SETTINGS_TABS.map((tab) => (
+                     <button
+                       key={tab.label}
+                       onClick={() => setActiveTab(tab.label)}
+                       className={cn(
+                         "w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all group",
+                         activeTab === tab.label 
+                          ? "bg-white/10 text-white border border-white/10 shadow-2xl backdrop-blur-2xl" 
+                          : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03] border border-transparent"
+                       )}
+                     >
+                       <div className="flex items-center gap-4">
+                         <tab.icon className={cn("w-5 h-5 transition-colors", activeTab === tab.label ? "text-violet-400" : "text-zinc-600 group-hover:text-zinc-400")} />
+                         <span className="text-[13px] font-bold tracking-tight">{tab.label}</span>
+                       </div>
+                       <ChevronRight className={cn("w-4 h-4 transition-transform", activeTab === tab.label ? "translate-x-0 opacity-100" : "-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-40")} />
+                     </button>
+                   ))}
+                </div>
+
+                <div className="pt-8 border-t border-white/5">
+                   <button
+                     onClick={() => signOut({ callbackUrl: '/' })}
+                     className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-rose-500 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all font-black uppercase text-[11px] tracking-[0.2em]"
+                   >
+                     <LogOut className="w-5 h-5" />
+                     Logout Platform
+                   </button>
+                </div>
             </div>
 
             {/* Main Content Area */}
@@ -201,7 +206,7 @@ export default function SettingsPage() {
                <AnimatePresence mode="wait">
                   {activeTab === "Account" && (
                     <motion.div 
-                      key="account-settings"
+                      key="account"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
@@ -262,7 +267,7 @@ export default function SettingsPage() {
 
                   {activeTab === "Appearance" && (
                     <motion.div 
-                      key="appearance-settings"
+                      key="appearance"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
@@ -320,7 +325,7 @@ export default function SettingsPage() {
 
                    {activeTab === "Security" && (
                     <motion.div 
-                      key="security-settings"
+                      key="security"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="glass-morphism rounded-[48px] p-12 border border-white/10 space-y-8"
@@ -343,25 +348,64 @@ export default function SettingsPage() {
 
                   {activeTab === "Privacy" && (
                     <motion.div 
-                      key="privacy-settings"
+                      key="privacy"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="glass-morphism rounded-[48px] p-12 border border-white/10 space-y-8"
+                      className="glass-morphism rounded-[48px] p-12 border border-white/10 space-y-12"
                     >
-                      <h3 className="text-xl font-black text-white uppercase tracking-tighter">Data Privacy</h3>
-                      <p className="text-zinc-500 text-sm">Manage how your data is used and visible to others.</p>
-                      <div className="flex items-center justify-between px-2">
-                         <span className="text-sm font-bold text-white">Public Profile Visibility</span>
-                         <div className="w-12 h-6 bg-violet-500 rounded-full relative">
-                            <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
-                         </div>
-                      </div>
+                       <div className="space-y-4">
+                          <h3 className="text-xl font-black text-white uppercase tracking-tighter">Data Privacy</h3>
+                          <p className="text-zinc-500 text-sm">Manage how your data is used and visible to others.</p>
+                       </div>
+                       
+                       <div className="space-y-6">
+                          <div className="flex items-center justify-between p-8 bg-white/[0.02] border border-white/5 rounded-[32px]">
+                             <div className="space-y-1">
+                                <p className="text-sm font-black text-white uppercase tracking-tight">Public Profile Visibility</p>
+                                <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Allow others to see your posts and marketplace items</p>
+                             </div>
+                             <div className="w-12 h-6 bg-violet-500 rounded-full relative cursor-pointer">
+                                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
+                             </div>
+                          </div>
+
+                          <div className="flex items-center justify-between p-8 bg-white/[0.02] border border-white/5 rounded-[32px]">
+                             <div className="space-y-1">
+                                <p className="text-sm font-black text-white uppercase tracking-tight">Incognito Mode</p>
+                                <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Browse signals without history</p>
+                             </div>
+                             <div className="w-12 h-6 bg-zinc-800 rounded-full relative cursor-pointer">
+                                <div className="absolute left-1 top-1 w-4 h-4 bg-zinc-400 rounded-full" />
+                             </div>
+                          </div>
+                       </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === "Expertise" && (
+                    <motion.div 
+                      key="expertise"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="glass-morphism rounded-[48px] p-12 border border-white/10 space-y-12"
+                    >
+                       <div className="space-y-4">
+                          <h3 className="text-xl font-black text-white uppercase tracking-tighter">Skills & Expertise</h3>
+                          <p className="text-zinc-500 text-sm">Define your technical identity for marketplace visibility.</p>
+                       </div>
+                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {["Next.js", "Prisma", "Postgres", "AI Engineering", "Security", "UI/UX"].map(skill => (
+                            <div key={skill} className="px-6 py-4 bg-white/[0.02] border border-white/5 rounded-2xl text-[11px] font-black text-zinc-400 uppercase tracking-widest hover:border-violet-500/30 hover:text-white transition-all cursor-pointer text-center">
+                              {skill}
+                            </div>
+                          ))}
+                       </div>
                     </motion.div>
                   )}
 
                   {activeTab === "Contact Us" && (
                     <motion.div 
-                      key="contact-settings"
+                      key="contact"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
@@ -373,8 +417,8 @@ export default function SettingsPage() {
                                 <Mail className="w-6 h-6" />
                              </div>
                              <div>
-                                <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none">Support Center</h3>
-                                <p className="text-zinc-500 text-xs mt-1 uppercase tracking-widest font-bold">Identity Help Desk</p>
+                                <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none italic">Support Center</h3>
+                                <p className="text-zinc-500 text-[10px] mt-1 uppercase tracking-widest font-black">Identity Help Desk</p>
                              </div>
                           </div>
 
@@ -398,8 +442,8 @@ export default function SettingsPage() {
 
                           <div className="p-10 bg-zinc-900/50 border border-white/5 rounded-[40px] text-center space-y-6">
                              <h4 className="text-sm font-black text-white uppercase tracking-widest">Need real-time help?</h4>
-                             <p className="text-xs text-zinc-500 max-w-sm mx-auto">Our specialized response team is available for identity synchronization and platform issues.</p>
-                             <button className="px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-zinc-200 transition-all">Submit Protocol Ticket</button>
+                             <p className="text-xs text-zinc-500 max-w-sm mx-auto font-medium">Our specialized response team is available for identity synchronization and platform issues.</p>
+                             <button className="px-10 py-5 bg-white text-black text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-zinc-200 transition-all shadow-xl">Submit Protocol Ticket</button>
                           </div>
                        </div>
                     </motion.div>

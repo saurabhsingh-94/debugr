@@ -4,14 +4,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   User, Settings, MapPin, Calendar, Link as LinkIcon,
   MessageSquare, Repeat2, Heart, Share, ArrowLeft,
-  MoreHorizontal, BadgeCheck, Bookmark, X, Camera, Save, Loader2, Github, Twitter, Instagram, Image as ImageIcon
+  MoreHorizontal, BadgeCheck, Bookmark, X, Camera, Save, Loader2, Github, Twitter, Instagram, Image as ImageIcon,
+  Check, Trash2, Upload
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { updateUserProfile } from "@/app/actions";
 import toast from "react-hot-toast";
 import PromptCard from "./PromptCard";
+import { cn } from "@/lib/utils";
 
 interface ProfileClientProps {
   user: any;
@@ -28,16 +30,12 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
   const [following, setFollowing] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const getInitial = () => {
-    return (user?.name?.[0] || user?.username?.[0] || "U").toUpperCase();
-  };
-
   const formattedJoinDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : "March 2024";
 
   return (
-    <div className="max-w-[1000px] mx-auto w-full min-h-screen">
+    <div className="max-w-[1000px] mx-auto w-full min-h-screen font-grotesk">
 
       {/* TOP BAR */}
       <div className="sticky top-0 z-40 flex items-center gap-4 px-4 py-3 bg-[#05050a]/80 backdrop-blur-xl border-b border-white/5">
@@ -46,7 +44,7 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
         </Link>
         <div>
           <p className="text-[15px] font-bold text-white leading-tight">{user?.name || "Profile"}</p>
-          <p className="text-xs text-zinc-600">{problems.length} posts</p>
+          <p className="text-xs text-zinc-600 font-bold uppercase tracking-widest">{problems.length} posts</p>
         </div>
       </div>
 
@@ -78,24 +76,23 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
           </div>
 
           <div className="flex items-center gap-2 pb-1">
-            <button className="p-2 rounded-full border border-white/10 text-zinc-400 hover:text-white hover:border-white/30 transition-all hover:bg-white/5">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
+             <Link href="/settings" className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl text-zinc-500 hover:text-white transition-all">
+                <Settings className="w-4 h-4" />
+             </Link>
             {!isPublic ? (
                 <button
                   onClick={() => setIsEditModalOpen(true)}
-                  className="px-6 py-2 rounded-2xl bg-white/[0.03] border border-white/10 text-[11px] font-black uppercase tracking-widest text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-[0.98]"
+                  className="px-6 py-2 rounded-2xl bg-white/[0.03] border border-white/10 text-[11px] font-black uppercase tracking-widest text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-[0.98] shadow-xl"
                 >
-                  Edit Profile
+                  Edit profile
                 </button>
             ) : (
               <button
                 onClick={() => setFollowing(!following)}
-                className={`px-5 py-1.5 rounded-full text-sm font-bold transition-all ${
-                  following
-                    ? "border border-white/20 text-white hover:border-rose-400/50 hover:text-rose-400 hover:bg-rose-400/5"
-                    : "bg-white text-black hover:bg-zinc-200"
-                }`}
+                className={cn(
+                  "px-6 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all",
+                  following ? "border border-white/10 text-white" : "bg-white text-black"
+                )}
               >
                 {following ? "Following" : "Follow"}
               </button>
@@ -104,32 +101,43 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
         </div>
 
         <div className="mb-3">
-          <div className="flex items-center gap-1.5">
-            <h1 className="text-xl font-extrabold text-white">{user?.name || "Anonymous"}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none">{user?.name || "Anonymous"}</h1>
             {user?.verified && <BadgeCheck className="w-5 h-5 text-violet-400" />}
           </div>
-          <p className="text-[15px] text-zinc-600">@{user?.username || "user"}</p>
+          <p className="text-[13px] text-zinc-500 font-bold uppercase tracking-widest">@{user?.username || "user"}</p>
         </div>
 
-        <p className="text-[15px] text-zinc-300 leading-relaxed mb-3">
-          {user?.bio || "No bio yet."}
+        <p className="text-[15px] text-zinc-300 font-medium leading-relaxed mb-6">
+          {user?.bio || "No profile identity established yet."}
         </p>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-6">
+        <div className="flex flex-wrap gap-x-6 gap-y-3 text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-8 pb-4 border-b border-white/5">
           {user?.location && (
             <div className="flex items-center gap-2">
-              <MapPin className="w-3.5 h-3.5 text-zinc-700" /> {user.location}
+              <MapPin className="w-3.5 h-3.5 text-zinc-800" /> {user.location}
+            </div>
+          )}
+          {user?.gender && (
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-800">·</span>
+              <span className="text-violet-500/80">{user.gender}</span>
             </div>
           )}
           {user?.website && (
             <div className="flex items-center gap-2">
-              <LinkIcon className="w-3.5 h-3.5 text-zinc-700" />
-              <a href={user.website} target="_blank" className="text-violet-400 hover:text-white transition-colors">{user.website.replace(/^https?:\/\//, '')}</a>
+              <LinkIcon className="w-3.5 h-3.5 text-zinc-800" />
+              <a href={user.website} target="_blank" className="text-cyan-400 hover:text-white transition-colors">{user.website.replace(/^https?:\/\//, '')}</a>
             </div>
           )}
           <div className="flex items-center gap-2">
-            <Calendar className="w-3.5 h-3.5 text-zinc-700" /> Joined {formattedJoinDate}
+            <Calendar className="w-3.5 h-3.5 text-zinc-800" /> Member since {formattedJoinDate}
           </div>
+          {user?.isPrivate && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-violet-500/5 border border-violet-500/20 rounded-full text-violet-400">
+               Private Profile
+            </div>
+          )}
         </div>
       </div>
 
@@ -142,22 +150,24 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
         )}
       </AnimatePresence>
 
-      <div className="sticky top-[57px] z-30 flex border-b border-white/5 bg-[#05050a]/80 backdrop-blur-xl mt-3">
+      {/* TABS */}
+      <div className="sticky top-[57px] z-30 flex border-b border-white/5 bg-[#05050a]/80 backdrop-blur-xl">
         {TABS.map((tab) => {
           const isActive = tab === activeTab;
           return (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-4 text-sm font-semibold transition-colors relative ${
-                isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.02]"
-              }`}
+              className={cn(
+                "flex-1 py-5 text-xs font-black uppercase tracking-[0.2em] transition-all relative",
+                isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400"
+              )}
             >
               {tab}
               {isActive && (
                 <motion.div
                   layoutId="profile-tab"
-                  className="absolute bottom-0 left-1/4 right-1/4 h-[2px] bg-violet-500 rounded-full shadow-[0_0_8px_rgba(124,58,237,0.6)]"
+                  className="absolute bottom-0 left-10 right-10 h-[3px] bg-violet-500 rounded-full shadow-[0_0_15px_rgba(124,58,237,0.6)]"
                 />
               )}
             </button>
@@ -165,20 +175,20 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
         })}
       </div>
 
-      <div>
+      <div className="pb-24">
         {activeTab === "Posts" ? (
           problems.length > 0 ? (
-            <div className="py-8 divide-y divide-white/[0.04]">
+            <div className="divide-y divide-white/[0.04]">
               {problems.map((post: any) => (
                 <ProfilePost key={post.id} post={post} />
               ))}
             </div>
           ) : (
-            <EmptyState tab="Posts" message={`@${user?.username || "this user"} hasn't posted yet.`} />
+            <EmptyState tab="Posts" message={`Identity @${user?.username || "user"} has no history in the network.`} />
           )
         ) : activeTab === "Marketplace" ? (
           prompts.length > 0 ? (
-            <div className="py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+            <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-6">
               {prompts.map((p: any) => (
                 <PromptCard 
                   key={p.id} 
@@ -192,10 +202,10 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
               ))}
             </div>
           ) : (
-            <EmptyState tab="Marketplace" message={`No items in the marketplace yet.`} />
+            <EmptyState tab="Marketplace" message={`No intelligence assets listed by @${user?.username || "user"}.`} />
           )
         ) : (
-          <EmptyState tab={activeTab} message={`Nothing to show in ${activeTab} yet.`} />
+          <EmptyState tab={activeTab} message={`Sector ${activeTab} is currently dark.`} />
         )}
       </div>
     </div>
@@ -204,34 +214,67 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
 
 function EditProfileModal({ user, onClose }: { user: any; onClose: () => void }) {
   const [isPending, startTransition] = useTransition();
-  const [avatar, setAvatar] = useState<File | null>(null);
-  const [banner, setBanner] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatarUrl);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [showPfpMenu, setShowPfpMenu] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     name: user.name || "",
     username: user.username || "",
     bio: user.bio || "",
     location: user.location || "",
     website: user.website || "",
+    gender: user.gender || "Not Specified",
+    isPrivate: user.isPrivate || false,
     githubProfile: user.githubProfile || "",
     xProfile: user.xProfile || "",
     instagramProfile: user.instagramProfile || "",
   });
+
+  const handlePfpRemove = () => {
+    setAvatarPreview(null);
+    setAvatarFile(null);
+    setShowPfpMenu(false);
+  };
+
+  const handlePfpClick = () => {
+    setShowPfpMenu(!showPfpMenu);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+      setShowPfpMenu(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
       try {
         const data = new FormData();
-        Object.entries(formData).forEach(([key, value]) => data.append(key, value));
-        if (avatar) data.append("avatar", avatar);
-        if (banner) data.append("banner", banner);
+        Object.entries(formData).forEach(([key, value]) => data.append(key, String(value)));
         
-        await updateUserProfile(data);
-        toast.success("Profile Updated");
+        // Image logic
+        if (avatarFile) {
+          // In a real app, upload avatarFile here and get URL
+          // For now we'll simulate by passing the file object to the action
+          data.append("avatarUrl", "MOCK_NEW_URL"); 
+        } else if (avatarPreview === null) {
+          data.append("avatarUrl", "REMOVE");
+        }
+        
+        const res = await updateUserProfile(data);
+        if (res.error) throw new Error(res.error);
+        
+        toast.success("Identity Updated");
         onClose();
         window.location.reload();
       } catch (err: any) {
-        toast.error("Update Failed: " + err.message);
+        toast.error("Internal Error: " + err.message);
       }
     });
   };
@@ -241,127 +284,151 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#05050a]/95 backdrop-blur-3xl"
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        initial={{ opacity: 0, scale: 0.9, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="w-full max-w-[540px] bg-[#0c0c12] border border-white/10 rounded-[40px] overflow-hidden shadow-2xl"
+        exit={{ opacity: 0, scale: 0.9, y: 30 }}
+        className="w-full max-w-[600px] bg-[#0c0c12] border border-white/10 rounded-[56px] overflow-hidden shadow-3xl"
       >
-        <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-white/[0.02]">
-           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/[0.03] border border-white/5 rounded-2xl flex items-center justify-center">
-                 <User className="w-4 h-4 text-violet-400" />
-              </div>
-               <div>
-                  <h2 className="text-sm font-black text-white italic uppercase tracking-widest">Edit Profile</h2>
-                  <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.4em] mt-0.5">Update your profile information</p>
-               </div>
+        <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-white/[0.01]">
+           <div className="space-y-1">
+              <h2 className="text-xl font-black text-white italic uppercase tracking-tighter">Modify <span className="text-zinc-700">Identity</span></h2>
+              <p className="text-[9px] font-black text-violet-500 uppercase tracking-[0.4em]">Sub-Profile Configuration</p>
            </div>
-           <button onClick={onClose} className="p-3 rounded-2xl hover:bg-white/5 text-zinc-600 hover:text-white transition-all">
-              <X className="w-4 h-4" />
+           <button onClick={onClose} className="p-4 rounded-3xl bg-white/[0.03] border border-white/10 text-zinc-600 hover:text-white transition-all">
+              <X className="w-5 h-5" />
            </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto scrollbar-none">
-           {/* Image Uploads */}
-           <div className="flex gap-6 items-center pb-4 border-b border-white/5">
-              <div className="space-y-3 flex-1">
-                 <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Profile Picture</label>
-                 <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center relative overflow-hidden">
-                       {avatar ? (
-                          <img src={URL.createObjectURL(avatar)} className="w-full h-full object-cover" />
-                       ) : user.avatarUrl ? (
-                          <img src={user.avatarUrl} className="w-full h-full object-cover" />
-                       ) : (
-                          <User className="w-6 h-6 text-zinc-700" />
-                       )}
+        <form onSubmit={handleSubmit} className="p-10 space-y-10 max-h-[75vh] overflow-y-auto scrollbar-none">
+           {/* AVATAR CENTER */}
+           <div className="flex flex-col items-center gap-6 pb-10 border-b border-white/5">
+              <div className="relative group">
+                 <button 
+                  type="button"
+                  onClick={handlePfpClick}
+                  className="w-32 h-32 rounded-[48px] overflow-hidden bg-zinc-900 border-4 border-white/5 relative group cursor-pointer"
+                 >
+                    {avatarPreview ? (
+                      <img src={avatarPreview} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-zinc-800">
+                         <User className="w-12 h-12 text-zinc-600" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                       <Camera className="w-8 h-8 text-white" />
                     </div>
-                    <label className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-bold text-white cursor-pointer transition-all">
-                       Change PFP
-                       <input type="file" className="hidden" accept="image/*" onChange={e => e.target.files?.[0] && setAvatar(e.target.files[0])} />
-                    </label>
-                 </div>
+                 </button>
+
+                 <AnimatePresence>
+                    {showPfpMenu && (
+                       <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-48 bg-[#0c0c12] border border-white/10 rounded-3xl p-3 shadow-2xl z-50 backdrop-blur-2xl"
+                       >
+                          <button 
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 text-zinc-400 hover:text-white text-[11px] font-bold uppercase tracking-widest transition-all"
+                          >
+                             <Upload className="w-4 h-4 text-violet-500" />
+                             Upload Photo
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={handlePfpRemove}
+                            className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-rose-500/10 text-rose-500/60 hover:text-rose-500 text-[11px] font-bold uppercase tracking-widest transition-all"
+                          >
+                             <Trash2 className="w-4 h-4" />
+                             Remove Photo
+                          </button>
+                       </motion.div>
+                    )}
+                 </AnimatePresence>
+                 <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
               </div>
-              
-              <div className="space-y-3 flex-1">
-                 <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Banner Image</label>
-                 <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center relative overflow-hidden">
-                       {banner ? (
-                          <img src={URL.createObjectURL(banner)} className="w-full h-full object-cover" />
-                       ) : user.bannerUrl ? (
-                          <img src={user.bannerUrl} className="w-full h-full object-cover" />
-                       ) : (
-                          <ImageIcon className="w-6 h-6 text-zinc-700" />
-                       )}
-                    </div>
-                    <label className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-bold text-white cursor-pointer transition-all">
-                       Change Banner
-                       <input type="file" className="hidden" accept="image/*" onChange={e => e.target.files?.[0] && setBanner(e.target.files[0])} />
-                    </label>
-                 </div>
+              <p className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">Click avatar to manage photo</p>
+           </div>
+
+           <div className="grid grid-cols-2 gap-8">
+              <InputGroup label="Display Name" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} />
+              <InputGroup label="Network Handle" value={formData.username} onChange={v => setFormData({ ...formData, username: v })} />
+           </div>
+
+           <div className="space-y-3">
+              <label className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.3em] px-2 italic">Profile Status</label>
+              <div className="grid grid-cols-2 gap-4">
+                 <button 
+                  type="button"
+                  onClick={() => setFormData({ ...formData, isPrivate: false })}
+                  className={cn(
+                    "p-6 rounded-3xl border transition-all text-left",
+                    !formData.isPrivate ? "bg-white/10 border-white/20 text-white" : "bg-white/[0.02] border-white/5 text-zinc-700"
+                  )}
+                 >
+                    <p className="text-[11px] font-black uppercase tracking-widest">Public</p>
+                    <p className="text-[8px] font-bold uppercase tracking-[0.2em] mt-1 opacity-60">Visible to network</p>
+                 </button>
+                 <button 
+                  type="button"
+                  onClick={() => setFormData({ ...formData, isPrivate: true })}
+                  className={cn(
+                    "p-6 rounded-3xl border transition-all text-left",
+                    formData.isPrivate ? "bg-violet-500/10 border-violet-500/20 text-violet-400" : "bg-white/[0.02] border-white/5 text-zinc-700"
+                  )}
+                 >
+                    <p className="text-[11px] font-black uppercase tracking-widest">Private</p>
+                    <p className="text-[8px] font-bold uppercase tracking-[0.2em] mt-1 opacity-60">Limited visibility</p>
+                 </button>
               </div>
            </div>
 
-           <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Name</label>
-                    <input
-                       value={formData.name}
-                       onChange={e => setFormData({ ...formData, name: e.target.value })}
-                       className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all placeholder:text-zinc-800"
-                    />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Username</label>
-                    <input
-                       value={formData.username}
-                       onChange={e => setFormData({ ...formData, username: e.target.value })}
-                       className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all placeholder:text-zinc-800"
-                    />
-                 </div>
+           <div className="space-y-3">
+              <label className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.3em] px-2 italic">Gender Identity</label>
+              <div className="flex flex-wrap gap-3">
+                 {["Male", "Female", "Non-Binary", "Other", "Hidden"].map(g => (
+                    <button 
+                      key={g}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, gender: g })}
+                      className={cn(
+                        "px-6 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all",
+                        formData.gender === g ? "bg-white text-black border-white" : "bg-white/[0.02] border-white/5 text-zinc-700 hover:text-zinc-400"
+                      )}
+                    >
+                       {g}
+                    </button>
+                 ))}
               </div>
+           </div>
 
-              <div className="space-y-2">
-                 <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Bio</label>
-                 <textarea
-                    value={formData.bio}
-                    onChange={e => setFormData({ ...formData, bio: e.target.value })}
-                    rows={3}
-                    className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all placeholder:text-zinc-800 resize-none"
-                 />
-              </div>
+           <div className="space-y-3">
+              <label className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.3em] px-2 italic">Professional Bio</label>
+              <textarea
+                value={formData.bio}
+                onChange={e => setFormData({ ...formData, bio: e.target.value })}
+                rows={3}
+                placeholder="Secure identity description..."
+                className="w-full bg-white/[0.02] border border-white/5 rounded-3xl py-5 px-8 text-[12px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all resize-none italic"
+              />
+           </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Location</label>
-                    <input
-                       value={formData.location}
-                       onChange={e => setFormData({ ...formData, location: e.target.value })}
-                       className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all placeholder:text-zinc-800"
-                    />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Website</label>
-                    <input
-                       value={formData.website}
-                       onChange={e => setFormData({ ...formData, website: e.target.value })}
-                       className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all placeholder:text-zinc-800"
-                    />
-                 </div>
-              </div>
+           <div className="grid grid-cols-2 gap-8">
+              <InputGroup label="Sector / Location" value={formData.location} onChange={v => setFormData({ ...formData, location: v })} />
+              <InputGroup label="Network Terminal / Link" value={formData.website} onChange={v => setFormData({ ...formData, website: v })} />
            </div>
 
            <button
               type="submit"
               disabled={isPending}
-              className="w-full py-5 bg-white text-black text-[11px] font-black uppercase tracking-[0.4em] rounded-[24px] hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-2xl flex items-center justify-center gap-4 border-b-4 border-zinc-300"
+              className="w-full py-6 bg-white text-black text-[12px] font-black uppercase tracking-[0.5em] rounded-[32px] hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-3xl flex items-center justify-center gap-4 group border-b-4 border-zinc-300"
            >
-              {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (<><Save className="w-4 h-4" /> Save Changes</>)}
+              {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (<><Check className="w-5 h-5 group-hover:scale-110 transition-transform" /> Commit Changes</>)}
            </button>
         </form>
       </motion.div>
@@ -369,30 +436,43 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
   );
 }
 
+function InputGroup({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-3">
+       <label className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.3em] px-2 italic">{label}</label>
+       <input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] py-4 px-6 text-[12px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all placeholder:text-zinc-800"
+       />
+    </div>
+  );
+}
+
 function ProfilePost({ post }: { post: any }) {
   const [liked, setLiked] = useState(false);
   return (
-    <article className="px-4 py-4 hover:bg-white/[0.01] transition-colors cursor-pointer group">
-      <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-[#111118] flex-shrink-0 border border-white/5 flex items-center justify-center">
-            {post.user?.avatarUrl ? <Image src={post.user.avatarUrl} alt="avatar" width={40} height={40} className="object-cover" /> : <User className="w-5 h-5 text-zinc-600" />}
+    <article className="px-6 py-6 hover:bg-white/[0.01] transition-colors cursor-pointer group">
+      <div className="flex gap-4">
+        <div className="w-12 h-12 rounded-2xl overflow-hidden bg-[#111118] flex-shrink-0 border border-white/5 flex items-center justify-center">
+            {post.user?.avatarUrl ? <Image src={post.user.avatarUrl} alt="avatar" width={48} height={48} className="object-cover" /> : <User className="w-6 h-6 text-zinc-700" />}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 mb-0.5">
-            <span className="text-sm font-bold text-white">{post.user?.name || "User"}</span>
-            <span className="text-sm text-zinc-600">@{post.user?.username}</span>
-            <span className="text-zinc-700">·</span>
-            <span className="text-sm text-zinc-600">2h</span>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[15px] font-black text-white italic uppercase tracking-tighter">{post.user?.name || "Anonymous User"}</span>
+            <span className="text-[12px] text-zinc-600 font-bold uppercase tracking-widest truncate">@{post.user?.username}</span>
+            <span className="text-zinc-800">·</span>
+            <span className="text-[12px] text-zinc-700 font-bold uppercase tracking-widest">2h</span>
           </div>
-          <p className="text-[15px] text-zinc-300 leading-relaxed mb-3">{post.content}</p>
-          <div className="flex items-center gap-6 text-zinc-600">
+          <p className="text-[16px] text-zinc-400 font-medium leading-relaxed mb-4">{post.content}</p>
+          <div className="flex items-center gap-8 text-zinc-700">
             <ActionBtn icon={<MessageSquare className="w-4 h-4" />} label={0} color="hover:text-violet-400" />
             <ActionBtn icon={<Repeat2 className="w-4 h-4" />} label={0} color="hover:text-emerald-400" />
-            <button className="flex items-center gap-1.5 hover:text-rose-400 transition-colors" onClick={() => setLiked(!liked)}>
-              <Heart className={`w-4 h-4 ${liked ? "fill-rose-400 text-rose-400" : ""}`} />
-              <span className="text-xs">{post._count?.likes || 0}</span>
+            <button className="flex items-center gap-2 hover:text-rose-500 transition-colors" onClick={() => setLiked(!liked)}>
+              <Heart className={cn("w-4 h-4 transition-all", liked && "fill-rose-500 text-rose-500 scale-110")} />
+              <span className="text-[11px] font-black uppercase tracking-widest">{post._count?.likes || 0}</span>
             </button>
-            <ActionBtn icon={<Share className="w-4 h-4" />} label={0} color="hover:text-blue-400" />
+            <ActionBtn icon={<Share className="w-4 h-4" />} label={0} color="hover:text-cyan-400" />
           </div>
         </div>
       </div>
@@ -402,18 +482,21 @@ function ProfilePost({ post }: { post: any }) {
 
 function ActionBtn({ icon, label, color }: { icon: React.ReactNode; label: number; color: string }) {
   return (
-    <button className={`flex items-center gap-1.5 transition-all ${color}`}>
+    <button className={cn("flex items-center gap-2 transition-all", color)}>
       {icon}
-      {label > 0 && <span className="text-xs font-medium">{label}</span>}
+      <span className="text-[11px] font-black uppercase tracking-widest">{label > 0 ? label : ""}</span>
     </button>
   );
 }
 
 function EmptyState({ tab, message }: { tab: string; message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-      <p className="text-xl font-extrabold text-white mb-2">Nothing here yet</p>
-      <p className="text-zinc-600 text-sm leading-relaxed max-w-xs">{message}</p>
+    <div className="flex flex-col items-center justify-center py-24 px-8 text-center animate-pulse">
+      <div className="w-20 h-20 bg-white/[0.02] border border-white/5 rounded-[32px] flex items-center justify-center mb-8">
+         <X className="w-10 h-10 text-zinc-800" />
+      </div>
+      <p className="text-2xl font-black text-white italic uppercase tracking-tighter mb-3">No Output Found</p>
+      <p className="text-zinc-600 text-[11px] font-bold uppercase tracking-[0.3em] leading-relaxed max-w-xs">{message}</p>
     </div>
   );
 }

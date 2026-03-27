@@ -66,7 +66,7 @@ export async function updateUserProfile(formData: FormData) {
     const user = await getAuthUser();
     if (!user?.id) throw new Error("Please sign in to update your profile");
 
-    const data = {
+    const data: any = {
       name: formData.get("name") as string,
       username: (formData.get("username") as string)?.toLowerCase(),
       bio: formData.get("bio") as string,
@@ -75,8 +75,16 @@ export async function updateUserProfile(formData: FormData) {
       githubProfile: formData.get("githubProfile") as string,
       xProfile: formData.get("xProfile") as string,
       instagramProfile: formData.get("instagramProfile") as string,
-      avatarUrl: formData.get("avatarUrl") as string,
+      gender: formData.get("gender") as string,
+      isPrivate: formData.get("isPrivate") === "true",
     };
+
+    const avatarUrl = formData.get("avatarUrl");
+    if (avatarUrl === "REMOVE") {
+      data.avatarUrl = null;
+    } else if (avatarUrl) {
+      data.avatarUrl = avatarUrl as string;
+    }
 
     await (prisma.user as any).update({
       where: { id: user.id },
@@ -130,10 +138,11 @@ export async function postSignal(formData: FormData) {
       },
     });
 
+    console.log("✅ Signal posted successfully by:", user.id);
     revalidatePath("/signals");
     return { success: true };
   } catch (error: any) {
-    console.error("postSignal error:", error);
+    console.error("❌ postSignal error:", error);
     throw new Error(error.message || "Failed to post signal");
   }
 }
@@ -251,8 +260,11 @@ export async function postPrompt(formData: FormData) {
       },
     });
 
+    console.log("✅ Prompt listed successfully by:", user.id);
     revalidatePath("/marketplace");
+    return { success: true };
   } catch (error: any) {
+    console.error("❌ postPrompt error:", error);
     throw new Error(error.message || "Failed to create listing. Please try again.");
   }
 }
