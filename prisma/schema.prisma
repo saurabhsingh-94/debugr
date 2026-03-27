@@ -53,6 +53,36 @@ model User {
   profileVisits         Int              @default(0)
   isPrivate             Boolean          @default(false)
   gender                String?
+  wallet                Wallet?
+}
+
+model Wallet {
+  id               String              @id @default(cuid())
+  userId           String              @unique
+  pendingBalance   Decimal             @default(0) @db.Decimal(10, 2)
+  availableBalance Decimal             @default(0) @db.Decimal(10, 2)
+  totalEarned      Decimal             @default(0) @db.Decimal(10, 2)
+  updatedAt        DateTime            @updatedAt
+  user             User                @relation(fields: [userId], references: [id])
+  transactions     WalletTransaction[]
+}
+
+model WalletTransaction {
+  id          String    @id @default(cuid())
+  walletId    String
+  userId      String
+  amount      Decimal   @db.Decimal(10, 2)
+  platformFee Decimal   @default(0) @db.Decimal(10, 2)
+  type        String    // "sale_credit" | "payout_debit"
+  status      String    @default("pending") // "pending" | "available" | "completed"
+  source      String    // "sale" | "payout"
+  orderId     String?
+  promptId    String?
+  releaseAt   DateTime?
+  createdAt   DateTime  @default(now())
+  wallet      Wallet    @relation(fields: [walletId], references: [id])
+
+  @@unique([orderId, type])
 }
 
 model Prompt {
