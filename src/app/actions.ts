@@ -78,32 +78,42 @@ export async function syncUser() {
 }
 
 export async function updateUserProfile(formData: FormData) {
-  const user = await getAuthUser();
-  if (!user?.id) throw new Error("Unauthorized");
+  try {
+    const user = await getAuthUser();
+    if (!user?.id) throw new Error("AUTH_REQUIRED: Identity not found");
 
-  const name = formData.get("name") as string;
-  const username = formData.get("username") as string;
-  const bio = formData.get("bio") as string;
-  const githubProfile = formData.get("githubProfile") as string;
-  const xProfile = formData.get("xProfile") as string;
-  const instagramProfile = formData.get("instagramProfile") as string;
-  const avatarUrl = formData.get("avatarUrl") as string;
+    const updateData: any = {};
+    
+    // Only add to update object if field exists in formData
+    const fields = [
+      "name", "username", "bio", "githubProfile", 
+      "xProfile", "instagramProfile", "avatarUrl",
+      "location", "website"
+    ];
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { 
-      name, 
-      username, 
-      bio, 
-      githubProfile, 
-      xProfile, 
-      instagramProfile,
-      avatarUrl 
-    },
-  });
+    fields.forEach(field => {
+      const value = formData.get(field);
+      if (value !== null) {
+        updateData[field] = value as string;
+      }
+    });
 
-  revalidatePath("/profile");
-  revalidatePath("/settings");
+    console.log(`[AUTH] Updating profile for user ${user.id}:`, updateData);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: updateData,
+    });
+
+    revalidatePath("/profile");
+    revalidatePath("/settings");
+    revalidatePath("/dashboard");
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("[AUTH] Profile Update Failure:", error);
+    throw new Error(error.message || "Failed to update profile");
+  }
 }
 export async function postSignal(formData: FormData) {
   const user = await getAuthUser();
@@ -199,7 +209,7 @@ export async function postPrompt(formData: FormData) {
 }
 
 export async function getUserByUsername(username: string) {
-  return await (prisma.user as any).findUnique({
+  return await prisma.user.findUnique({
     where: { username },
     select: {
       id: true,
@@ -213,4 +223,12 @@ export async function getUserByUsername(username: string) {
       instagramProfile: true,
     }
   });
+}
+
+export async function isUsernameAvailable(username: string) {
+  const user = await prisma.user.findUnique({
+    where: { username: username.toLowerCase() },
+    select: { id: true }
+  });
+  return !user;
 }

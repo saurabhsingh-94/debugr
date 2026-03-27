@@ -15,7 +15,7 @@ export async function GET(request: Request) {
         cursor: { id: cursor },
       }),
       include: {
-        author: {
+        user: {
           select: {
             username: true,
             avatarUrl: true,
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
         user: {
           select: {
             username: true,
-            image: true,
+            avatarUrl: true,
             name: true,
           },
         },

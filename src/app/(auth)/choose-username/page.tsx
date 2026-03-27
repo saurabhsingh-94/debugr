@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   XCircle
 } from "lucide-react";
-import { updateUserProfile, syncUser } from "@/app/actions";
+import { updateUserProfile, isUsernameAvailable } from "@/app/actions";
 import toast from "react-hot-toast";
 import Image from "next/image";
 
@@ -28,7 +28,6 @@ export default function ChooseUsernamePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,28 +36,47 @@ export default function ChooseUsernamePage() {
       return;
     }
 
+    if (isAvailable === false) {
+      toast.error("COLLISION_DETECTED: Alias already taken");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const data = new FormData();
       data.append("username", username.toLowerCase());
       
-      await updateUserProfile(data);
+      const res = await updateUserProfile(data);
       toast.success("IDENTITY_ESTABLISHED: Link successful");
       window.location.href = "/dashboard";
     } catch (err: any) {
+      console.error("Update error:", err);
       toast.error("LINK_FAILURE: " + err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Simple debounced check could be here
   useEffect(() => {
-    if (username.length >= 3) {
-      setIsAvailable(true); // Placeholder for real check
-    } else {
-      setIsAvailable(null);
-    }
+    const checkAvailability = async () => {
+      if (username.length < 3) {
+        setIsAvailable(null);
+        return;
+      }
+
+      setIsChecking(true);
+      try {
+        const available = await isUsernameAvailable(username);
+        setIsAvailable(available);
+      } catch (err) {
+        setIsAvailable(null);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    const timer = setTimeout(checkAvailability, 500);
+    return () => clearTimeout(timer);
   }, [username]);
 
   return (
