@@ -1,4 +1,9 @@
-export { auth as middleware } from "@/auth"
+import NextAuth from "next-auth"
+import { authConfig } from "./auth.config"
+
+const { auth } = NextAuth(authConfig)
+
+export default auth
 
 export const config = {
   matcher: [
@@ -7,8 +12,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * - public (standard public assets)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

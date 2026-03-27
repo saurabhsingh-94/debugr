@@ -1,42 +1,29 @@
 import NextAuth from "next-auth"
-import Google from "next-auth/providers/google"
-import GitHub from "next-auth/providers/github"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/db"
+import { authConfig } from "./auth.config"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  providers: [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      allowDangerousEmailAccountLinking: true,
-    }),
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID,
-      clientSecret: process.env.AUTH_GITHUB_SECRET,
-      allowDangerousEmailAccountLinking: true,
-    }),
-  ],
+  session: { strategy: "jwt" },
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Logic for new users or redirection can go here if needed
-      return true;
-    },
-    async session({ session, user }) {
-      if (session.user && user) {
-        session.user.id = user.id;
-        // @ts-ignore - username exists in user model but not default session type
-        session.user.username = (user as any).username;
+    ...authConfig.callbacks,
+    async session({ session, token }) {
+      if (token.sub && session.user) {
+        session.user.id = token.sub;
+        
+        // Optionally fetch extra data from DB here
+        // const dbUser = await prisma.user.findUnique({ where: { id: token.sub } });
+        // if (dbUser) session.user.username = dbUser.username;
       }
       return session;
     },
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
   },
-  pages: {
-    signIn: "/login",
-  },
-  session: {
-    strategy: "database", // Database strategy is required for PrismaAdapter to handle complex profiles
-  },
-  trustHost: true,
 })
