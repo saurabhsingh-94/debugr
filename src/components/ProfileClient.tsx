@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useTransition, useRef } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { updateUserProfile } from "@/app/actions";
 import toast from "react-hot-toast";
@@ -31,6 +31,13 @@ export default function ProfileClient({ user: initialUser, stats, problems = [],
   const [activeTab, setActiveTab] = useState("Posts");
   const [following, setFollowing] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Sync state if initialUser changes (e.g. after async fetch in parent)
+  useEffect(() => {
+    if (initialUser) {
+      setUser(initialUser);
+    }
+  }, [initialUser]);
 
   const formattedJoinDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
@@ -107,7 +114,9 @@ export default function ProfileClient({ user: initialUser, stats, problems = [],
             <h1 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none">{user?.name || "Anonymous"}</h1>
             {user?.verified && <BadgeCheck className="w-5 h-5 text-violet-400" />}
           </div>
-          <p className="text-[13px] text-zinc-500 font-bold uppercase tracking-widest">@{user?.username || "user"}</p>
+          <p className="text-[13px] text-zinc-500 font-bold uppercase tracking-widest">
+            @{user?.username || (user?.email ? user.email.split("@")[0] : "agent")}
+          </p>
         </div>
 
         <p className="text-[15px] text-zinc-300 font-medium leading-relaxed mb-6">
