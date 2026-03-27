@@ -1,21 +1,24 @@
 "use server";
-export async function isUsernameAvailable(username: string) {
-  const user = await prisma.user.findUnique({
-    where: { username: username.toLowerCase() },
-    select: { id: true }
-  });
-  return !user;
-}
-
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 
 export async function getAuthUser() {
   const session = await auth();
   return session?.user;
+}
+
+export async function isUsernameAvailable(username: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username: username.toLowerCase() },
+      select: { id: true },
+    });
+    return !user;
+  } catch {
+    return false;
+  }
 }
 
 export async function syncUser() {
@@ -25,16 +28,21 @@ export async function syncUser() {
 
   return await (prisma.user as any).upsert({
     where: { id: user.id },
-    update: { 
+    update: {
       email: user.email!,
       avatarUrl: (user as any).avatarUrl || user.image,
     },
-    create: { 
-      id: user.id, 
+    create: {
+      id: user.id,
       email: user.email!,
-      name: user.name || user.email?.split('@')[0] || "Anonymous",
+      name: user.name || user.email?.split("@")[0] || "Anonymous",
       avatarUrl: (user as any).avatarUrl || user.image,
-      username: (user.name || user.email?.split('@')[0])?.toLowerCase().replace(/\s+/g, '_') + "_" + Math.floor(Math.random() * 1000),
+      username:
+        (user.name || user.email?.split("@")[0])
+          ?.toLowerCase()
+          .replace(/\s+/g, "_") +
+        "_" +
+        Math.floor(Math.random() * 1000),
     },
     select: {
       id: true,
@@ -49,7 +57,7 @@ export async function syncUser() {
       xProfile: true,
       instagramProfile: true,
       createdAt: true,
-    }
+    },
   });
 }
 
@@ -72,7 +80,7 @@ export async function updateUserProfile(formData: FormData) {
 
     await (prisma.user as any).update({
       where: { id: user.id },
-      data
+      data,
     });
 
     revalidatePath("/profile");
@@ -96,15 +104,61 @@ export async function postPost(content: string) {
   revalidatePath("/");
 }
 
-export async function toggleLike(targetId: string, type: 'post' | 'prompt') {
+export async function postPrompt(formData: FormData) {
+  try {
+    const user = await getAuthUser();
+    if (!user?.id) throw new Error("You must be signed in to list a prompt.");
+
+    const title = (formData.get("title") as string)?.trim();
+    const previewContent = (formData.get("previewContent") as string)?.trim() || "";
+    const fullContent = (formData.get("fullContent") as string)?.trim();
+    const priceRaw = formData.get("price") as string;
+    const category = (formData.get("category") as string)?.trim() || "general";
+    const aiModel = (formData.get("aiModel") as string)?.trim() || "GPT-4";
+    const currency = (formData.get("currency") as string)?.trim() || "INR";
+    const thumbnailRaw = (formData.get("thumbnailUrl") as string)?.trim();
+    // Store null if empty to avoid DB constraint errors on the URL field
+    const thumbnailUrl = thumbnailRaw && thumbnailRaw.length > 0 ? thumbnailRaw : null;
+
+    if (!title) throw new Error("Title is required.");
+    if (!fullContent) throw new Error("Prompt content is required.");
+
+    const price = parseFloat(priceRaw);
+    if (isNaN(price) || price < 0) throw new Error("A valid price is required.");
+
+    await prisma.prompt.create({
+      data: {
+        title,
+        description: previewContent || null,
+        previewContent,
+        fullContent,
+        price,
+        category: category.toLowerCase(),
+        aiModel,
+        currency,
+        thumbnailUrl,
+        authorId: user.id,
+      },
+    });
+
+    revalidatePath("/marketplace");
+  } catch (error: any) {
+    // Re-throw with a clean message so the client toast can display it
+    throw new Error(error.message || "Failed to create listing. Please try again.");
+  }
+}
+
+export async function toggleLike(targetId: string, type: "post" | "prompt") {
   const user = await getAuthUser();
   if (!user?.id) throw new Error("Unauthorized");
 
   const existingLike = await (prisma.like as any).findUnique({
     where: {
-      userId_postId: type === 'post' ? { userId: user.id, postId: targetId } : undefined,
-      userId_promptId: type === 'prompt' ? { userId: user.id, promptId: targetId } : undefined,
-    }
+      userId_postId:
+        type === "post" ? { userId: user.id, postId: targetId } : undefined,
+      userId_promptId:
+        type === "prompt" ? { userId: user.id, promptId: targetId } : undefined,
+    },
   });
 
   if (existingLike) {
@@ -113,48 +167,57 @@ export async function toggleLike(targetId: string, type: 'post' | 'prompt') {
     await (prisma.like as any).create({
       data: {
         userId: user.id,
-        [type === 'post' ? 'postId' : 'promptId']: targetId
-      }
+        [type === "post" ? "postId" : "promptId"]: targetId,
+      },
     });
 
-    // Create Notification
     try {
       let receiverId: string | undefined;
-      if (type === 'post') {
-        const post = await (prisma.post as any).findUnique({ where: { id: targetId }, select: { authorId: true } });
+      if (type === "post") {
+        const post = await (prisma.post as any).findUnique({
+          where: { id: targetId },
+          select: { authorId: true },
+        });
         receiverId = post?.authorId;
       } else {
-        const prompt = await (prisma.prompt as any).findUnique({ where: { id: targetId }, select: { authorId: true } });
+        const prompt = await (prisma.prompt as any).findUnique({
+          where: { id: targetId },
+          select: { authorId: true },
+        });
         receiverId = prompt?.authorId;
       }
 
       if (receiverId && receiverId !== user.id) {
         await (prisma.notification as any).create({
           data: {
-            type: 'LIKE',
+            type: "LIKE",
             userId: receiverId,
             actorId: user.id,
-            postId: type === 'post' ? targetId : null,
-            promptId: type === 'prompt' ? targetId : null,
-          }
+            postId: type === "post" ? targetId : null,
+            promptId: type === "prompt" ? targetId : null,
+          },
         });
       }
-    } catch (e) { console.error("Notification failed", e); }
+    } catch (e) {
+      console.error("Notification failed", e);
+    }
   }
 
   revalidatePath("/");
   revalidatePath("/marketplace");
 }
 
-export async function toggleBookmark(targetId: string, type: 'post' | 'prompt') {
+export async function toggleBookmark(targetId: string, type: "post" | "prompt") {
   const user = await getAuthUser();
   if (!user?.id) throw new Error("Unauthorized");
 
   const existing = await (prisma.bookmark as any).findUnique({
     where: {
-      userId_postId: type === 'post' ? { userId: user.id, postId: targetId } : undefined,
-      userId_promptId: type === 'prompt' ? { userId: user.id, promptId: targetId } : undefined,
-    }
+      userId_postId:
+        type === "post" ? { userId: user.id, postId: targetId } : undefined,
+      userId_promptId:
+        type === "prompt" ? { userId: user.id, promptId: targetId } : undefined,
+    },
   });
 
   if (existing) {
@@ -163,8 +226,8 @@ export async function toggleBookmark(targetId: string, type: 'post' | 'prompt') 
     await (prisma.bookmark as any).create({
       data: {
         userId: user.id,
-        [type === 'post' ? 'postId' : 'promptId']: targetId
-      }
+        [type === "post" ? "postId" : "promptId"]: targetId,
+      },
     });
   }
   revalidatePath("/");
@@ -179,9 +242,9 @@ export async function toggleFollow(followingId: string) {
     where: {
       followerId_followingId: {
         followerId: user.id,
-        followingId
-      }
-    }
+        followingId,
+      },
+    },
   });
 
   if (existing) {
@@ -190,56 +253,26 @@ export async function toggleFollow(followingId: string) {
     await (prisma.follow as any).create({
       data: {
         followerId: user.id,
-        followingId
-      }
+        followingId,
+      },
     });
 
-    // Notify
     await (prisma.notification as any).create({
       data: {
-        type: 'FOLLOW',
+        type: "FOLLOW",
         userId: followingId,
-        actorId: user.id
-      }
+        actorId: user.id,
+      },
     });
   }
   revalidatePath("/profile");
 }
 
-export async function postPrompt(formData: FormData) {
-  const user = await getAuthUser();
-  if (!user?.id) throw new Error("Unauthorized");
-
-  const title = formData.get("title") as string;
-  const previewContent = formData.get("previewContent") as string;
-  const fullContent = formData.get("fullContent") as string;
-  const priceParsed = parseFloat(formData.get("price") as string);
-  const category = formData.get("category") as string;
-  const aiModel = formData.get("aiModel") as string;
-  const currency = formData.get("currency") as string;
-  const thumbnailUrl = formData.get("thumbnailUrl") as string;
-
-  if (isNaN(priceParsed)) throw new Error("Invalid price provided");
-
-  await (prisma.prompt as any).create({
-    data: {
-      title,
-      description: previewContent,
-      previewContent,
-      fullContent,
-      price: priceParsed,
-      category: category?.toLowerCase() || "general",
-      aiModel: aiModel || "GPT-4",
-      currency: currency || "INR",
-      thumbnailUrl,
-      authorId: user.id,
-    }
-  });
-
-  revalidatePath("/marketplace");
-}
-
-export async function addComment(targetId: string, type: 'post' | 'prompt', content: string) {
+export async function addComment(
+  targetId: string,
+  type: "post" | "prompt",
+  content: string
+) {
   const user = await getAuthUser();
   if (!user?.id) throw new Error("Unauthorized");
 
@@ -247,30 +280,35 @@ export async function addComment(targetId: string, type: 'post' | 'prompt', cont
     data: {
       content,
       userId: user.id,
-      [type === 'post' ? 'postId' : 'promptId']: targetId
-    }
+      [type === "post" ? "postId" : "promptId"]: targetId,
+    },
   });
 
-  // Notify
   try {
     let receiverId: string | undefined;
-    if (type === 'post') {
-      const post = await (prisma.post as any).findUnique({ where: { id: targetId }, select: { authorId: true } });
+    if (type === "post") {
+      const post = await (prisma.post as any).findUnique({
+        where: { id: targetId },
+        select: { authorId: true },
+      });
       receiverId = post?.authorId;
     } else {
-      const prompt = await (prisma.prompt as any).findUnique({ where: { id: targetId }, select: { authorId: true } });
+      const prompt = await (prisma.prompt as any).findUnique({
+        where: { id: targetId },
+        select: { authorId: true },
+      });
       receiverId = prompt?.authorId;
     }
 
     if (receiverId && receiverId !== user.id) {
       await (prisma.notification as any).create({
         data: {
-          type: 'COMMENT',
+          type: "COMMENT",
           userId: receiverId,
           actorId: user.id,
-          postId: type === 'post' ? targetId : null,
-          promptId: type === 'prompt' ? targetId : null,
-        }
+          postId: type === "post" ? targetId : null,
+          promptId: type === "prompt" ? targetId : null,
+        },
       });
     }
   } catch (e) {}
@@ -286,10 +324,10 @@ export async function getNotifications() {
     where: { userId: user.id },
     include: {
       actor: {
-        select: { name: true, image: true, avatarUrl: true, username: true }
-      }
+        select: { name: true, image: true, avatarUrl: true, username: true },
+      },
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: "desc" },
   });
 }
 
@@ -299,6 +337,6 @@ export async function markNotificationsAsRead() {
 
   await (prisma.notification as any).updateMany({
     where: { userId: user.id, isRead: false },
-    data: { isRead: true }
+    data: { isRead: true },
   });
 }
