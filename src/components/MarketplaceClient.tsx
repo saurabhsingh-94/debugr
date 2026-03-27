@@ -105,7 +105,13 @@ export default function MarketplaceClient({ initialPrompts }: { initialPrompts: 
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
           {filteredPrompts.map((prompt) => (
-            <PromptCard key={prompt.id} {...prompt} author={prompt.creator?.name} authorUsername={prompt.creator?.username} />
+            <PromptCard 
+              key={prompt.id} 
+              {...prompt} 
+              author={prompt.author?.name} 
+              authorUsername={prompt.author?.username} 
+              creatorId={prompt.authorId}
+            />
           ))}
         </div>
       )}

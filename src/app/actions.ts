@@ -206,15 +206,33 @@ export async function toggleFollow(followingId: string) {
   revalidatePath("/profile");
 }
 
-export async function postPrompt(data: any) {
+export async function postPrompt(formData: FormData) {
   const user = await getAuthUser();
   if (!user?.id) throw new Error("Unauthorized");
 
+  const title = formData.get("title") as string;
+  const previewContent = formData.get("previewContent") as string;
+  const fullContent = formData.get("fullContent") as string;
+  const priceParsed = parseFloat(formData.get("price") as string);
+  const category = formData.get("category") as string;
+  const aiModel = formData.get("aiModel") as string;
+  const currency = formData.get("currency") as string;
+  const thumbnailUrl = formData.get("thumbnailUrl") as string;
+
+  if (isNaN(priceParsed)) throw new Error("Invalid price provided");
+
   await (prisma.prompt as any).create({
     data: {
-      ...data,
+      title,
+      description: previewContent,
+      previewContent,
+      fullContent,
+      price: priceParsed,
+      category: category?.toLowerCase() || "general",
+      aiModel: aiModel || "GPT-4",
+      currency: currency || "INR",
+      thumbnailUrl,
       authorId: user.id,
-      price: parseFloat(data.price),
     }
   });
 
