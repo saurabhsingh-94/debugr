@@ -720,21 +720,60 @@ export async function getCreatorStats() {
   const user = await getAuthUser();
   if (!user?.id) return null;
 
-  const [earnings, followers, profileVisits] = await Promise.all([
-    prisma.creatorEarning.aggregate({
+  const [wallet, followers, profileVisitsResult] = await Promise.all([
+    // Primary source: new Wallet model
+    (prisma as any).wallet.findUnique({
       where: { userId: user.id },
-      _sum: { amount: true },
+      select: {
+        pendingBalance:   true,
+        availableBalance: true,
+        totalEarned:      true,
+      },
     }),
     prisma.follow.count({ where: { followingId: user.id } }),
-    prisma.user.findUnique({
+    (prisma as any).user.findUnique({
       where: { id: user.id },
       select: { profileVisits: true },
     }),
   ]);
 
   return {
-    totalEarnings: earnings._sum.amount || 0,
+    // Wallet balances — all Decimal, convert to number for client
+    pendingBalance:   wallet ? Number(wallet.pendingBalance)   : 0,
+    availableBalance: wallet ? Number(wallet.availableBalance) : 0,
+    totalEarned:      wallet ? Number(wallet.totalEarned)      : 0,
+    // Keep legacy key for backward compat with existing dashboard references
+    totalEarnings:    wallet ? Number(wallet.totalEarned)      : 0,
     followers,
-    profileVisits: profileVisits?.profileVisits || 0,
+    profileVisits: profileVisitsResult?.profileVisits || 0,
   };
+}
+
+export async function getWalletTransactions(limit = 20) {
+  const user = await getAuthUser();
+  if (!user?.id) return [];
+
+  const txns = await (prisma as any).walletTransaction.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      id:          true,
+      amount:      true,
+      platformFee: true,
+      type:        true,
+      status:      true,
+      source:      true,
+      orderId:     true,
+      promptId:    true,
+      releaseAt:   true,
+      createdAt:   true,
+    },
+  });
+
+  return txns.map((t: any) => ({
+    ...t,
+    amount:      Number(t.amount),
+    platformFee: Number(t.platformFee),
+  }));
 }
