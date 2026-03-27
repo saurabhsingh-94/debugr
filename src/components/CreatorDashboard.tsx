@@ -37,17 +37,14 @@ export default function CreatorDashboard({ user, stats }: CreatorDashboardProps)
   };
 
   useEffect(() => {
-    if (user.isProfessional) {
-      fetchWallet();
-      // Poll every 30 seconds for near-real-time updates
-      const interval = setInterval(fetchWallet, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [user.isProfessional]);
+    // Always fetch wallet — everyone earns, bank verification only gates withdrawal
+    fetchWallet();
+    const interval = setInterval(fetchWallet, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
-  if (!user.isProfessional) {
-    return <JoinCreatorView isPending={isPending} startTransition={startTransition} />;
-  }
+  const isVerified = user.professionalStatus === "VERIFIED";
+  const hasBankSetup = user.professionalStatus !== "UNCONFIGURED";
 
   return (
     <div className="space-y-10 font-grotesk">
@@ -83,6 +80,47 @@ export default function CreatorDashboard({ user, stats }: CreatorDashboardProps)
           </div>
         </div>
       </div>
+
+      {/* BANK VERIFICATION BANNER — shown when bank not set up or pending */}
+      {!isVerified && (
+        <div className={cn(
+          "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 rounded-3xl border",
+          !hasBankSetup
+            ? "bg-amber-500/5 border-amber-500/20"
+            : "bg-blue-500/5 border-blue-500/20"
+        )}>
+          <div className="flex items-start gap-4">
+            <div className={cn(
+              "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0",
+              !hasBankSetup ? "bg-amber-500/10" : "bg-blue-500/10"
+            )}>
+              {!hasBankSetup
+                ? <AlertCircle className="w-5 h-5 text-amber-400" />
+                : <Clock className="w-5 h-5 text-blue-400" />
+              }
+            </div>
+            <div className="space-y-1">
+              <p className={cn(
+                "text-[11px] font-black uppercase tracking-widest",
+                !hasBankSetup ? "text-amber-400" : "text-blue-400"
+              )}>
+                {!hasBankSetup ? "Bank Account Required to Withdraw" : "Verification In Progress"}
+              </p>
+              <p className="text-[10px] font-medium text-zinc-500 leading-relaxed">
+                {!hasBankSetup
+                  ? "Your earnings are accumulating and safe. Add your bank account below to unlock withdrawals."
+                  : "Your bank details are under review. Earnings continue to accumulate — withdrawals unlock once verified."
+                }
+              </p>
+            </div>
+          </div>
+          {!hasBankSetup && (
+            <a href="#bank-setup" className="shrink-0 px-5 py-3 bg-amber-500 text-black text-[9px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-amber-400 transition-all whitespace-nowrap">
+              Set Up Bank →
+            </a>
+          )}
+        </div>
+      )}
 
       {/* AUDIENCE STATS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -125,13 +163,22 @@ export default function CreatorDashboard({ user, stats }: CreatorDashboardProps)
               sub="Ready to withdraw"
               accent="emerald"
               action={
-                (walletData?.availableBalance || 0) > 0 && user.professionalStatus === "VERIFIED" ? (
-                  <button 
-                    onClick={() => toast.success("Payout request submitted. Processing within 2-3 business days.")}
-                    className="mt-4 w-full py-3 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-emerald-400 transition-all active:scale-95"
-                  >
-                    Withdraw
-                  </button>
+                (walletData?.availableBalance || 0) > 0 ? (
+                  isVerified ? (
+                    <button
+                      onClick={() => toast.success("Payout request submitted. Processing within 2-3 business days.")}
+                      className="mt-4 w-full py-3 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-emerald-400 transition-all active:scale-95"
+                    >
+                      Withdraw
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => toast.error("Verify your bank account to unlock withdrawals.")}
+                      className="mt-4 w-full py-3 bg-white/5 border border-white/10 text-zinc-600 text-[9px] font-black uppercase tracking-[0.3em] rounded-2xl cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      🔒 Verify Bank to Withdraw
+                    </button>
+                  )
                 ) : null
               }
             />
