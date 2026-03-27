@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
-import { cashfree } from "@/lib/cashfree";
+import { createCashfreeOrder } from "@/lib/cashfree";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // Create Cashfree Order
+    // Create Cashfree Order via Direct API Helper
     const cfRequest = {
       order_id: orderId,
       order_amount: prompt.price,
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       customer_details: {
         customer_id: session.user.id,
         customer_email: session.user.email || "no-email@debugr.platform",
-        customer_phone: "9999999999", // Mock or from user profile
+        customer_phone: "9999999999", 
       },
       order_meta: {
         return_url: `${process.env.NEXT_PUBLIC_APP_URL}/marketplace/status?order_id=${orderId}`,
@@ -66,14 +66,14 @@ export async function POST(req: Request) {
       },
     };
 
-    const response = await cashfree.PGCreateOrder("2023-08-01", cfRequest);
+    const response = await createCashfreeOrder(cfRequest);
     
     return NextResponse.json({
-      paymentSessionId: response.data.payment_session_id,
+      paymentSessionId: response.payment_session_id,
       orderId: orderId,
     });
   } catch (err: any) {
-    console.error("POST /api/checkout error:", err.response?.data || err);
+    console.error("POST /api/checkout error:", err.message || err);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
