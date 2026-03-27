@@ -104,6 +104,117 @@ export async function postPost(content: string) {
   revalidatePath("/");
 }
 
+/**
+ * SIGNAL ACTIONS
+ */
+
+export async function postSignal(formData: FormData) {
+  try {
+    const user = await getAuthUser();
+    if (!user?.id) throw new Error("You must be signed in to post a signal.");
+
+    const type = formData.get("type") as string;
+    const origin = formData.get("origin") as string;
+    const priority = formData.get("priority") as string;
+    const strength = formData.get("strength") as string;
+
+    if (!type || !origin) throw new Error("Type and Origin are required.");
+
+    await prisma.signal.create({
+      data: {
+        type,
+        origin,
+        priority: priority || "INFO",
+        strength: strength || "0%",
+        authorId: user.id,
+      },
+    });
+
+    revalidatePath("/signals");
+    return { success: true };
+  } catch (error: any) {
+    console.error("postSignal error:", error);
+    throw new Error(error.message || "Failed to post signal");
+  }
+}
+
+// Alias for CreateSignalModal compatibility
+export async function submitProblem(formData: FormData) {
+  return await postSignal(formData);
+}
+
+/**
+ * BOUNTY ACTIONS
+ */
+
+export async function postBounty(formData: FormData) {
+  try {
+    const user = await getAuthUser();
+    if (!user?.id) throw new Error("You must be signed in to create a mission.");
+
+    const task = formData.get("task") as string;
+    const reward = formData.get("reward") as string;
+    const difficulty = formData.get("difficulty") as string;
+    const expiresAtRaw = formData.get("expiresAt") as string;
+
+    if (!task || !reward) throw new Error("Task and Reward are required.");
+
+    await prisma.bounty.create({
+      data: {
+        task,
+        reward,
+        difficulty: difficulty || "EASY",
+        expiresAt: expiresAtRaw ? new Date(expiresAtRaw) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days
+        userId: user.id,
+      },
+    });
+
+    revalidatePath("/bounties");
+    return { success: true };
+  } catch (error: any) {
+    console.error("postBounty error:", error);
+    throw new Error(error.message || "Failed to create mission");
+  }
+}
+
+/**
+ * INTEL ASSET ACTIONS (Exchange)
+ */
+
+export async function postIntelAsset(formData: FormData) {
+  try {
+    const user = await getAuthUser();
+    if (!user?.id) throw new Error("You must be signed in to list an asset.");
+
+    const title = formData.get("title") as string;
+    const price = formData.get("price") as string;
+    const category = formData.get("category") as string;
+    const description = formData.get("description") as string;
+
+    if (!title || !price) throw new Error("Title and Price are required.");
+
+    await prisma.intelAsset.create({
+      data: {
+        title,
+        price,
+        category: category || "general",
+        description: description || "",
+        userId: user.id,
+      },
+    });
+
+    revalidatePath("/exchange");
+    return { success: true };
+  } catch (error: any) {
+    console.error("postIntelAsset error:", error);
+    throw new Error(error.message || "Failed to list asset");
+  }
+}
+
+/**
+ * MARKETPLACE ACTIONS
+ */
+
 export async function postPrompt(formData: FormData) {
   try {
     const user = await getAuthUser();
@@ -117,7 +228,6 @@ export async function postPrompt(formData: FormData) {
     const aiModel = (formData.get("aiModel") as string)?.trim() || "GPT-4";
     const currency = (formData.get("currency") as string)?.trim() || "INR";
     const thumbnailRaw = (formData.get("thumbnailUrl") as string)?.trim();
-    // Store null if empty to avoid DB constraint errors on the URL field
     const thumbnailUrl = thumbnailRaw && thumbnailRaw.length > 0 ? thumbnailRaw : null;
 
     if (!title) throw new Error("Title is required.");
@@ -143,10 +253,13 @@ export async function postPrompt(formData: FormData) {
 
     revalidatePath("/marketplace");
   } catch (error: any) {
-    // Re-throw with a clean message so the client toast can display it
     throw new Error(error.message || "Failed to create listing. Please try again.");
   }
 }
+
+/**
+ * SOCIAL & NOTIFICATION ACTIONS
+ */
 
 export async function toggleLike(targetId: string, type: "post" | "prompt") {
   const user = await getAuthUser();
@@ -315,6 +428,36 @@ export async function addComment(
 
   revalidatePath("/");
 }
+
+/**
+ * SEARCH ACTIONS
+ */
+
+export async function searchEverything(query: string) {
+  try {
+    return await prisma.prompt.findMany({
+      where: {
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { description: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        author: {
+          select: { name: true, username: true, avatarUrl: true },
+        },
+      },
+      take: 10,
+    });
+  } catch (error) {
+    console.error("searchEverything error:", error);
+    return [];
+  }
+}
+
+/**
+ * NOTIFICATION VIEW ACTIONS
+ */
 
 export async function getNotifications() {
   const user = await getAuthUser();

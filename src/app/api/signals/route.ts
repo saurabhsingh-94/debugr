@@ -3,29 +3,28 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const problems = await prisma.problem.findMany({
+    const signalRecords = await prisma.signal.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        _count: {
-          select: { votes: true }
+        author: {
+          select: { name: true, username: true, avatarUrl: true }
         }
       }
     });
 
-    const signals = problems.map(prob => ({
-      id: prob.id,
-      title: prob.title,
-      description: prob.description,
-      tags: prob.tags,
-      votes: prob._count.votes,
-      painScore: 5,
-      mergedFrom: 0,
-      commentCount: 0,
+    const signals = signalRecords.map(sig => ({
+      id: sig.id,
+      type: sig.type,
+      origin: sig.origin,
+      priority: sig.priority,
+      strength: sig.strength,
+      author: sig.author?.name || "Anonymous",
+      createdAt: sig.createdAt
     }));
 
     return NextResponse.json(signals);
   } catch (error) {
-    console.error("Database connection error:", error);
+    console.error("Database error in signals API:", error);
     return NextResponse.json({ error: "Failed to fetch signals" }, { status: 500 });
   }
 }
