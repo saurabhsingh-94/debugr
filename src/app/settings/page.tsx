@@ -119,7 +119,7 @@ export default function SettingsPage() {
   const SETTINGS_TABS = [
     { label: "Account", icon: User },
     { label: "Appearance", icon: Palette },
-    { label: "Expertise", icon: Target },
+    { label: "Security", icon: Key },
     { label: "Security", icon: Key },
     { label: "Privacy", icon: Eye },
     { label: "Payments", icon: CreditCard },
@@ -382,26 +382,6 @@ export default function SettingsPage() {
                     </motion.div>
                   )}
 
-                  {activeTab === "Expertise" && (
-                    <motion.div 
-                      key="expertise"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="glass-morphism rounded-[48px] p-12 border border-white/10 space-y-12"
-                    >
-                       <div className="space-y-4">
-                          <h3 className="text-xl font-black text-white uppercase tracking-tighter">Skills & Expertise</h3>
-                          <p className="text-zinc-500 text-sm">Define your technical identity for marketplace visibility.</p>
-                       </div>
-                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {["Next.js", "Prisma", "Postgres", "AI Engineering", "Security", "UI/UX"].map(skill => (
-                            <div key={skill} className="px-6 py-4 bg-white/[0.02] border border-white/5 rounded-2xl text-[11px] font-black text-zinc-400 uppercase tracking-widest hover:border-violet-500/30 hover:text-white transition-all cursor-pointer text-center">
-                              {skill}
-                            </div>
-                          ))}
-                       </div>
-                    </motion.div>
-                  )}
 
                   {activeTab === "Contact Us" && (
                     <motion.div 

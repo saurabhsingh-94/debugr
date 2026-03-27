@@ -21,6 +21,38 @@ export async function isUsernameAvailable(username: string) {
   }
 }
 
+export async function getUserByUsername(username: string) {
+  return await prisma.user.findUnique({
+    where: { username: username.toLowerCase() },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      username: true,
+      bio: true,
+      avatarUrl: true,
+      location: true,
+      website: true,
+      githubProfile: true,
+      xProfile: true,
+      instagramProfile: true,
+      expertise: true,
+      isProfessional: true,
+      professionalStatus: true,
+      image: true,
+      createdAt: true,
+      _count: {
+        select: {
+          followers: true,
+          following: true,
+          posts: true,
+          prompts: true,
+        },
+      },
+    },
+  });
+}
+
 export async function syncUser() {
   const session = await auth();
   const user = session?.user;
@@ -56,6 +88,14 @@ export async function syncUser() {
       githubProfile: true,
       xProfile: true,
       instagramProfile: true,
+      isProfessional: true,
+      professionalStatus: true,
+      bankName: true,
+      accountNumber: true,
+      ifscCode: true,
+      accountHolderName: true,
+      expertise: true,
+      profileVisits: true,
       createdAt: true,
     },
   });
@@ -77,6 +117,7 @@ export async function updateUserProfile(formData: FormData) {
       instagramProfile: formData.get("instagramProfile") as string,
       gender: formData.get("gender") as string,
       isPrivate: formData.get("isPrivate") === "true",
+      expertise: formData.get("expertise") as string,
     };
 
     const avatarUrl = formData.get("avatarUrl");
@@ -95,6 +136,58 @@ export async function updateUserProfile(formData: FormData) {
     return { success: true };
   } catch (error: any) {
     return { error: error.message };
+  }
+}
+
+export async function switchToProfessional() {
+  try {
+    const user = await getAuthUser();
+    if (!user?.id) throw new Error("Unauthorized");
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isProfessional: true, professionalStatus: "UNCONFIGURED" },
+    });
+
+    revalidatePath("/profile");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function updateBankDetails(formData: FormData) {
+  try {
+    const user = await getAuthUser();
+    if (!user?.id) throw new Error("Unauthorized");
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        bankName: formData.get("bankName") as string,
+        accountNumber: formData.get("accountNumber") as string,
+        ifscCode: formData.get("ifscCode") as string,
+        accountHolderName: formData.get("accountHolderName") as string,
+        professionalStatus: "PENDING",
+      },
+    });
+
+    revalidatePath("/dashboard/creator");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function recordProfileVisit(username: string) {
+  try {
+    await prisma.user.update({
+      where: { username },
+      data: { profileVisits: { increment: 1 } },
+    });
+    return { success: true };
+  } catch (e) {
+    return { error: "Failed to record visit" };
   }
 }
 
@@ -494,4 +587,53 @@ export async function markNotificationsAsRead() {
     where: { userId: user.id, isRead: false },
     data: { isRead: true },
   });
+}
+
+export async function getPersonalStats() {
+  const user = await getAuthUser();
+  if (!user?.id) return null;
+
+  const [prompts, purchases, signals, bounties] = await Promise.all([
+    prisma.prompt.count({ where: { authorId: user.id } }),
+    prisma.purchase.count({ where: { userId: user.id } }),
+    prisma.signal.count({ where: { authorId: user.id } }),
+    prisma.bounty.count({ where: { userId: user.id } }),
+  ]);
+
+  return { prompts, purchases, signals, bounties };
+}
+
+export async function getPlatformStats() {
+  const [users, prompts, totalEarnings] = await Promise.all([
+    prisma.user.count(),
+    prisma.prompt.count(),
+    prisma.creatorEarning.aggregate({
+      _sum: { amount: true },
+    }),
+  ]);
+
+  return { users, prompts, totalEarnings: totalEarnings._sum.amount || 0 };
+}
+
+export async function getCreatorStats() {
+  const user = await getAuthUser();
+  if (!user?.id) return null;
+
+  const [earnings, followers, profileVisits] = await Promise.all([
+    prisma.creatorEarning.aggregate({
+      where: { userId: user.id },
+      _sum: { amount: true },
+    }),
+    prisma.follow.count({ where: { followingId: user.id } }),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { profileVisits: true },
+    }),
+  ]);
+
+  return {
+    totalEarnings: earnings._sum.amount || 0,
+    followers,
+    profileVisits: profileVisits?.profileVisits || 0,
+  };
 }

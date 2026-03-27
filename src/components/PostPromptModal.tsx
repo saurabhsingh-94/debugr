@@ -5,11 +5,14 @@ import { X, Zap, ShieldCheck, DollarSign, Image as ImageIcon, Sparkles, Loader2 
 import { useState, useRef } from "react";
 import { postPrompt } from "@/app/actions";
 import { toast } from "react-hot-toast";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 interface PostPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPostSuccess?: () => void;
+  user?: any;
 }
 
 const categories = [
@@ -20,7 +23,7 @@ const aiModels = [
   "GPT-4", "Claude 3.5 Sonnet", "Midjourney v6", "DALL-E 3", "Llama 3"
 ];
 
-export default function PostPromptModal({ isOpen, onClose, onPostSuccess }: PostPromptModalProps) {
+export default function PostPromptModal({ isOpen, onClose, onPostSuccess, user }: PostPromptModalProps) {
   const [activeCategory, setActiveCategory] = useState("Artistic");
   const [activeModel, setActiveModel] = useState("GPT-4");
   const [currency, setCurrency] = useState("INR");
@@ -72,7 +75,23 @@ export default function PostPromptModal({ isOpen, onClose, onPostSuccess }: Post
             </div>
 
             {/* MODAL_FORM */}
-            <form action={handleSubmit} className="p-8 space-y-8 overflow-y-auto scrollbar-none">
+            {!user?.isProfessional || user?.professionalStatus !== "VERIFIED" ? (
+              <div className="p-12 flex flex-col items-center justify-center text-center space-y-8 h-[60vh]">
+                 <div className="w-20 h-20 rounded-[32px] bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                    <ShieldCheck className="w-10 h-10 text-violet-400" />
+                 </div>
+                 <div className="space-y-3">
+                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Verification <span className="text-zinc-700">Required</span></h3>
+                    <p className="text-sm text-zinc-500 font-medium italic max-w-sm mx-auto leading-relaxed">
+                       Prompt listing is restricted to verified professional identities. Complete your creator profile to begin synchronization.
+                    </p>
+                 </div>
+                 <Link href="/dashboard/creator" onClick={onClose} className="px-10 py-4 bg-white text-black text-[11px] font-black uppercase tracking-[0.4em] rounded-full hover:bg-zinc-200 transition-all flex items-center gap-3">
+                    Setup Creator Profile <ArrowRight className="w-4 h-4" />
+                 </Link>
+              </div>
+            ) : (
+              <form action={handleSubmit} className="p-8 space-y-8 overflow-y-auto scrollbar-none">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-3">
@@ -141,7 +160,8 @@ export default function PostPromptModal({ isOpen, onClose, onPostSuccess }: Post
                   {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Listing"}
                 </button>
               </div>
-            </form>
+              </form>
+            )}
           </motion.div>
         </div>
       )}

@@ -3,10 +3,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, PenSquare, ShoppingBag, X } from "lucide-react";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import CreatePost from "./CreatePost";
 import PostPromptModal from "./PostPromptModal";
 
 export default function FloatingPostButton() {
+  const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [showPromptModal, setShowPromptModal] = useState(false);
@@ -63,7 +65,11 @@ export default function FloatingPostButton() {
         )}
 
         {showPromptModal && (
-          <PostPromptModal isOpen={true} onClose={() => setShowPromptModal(false)} />
+          <PostPromptModal 
+            isOpen={true} 
+            onClose={() => setShowPromptModal(false)} 
+            user={session?.user}
+          />
         )}
       </AnimatePresence>
     </>

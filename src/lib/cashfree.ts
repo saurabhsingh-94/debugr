@@ -1,6 +1,6 @@
 // Cashfree API Helpers
 
-const CASHFREE_BASE_URL = "https://sandbox.cashfree.com/pg/orders"; // Sandbox
+const CASHFREE_BASE_URL = "https://api.cashfree.com/pg/orders"; // Production
 
 export const createCashfreeOrder = async (orderData: any) => {
   const response = await fetch(CASHFREE_BASE_URL, {
@@ -27,7 +27,7 @@ export const createCashfreeOrder = async (orderData: any) => {
 /**
  * Payout API Client
  */
-const PAYOUT_BASE_URL = "https://payout-gamma.cashfree.com"; // Sandbox
+const PAYOUT_BASE_URL = "https://payout-api.cashfree.com"; // Production
 
 const payoutHeaders = {
   "X-Client-Id": process.env.CASHFREE_APP_ID || "",

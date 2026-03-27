@@ -6,7 +6,7 @@ import {
   PenSquare, X, Camera, Save, Loader2, Github, 
   Twitter, Instagram, MapPin, Link as LinkIcon, 
   Calendar, MoreHorizontal, Compass, ShoppingBag, 
-  LayoutDashboard, Settings, Mail, Menu, PanelLeftClose, PanelLeftOpen
+  LayoutDashboard, Settings, Mail, Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,6 +21,7 @@ const navItems = [
   { icon: Compass, label: "Explore", href: "/explore", badge: null },
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", badge: null },
   { icon: ShoppingBag, label: "Marketplace", href: "/marketplace", badge: "Live" },
+  { icon: ShieldCheck, label: "Creator Hub", href: "/dashboard/creator", badge: "New" },
   { icon: Bell, label: "Notifications", href: "/notifications", badge: null },
 ];
 
@@ -56,14 +57,15 @@ export default function NeonSidebar() {
           </Link>
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="group relative flex items-center justify-center w-9 h-9 border border-white/10 rounded-xl bg-white/[0.03] hover:bg-white hover:text-black transition-all duration-500 shadow-xl overflow-hidden"
+            className="group relative flex items-center justify-center w-10 h-10 border border-white/5 rounded-2xl bg-white/[0.02] hover:bg-violet-500 hover:text-white transition-all duration-700 shadow-2xl overflow-hidden hover:scale-110 active:scale-95"
           >
             <motion.div
-              animate={{ rotate: isCollapsed ? 180 : 0 }}
-              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              animate={{ rotate: isCollapsed ? 180 : 0, scale: isCollapsed ? 1.2 : 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               {isCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
             </motion.div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-violet-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
         </div>
 

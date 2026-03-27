@@ -35,8 +35,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [session]);
 
   const setTheme = async (newTheme: Theme) => {
-    setThemeState(newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
+    const applyTheme = () => {
+      setThemeState(newTheme);
+      document.documentElement.setAttribute("data-theme", newTheme);
+    };
+
+    if (typeof document !== 'undefined' && (document as any).startViewTransition) {
+      (document as any).startViewTransition(applyTheme);
+    } else {
+      applyTheme();
+    }
     
     // Persist to Prisma
     const formData = new FormData();

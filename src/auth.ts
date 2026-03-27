@@ -13,9 +13,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.sub && session.user) {
         session.user.id = token.sub;
         
-        // Optionally fetch extra data from DB here
-        // const dbUser = await prisma.user.findUnique({ where: { id: token.sub } });
-        // if (dbUser) session.user.username = dbUser.username;
+        // Fetch fresh data from DB for professional status
+        const dbUser = await prisma.user.findUnique({ 
+          where: { id: token.sub },
+          select: { 
+            username: true, 
+            isProfessional: true, 
+            professionalStatus: true 
+          }
+        });
+        
+        if (dbUser) {
+          (session.user as any).username = dbUser.username;
+          (session.user as any).isProfessional = dbUser.isProfessional;
+          (session.user as any).professionalStatus = dbUser.professionalStatus;
+        }
       }
       return session;
     },

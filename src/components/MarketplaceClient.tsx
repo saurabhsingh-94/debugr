@@ -21,7 +21,7 @@ const channels = [
   "Hyper-Realistic",
 ];
 
-export default function MarketplaceClient({ initialPrompts }: { initialPrompts: any[] }) {
+export default function MarketplaceClient({ initialPrompts, user }: { initialPrompts: any[], user: any }) {
   const [activeChannel, setActiveChannel] = useState("All Intelligence");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,6 +42,7 @@ export default function MarketplaceClient({ initialPrompts }: { initialPrompts: 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onPostSuccess={() => setIsModalOpen(false)}
+        user={user}
       />
 
       {/* ATLAS_MARKETPLACE_HEADER */}
@@ -117,6 +118,8 @@ export default function MarketplaceClient({ initialPrompts }: { initialPrompts: 
             <PromptCard
               key={prompt.id}
               {...prompt}
+              content={prompt.content}
+              initialLocked={prompt.initialLocked}
               author={prompt.author?.name}
               authorUsername={prompt.author?.username}
               creatorId={prompt.authorId}

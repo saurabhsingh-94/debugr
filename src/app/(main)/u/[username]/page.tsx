@@ -12,7 +12,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getUserByUsername } from "@/app/actions";
+import { getUserByUsername, recordProfileVisit } from "@/app/actions";
 import ProfileClient from "@/components/ProfileClient";
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -26,7 +26,10 @@ export default function PublicProfilePage() {
     const fetchUser = async () => {
       if (typeof username === "string") {
         const data = await getUserByUsername(username);
-        if (data) setUser(data);
+        if (data && data.username) {
+          setUser(data);
+          recordProfileVisit(data.username);
+        }
       }
       setIsLoading(false);
     };
@@ -71,13 +74,22 @@ export default function PublicProfilePage() {
     x: user.xProfile,
     instagram: user.instagramProfile,
     username: user.username,
+    expertise: user.expertise,
+    isProfessional: user.isProfessional,
+    professionalStatus: user.professionalStatus,
+  };
+
+  const enhancedStats = {
+    followersCount: user._count?.followers || 0,
+    followingCount: user._count?.following || 0,
+    postsCount: user._count?.posts || 0,
   };
 
   return (
     <div className="space-y-12">
        <ProfileClient 
           user={profileData} 
-          stats={stats} 
+          stats={enhancedStats} 
           problems={[]} 
           isPublic={true}
        />

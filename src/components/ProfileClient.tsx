@@ -133,12 +133,61 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
           <div className="flex items-center gap-2">
             <Calendar className="w-3.5 h-3.5 text-zinc-800" /> Member since {formattedJoinDate}
           </div>
-          {user?.isPrivate && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-violet-500/5 border border-violet-500/20 rounded-full text-violet-400">
-               Private Profile
+          {user?.isProfessional && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400">
+               <BadgeCheck className="w-3 h-3" /> Professional Creator
             </div>
           )}
         </div>
+
+        {/* SOCIAL LINKS & STATS */}
+        <div className="flex items-center justify-between mb-8">
+           <div className="flex items-center gap-4">
+              {user?.xProfile && (
+                <a href={`https://x.com/${user.xProfile}`} target="_blank" className="p-2.5 bg-white/[0.03] border border-white/10 rounded-xl text-zinc-500 hover:text-white hover:border-white/20 transition-all">
+                  <Twitter className="w-4 h-4" />
+                </a>
+              )}
+              {user?.instagramProfile && (
+                <a href={`https://instagram.com/${user.instagramProfile}`} target="_blank" className="p-2.5 bg-white/[0.03] border border-white/10 rounded-xl text-zinc-500 hover:text-white hover:border-white/20 transition-all">
+                  <Instagram className="w-4 h-4" />
+                </a>
+              )}
+              {user?.githubProfile && (
+                <a href={`https://github.com/${user.githubProfile}`} target="_blank" className="p-2.5 bg-white/[0.03] border border-white/10 rounded-xl text-zinc-500 hover:text-white hover:border-white/20 transition-all">
+                  <Github className="w-4 h-4" />
+                </a>
+              )}
+           </div>
+
+           <div className="flex items-center gap-6">
+              <Link href={`/u/${user?.username}/followers`} className="group">
+                 <p className="text-[13px] font-black text-white group-hover:text-violet-400 transition-colors">{stats?.followersCount || 0} <span className="text-zinc-600 font-bold uppercase tracking-widest text-[10px] ml-1">Followers</span></p>
+              </Link>
+              <Link href={`/u/${user?.username}/following`} className="group">
+                 <p className="text-[13px] font-black text-white group-hover:text-violet-400 transition-colors">{stats?.followingCount || 0} <span className="text-zinc-600 font-bold uppercase tracking-widest text-[10px] ml-1">Following</span></p>
+              </Link>
+           </div>
+        </div>
+
+        {user?.expertise && (
+          <div className="mb-8 p-4 bg-white/[0.02] border border-white/5 rounded-3xl">
+             <p className="text-[9px] font-black text-zinc-700 uppercase tracking-widest mb-2 px-2">Neural_Expertise</p>
+             <div className="flex flex-wrap gap-2">
+                {user.expertise.split(',').map((exp: string) => (
+                  <span key={exp} className="px-3 py-1 bg-violet-500/5 border border-violet-500/10 rounded-full text-[10px] font-bold text-violet-400/80 uppercase tracking-wider">{exp.trim()}</span>
+                ))}
+             </div>
+          </div>
+        )}
+
+        {!isPublic && !user?.isProfessional && (
+           <Link href="/dashboard/creator">
+              <button className="w-full py-4 mb-8 bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border border-violet-500/30 rounded-3xl text-[11px] font-black text-violet-400 uppercase tracking-[0.3em] hover:from-violet-600/30 hover:to-indigo-600/30 transition-all animate-pulse">
+                 Join Professional Creator Program
+              </button>
+           </Link>
+        )}
       </div>
 
       <AnimatePresence>
@@ -227,6 +276,7 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
     website: user.website || "",
     gender: user.gender || "Not Specified",
     isPrivate: user.isPrivate || false,
+    expertise: user.expertise || "",
     githubProfile: user.githubProfile || "",
     xProfile: user.xProfile || "",
     instagramProfile: user.instagramProfile || "",
@@ -418,18 +468,36 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
               />
            </div>
 
-           <div className="grid grid-cols-2 gap-8">
-              <InputGroup label="Sector / Location" value={formData.location} onChange={v => setFormData({ ...formData, location: v })} />
-              <InputGroup label="Network Terminal / Link" value={formData.website} onChange={v => setFormData({ ...formData, website: v })} />
-           </div>
+            <div className="grid grid-cols-2 gap-8">
+               <InputGroup label="Sector / Location" value={formData.location} onChange={v => setFormData({ ...formData, location: v })} />
+               <InputGroup label="Network Terminal / Link" value={formData.website} onChange={v => setFormData({ ...formData, website: v })} />
+            </div>
 
-           <button
-              type="submit"
-              disabled={isPending}
-              className="w-full py-6 bg-white text-black text-[12px] font-black uppercase tracking-[0.5em] rounded-[32px] hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-3xl flex items-center justify-center gap-4 group border-b-4 border-zinc-300"
-           >
-              {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (<><Check className="w-5 h-5 group-hover:scale-110 transition-transform" /> Commit Changes</>)}
-           </button>
+            <div className="space-y-3">
+              <label className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.3em] px-2 italic">Neural Expertise (Comma Separated)</label>
+              <input
+                value={formData.expertise}
+                onChange={e => setFormData({ ...formData, expertise: e.target.value })}
+                placeholder="Next.js, AI, prompt-engineering..."
+                className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] py-4 px-6 text-[12px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all placeholder:text-zinc-800"
+              />
+            </div>
+
+            <div className="nn-divider opacity-10" />
+
+            <div className="grid grid-cols-3 gap-6">
+               <InputGroup label="X Account" value={formData.xProfile} onChange={v => setFormData({ ...formData, xProfile: v })} />
+               <InputGroup label="Instagram" value={formData.instagramProfile} onChange={v => setFormData({ ...formData, instagramProfile: v })} />
+               <InputGroup label="GitHub" value={formData.githubProfile} onChange={v => setFormData({ ...formData, githubProfile: v })} />
+            </div>
+
+            <button
+               type="submit"
+               disabled={isPending}
+               className="w-full py-6 bg-white text-black text-[12px] font-black uppercase tracking-[0.5em] rounded-[32px] hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-3xl flex items-center justify-center gap-4 group border-b-4 border-zinc-300"
+            >
+               {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (<><Check className="w-5 h-5 group-hover:scale-110 transition-transform" /> Commit Changes</>)}
+            </button>
         </form>
       </motion.div>
     </motion.div>

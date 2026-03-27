@@ -87,7 +87,7 @@ export default function PromptCard({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Payment session failed");
 
-      const cashfree = new (window as any).Cashfree({ mode: "sandbox" }); 
+      const cashfree = new (window as any).Cashfree({ mode: "production" }); 
       await cashfree.checkout({
         paymentSessionId: data.paymentSessionId,
         redirectTarget: "_self" 

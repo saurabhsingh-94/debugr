@@ -29,6 +29,7 @@
     -moz-osx-font-smoothing: grayscale;
     selection-color: #7c3aed;
     overflow-x: hidden;
+    transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1), color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   ::selection {
@@ -76,10 +77,12 @@
 
   .glass-morphism {
     background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 8px 32px 0 rgba(0, 0, 0, 0.37),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   }
 
   .nn-card:hover::before {
@@ -312,4 +315,32 @@
 
 .animate-pulse-glow {
   animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* THEME TRANSITION OVERLAY */
+.theme-transition-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: white;
+  opacity: 0;
+}
+
+.dark .theme-transition-overlay {
+  background: black;
+}
+
+/* PREMIUM BUTTON HOVER */
+.premium-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-hover:hover {
+  transform: scale(1.02) translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.premium-hover:active {
+  transform: scale(0.98) translateY(0);
 }
