@@ -19,9 +19,75 @@ model User {
   website       String?
   location      String?
   theme         String    @default("dark")
-  accounts      Account[]
-  sessions      Session[]
-  posts         Post[]
+  cashfreeBeneficiaryId String?
+  accounts              Account[]
+  sessions              Session[]
+  posts                 Post[]
+  prompts               Prompt[]          @relation("CreatedPrompts")
+  purchases             Purchase[]
+  earnings              CreatorEarning[]
+  payouts               Payout[]
+}
+
+model Prompt {
+  id             String           @id @default(cuid())
+  title          String
+  previewContent String           @db.Text
+  fullContent    String           @db.Text
+  price          Float
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  creatorId      String
+  creator        User             @relation("CreatedPrompts", fields: [creatorId], references: [id])
+  purchases      Purchase[]
+  earnings       CreatorEarning[]
+}
+
+model Purchase {
+  id        String   @id @default(cuid())
+  userId    String
+  promptId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  prompt Prompt @relation(fields: [promptId], references: [id])
+
+  @@unique([userId, promptId])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  userId    String
+  promptId  String
+  amount    Float
+  status    String   // PENDING, SUCCESS, FAILED
+  createdAt DateTime @default(now())
+}
+
+model CreatorEarning {
+  id        String   @id @default(cuid())
+  userId    String
+  promptId  String
+  amount    Float
+  status    String   @default("PENDING") // PENDING, PAID
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  prompt Prompt @relation(fields: [promptId], references: [id])
+}
+
+model Payout {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float
+  month     String   // YYYY-MM
+  status    String   @default("PROCESSING") // PROCESSING, PAID, FAILED
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, month])
 }
 
 model Account {
