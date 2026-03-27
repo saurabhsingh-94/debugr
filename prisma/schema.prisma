@@ -37,7 +37,8 @@ model User {
   signals       Signal[]
   bounties      Bounty[]
   intelAssets   IntelAsset[]
-  notifications Notification[]
+  receivedNotifications Notification[] @relation("Receiver")
+  actedNotifications    Notification[] @relation("Actor")
 
   likes     Like[]
   comments  Comment[]
