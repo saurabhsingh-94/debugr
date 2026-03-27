@@ -129,7 +129,9 @@ export default function LoginPage() {
               {/* OAuth buttons */}
               <div className="space-y-3">
                 <button
-                  onClick={() => signInWithGoogle()}
+                  onClick={async () => {
+                    await signInWithGoogle();
+                  }}
                   className="w-full flex items-center justify-center gap-3 h-11 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-100 active:scale-[0.98] transition-all shadow-lg"
                 >
                   <Chrome className="w-4 h-4" />
@@ -137,7 +139,9 @@ export default function LoginPage() {
                 </button>
 
                 <button
-                  onClick={() => signInWithGithub()}
+                  onClick={async () => {
+                    await signInWithGithub();
+                  }}
                   className="w-full flex items-center justify-center gap-3 h-11 rounded-xl bg-[#24292e] text-white text-sm font-semibold hover:bg-[#2d3339] active:scale-[0.98] transition-all border border-white/10"
                 >
                   <Github className="w-4 h-4" />

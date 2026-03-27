@@ -10,32 +10,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   callbacks: {
-    authorized: ({ auth, request: { nextUrl } }) => {
-      const isLoggedIn = !!auth?.user;
-      const isPublicRoute = ["/login", "/signup", "/u/"].some(route => nextUrl.pathname.startsWith(route));
-      const isAuthPage = nextUrl.pathname.startsWith("/login") || nextUrl.pathname.startsWith("/signup");
-      
-      if (isAuthPage) {
-        if (isLoggedIn) return Response.redirect(new URL("/dashboard", nextUrl));
-        return true;
-      }
-
-      if (!isLoggedIn && !isPublicRoute && nextUrl.pathname !== "/") {
-        return false; // Redirect to login
-      }
-
+    async signIn({ user, account, profile }) {
+      // Logic for new users or redirection can go here if needed
       return true;
     },
     async session({ session, user }) {
       if (session.user && user) {
         session.user.id = user.id;
+        // @ts-ignore - username exists in user model but not default session type
+        session.user.username = (user as any).username;
       }
       return session;
     },
@@ -43,4 +35,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
   },
+  session: {
+    strategy: "database", // Database strategy is required for PrismaAdapter to handle complex profiles
+  },
+  trustHost: true,
 })
