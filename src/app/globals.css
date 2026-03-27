@@ -20,9 +20,18 @@
   --text-muted: #374151;
 }
 
+[data-theme="glass"] {
+  --bg-base: rgba(5, 5, 10, 0.6);
+  --bg-surface: rgba(12, 12, 24, 0.4);
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-accent: rgba(124, 58, 237, 0.4);
+}
+
 @layer base {
   body {
     background-color: var(--bg-base);
+    background-attachment: fixed;
     color: var(--text-primary);
     font-family: 'Space Grotesk', 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;

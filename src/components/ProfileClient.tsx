@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useTransition, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { updateUserProfile } from "@/app/actions";
 import toast from "react-hot-toast";
 import PromptCard from "./PromptCard";
@@ -25,7 +26,8 @@ interface ProfileClientProps {
 
 const TABS = ["Posts", "Marketplace"];
 
-export default function ProfileClient({ user, stats, problems = [], prompts = [], isPublic = false }: ProfileClientProps) {
+export default function ProfileClient({ user: initialUser, stats, problems = [], prompts = [], isPublic = false }: ProfileClientProps) {
+  const [user, setUser] = useState(initialUser);
   const [activeTab, setActiveTab] = useState("Posts");
   const [following, setFollowing] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -243,10 +245,13 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
                   key={p.id} 
                   id={p.id}
                   title={p.title}
-                  thumbnail={p.thumbnailUrl || "/placeholder.png"}
-                  model={p.aiModel || "GPT-4"}
-                  price={`${p.currency === 'INR' ? '₹' : '$'}${p.price}`}
-                  prompt={p.previewContent || p.description}
+                  thumbnailUrl={p.thumbnailUrl || "/placeholder.png"}
+                  aiModel={p.aiModel || "GPT-4"}
+                  price={Number(p.price)}
+                  content={p.previewContent || p.description}
+                  creatorId={p.authorId}
+                  author={p.author?.name}
+                  authorUsername={p.author?.username}
                 />
               ))}
             </div>
@@ -262,6 +267,7 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
 }
 
 function EditProfileModal({ user, onClose }: { user: any; onClose: () => void }) {
+  const { data: session, update: updateSession } = useSession();
   const [isPending, startTransition] = useTransition();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatarUrl);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -320,9 +326,18 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
         const res = await updateUserProfile(data);
         if (res.error) throw new Error(res.error);
         
+        // Update Session to reflect new username/identity immediately
+        await updateSession({
+          ...session,
+          user: {
+            ...session?.user,
+            ...Object.fromEntries(data.entries()),
+          }
+        });
+
         toast.success("Identity Updated");
         onClose();
-        window.location.reload();
+        // Optional: window.location.reload(); if you want a full refresh, but updateSession handles most things.
       } catch (err: any) {
         toast.error("Internal Error: " + err.message);
       }

@@ -49,25 +49,41 @@ export default function NeonSidebar() {
         className="hidden lg:flex flex-col h-screen fixed left-0 top-0 bg-[#050505] border-r border-white/5 z-50 overflow-y-auto scrollbar-none"
       >
         
-        {/* LOGO & TOGGLE */}
-        <div className={cn("p-8 flex items-center justify-between", isCollapsed && "px-6")}>
+        {/* LOGO AREA */}
+        <div className={cn("p-8 flex items-center", isCollapsed ? "justify-center" : "justify-start")}>
           <Link href="/" className="flex items-center gap-3">
             <Logo className="w-8 h-8" />
             {!isCollapsed && <span className="text-xl font-black italic tracking-tighter text-white">Debugr</span>}
           </Link>
-          <button 
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="group relative flex items-center justify-center w-10 h-10 border border-white/5 rounded-2xl bg-white/[0.02] hover:bg-violet-500 hover:text-white transition-all duration-700 shadow-2xl overflow-hidden hover:scale-110 active:scale-95"
-          >
-            <motion.div
-              animate={{ rotate: isCollapsed ? 180 : 0, scale: isCollapsed ? 1.2 : 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              {isCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-            </motion.div>
-            <div className="absolute inset-0 bg-gradient-to-tr from-violet-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
         </div>
+
+        {/* MAGNETIC TRIGGER HANDLE */}
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-24 group z-50 focus:outline-none"
+        >
+          <div className="w-full h-full flex items-center justify-center">
+            <motion.div 
+              animate={{ 
+                height: isCollapsed ? 40 : 80,
+                backgroundColor: isCollapsed ? "rgba(255,255,255,0.05)" : "rgba(124, 58, 237, 0.2)",
+              }}
+              className="w-1 rounded-full relative overflow-hidden transition-all duration-500 group-hover:w-1.5 group-hover:bg-violet-500 shadow-[0_0_20px_transparent] group-hover:shadow-violet-500/50"
+            >
+              <motion.div 
+                animate={{ 
+                  y: ["-100%", "100%"] 
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity, 
+                  ease: "linear" 
+                }}
+                className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-transparent"
+              />
+            </motion.div>
+          </div>
+        </button>
 
         {/* NAVIGATION */}
         <nav className="flex-1 px-4 space-y-2 mt-4">
