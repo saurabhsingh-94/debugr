@@ -15,8 +15,8 @@ export default function SignalsPage() {
   useEffect(() => {
     // Initial mock data if DB is empty for demo
     setSignals([
-      { id: "SIG-0842", type: "NEURAL_OVERLOAD", origin: "CLUSTER_A", priority: "CRITICAL", strength: "94%" },
-      { id: "SIG-1294", type: "BUFFER_OVERFLOW", origin: "GATEWAY_3", priority: "WARNING", strength: "72%" },
+      { id: "SIG-0842", type: "Logic Overload", origin: "Node A", priority: "CRITICAL", strength: "94%" },
+      { id: "SIG-1294", type: "Data Overflow", origin: "Node B", priority: "WARNING", strength: "72%" },
     ]);
   }, []);
 
@@ -27,7 +27,7 @@ export default function SignalsPage() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <Activity className="w-5 h-5 text-zinc-400" />
-            <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">SIGNAL_MONITOR</h1>
+            <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">Signal Monitor</h1>
           </div>
           <p className="text-zinc-500 text-xs font-bold tracking-[0.3em] uppercase">Real-time AI behavioral analysis and anomaly detection</p>
         </div>
@@ -35,7 +35,7 @@ export default function SignalsPage() {
           onClick={() => setShowPost(true)}
           className="px-6 py-3 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all flex items-center gap-2 group"
         >
-          <Plus className="w-4 h-4" /> POST_SIGNAL
+          <Plus className="w-4 h-4" /> Post Signal
         </button>
       </div>
 
@@ -63,11 +63,11 @@ export default function SignalsPage() {
               <h3 className="text-xs font-black text-white uppercase tracking-widest italic">{sig.type}</h3>
               <div className="mt-6 flex flex-col gap-1 w-full pt-6 border-t border-white/5">
                 <div className="flex justify-between text-[8px] font-black uppercase tracking-widest">
-                   <span className="text-zinc-700">Origin</span>
+                    <span className="text-zinc-700">Source</span>
                    <span className="text-zinc-400">{sig.origin}</span>
                 </div>
                 <div className="flex justify-between text-[8px] font-black uppercase tracking-widest">
-                   <span className="text-zinc-700">Strength</span>
+                    <span className="text-zinc-700">Magnitude</span>
                    <span className="text-zinc-400">{sig.strength}</span>
                 </div>
               </div>
@@ -103,8 +103,8 @@ export default function SignalsPage() {
 
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase mb-2">Initialize Signal</h2>
-                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Transmit new behavioral anomaly to the network</p>
+                  <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase mb-2">Post Signal</h2>
+                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Report a new signal to the network</p>
                 </div>
 
                 <form action={async (formData) => {
@@ -112,18 +112,18 @@ export default function SignalsPage() {
                   setShowPost(false);
                 }} className="space-y-6">
                   <div className="space-y-4">
-                    <input name="type" placeholder="SIGNAL_TYPE (e.g. NEURAL_OVERLOAD)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none focus:border-white/20 transition-all" required />
-                    <input name="origin" placeholder="DETECTION_ORIGIN (e.g. CLUSTER_X)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none focus:border-white/20 transition-all" required />
+                    <input name="type" placeholder="Category (e.g. Logic Overload)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none focus:border-white/20 transition-all" required />
+                    <input name="origin" placeholder="Source (e.g. Node A)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none focus:border-white/20 transition-all" required />
                     <select name="priority" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 focus:outline-none focus:border-white/20 transition-all appearance-none cursor-pointer">
-                      <option value="INFO">INFO_LEVEL</option>
-                      <option value="WARNING">WARNING_LEVEL</option>
-                      <option value="CRITICAL">CRITICAL_LEVEL</option>
+                      <option value="INFO">Info</option>
+                      <option value="WARNING">Warning</option>
+                      <option value="CRITICAL">Critical</option>
                     </select>
-                    <input name="strength" placeholder="SIGNAL_STRENGTH (e.g. 98%)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none focus:border-white/20 transition-all" required />
+                    <input name="strength" placeholder="Magnitude (e.g. 98%)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none focus:border-white/20 transition-all" required />
                   </div>
 
                   <button type="submit" className="w-full py-5 bg-white text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-3 hover:bg-zinc-200 transition-all">
-                    TRANSMIT_DATA <Send className="w-4 h-4" />
+                    Publish Signal <Send className="w-4 h-4" />
                   </button>
                 </form>
               </div>

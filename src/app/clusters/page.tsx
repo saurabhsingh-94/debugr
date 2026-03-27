@@ -5,10 +5,10 @@ import { Layers, HardDrive, Cpu, Cloud, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CLUSTERS = [
-  { id: "CLUSTER_ALPHA", nodes: 128, load: "84%", status: "OPTIMAL", type: "NEURAL_CORE" },
-  { id: "CLUSTER_BETA", nodes: 64, load: "32%", status: "IDLE", type: "EDGE_COMPUTE" },
-  { id: "CLUSTER_GAMMA", nodes: 256, load: "91%", status: "OVERLOAD", type: "TRAINING_UNIT" },
-  { id: "CLUSTER_DELTA", nodes: 12, load: "0%", status: "OFFLINE", type: "SANDBOX" },
+  { id: "Alpha Core", nodes: 128, load: "84%", status: "OPTIMAL", type: "Processing Core" },
+  { id: "Beta Hub", nodes: 64, load: "32%", status: "IDLE", type: "Edge Network" },
+  { id: "Gamma Node", nodes: 256, load: "91%", status: "OVERLOAD", type: "Deep Learning" },
+  { id: "Delta Lab", nodes: 12, load: "0%", status: "OFFLINE", type: "Sandbox" },
 ];
 
 export default function ClustersPage() {
@@ -18,7 +18,7 @@ export default function ClustersPage() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <Layers className="w-5 h-5 text-zinc-400" />
-          <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">CLUSTER_MANAGEMENT</h1>
+          <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">Infrastructure</h1>
         </div>
         <p className="text-zinc-500 text-xs font-bold tracking-[0.3em] uppercase">Distributed neural compute resources and cloud infrastructure</p>
       </div>

@@ -19,11 +19,11 @@ import { useState, useEffect, useCallback } from "react";
 
 const menuItems = [
   { id: "feed", icon: Zap, path: "/", label: "Nexus" },
-  { id: "intel", icon: LayoutDashboard, path: "/dashboard", label: "Intelligence" },
-  { id: "market", icon: ShoppingBag, path: "/marketplace", label: "Market" },
-  { id: "profile", icon: User, path: "/profile", label: "Agent Profile" },
-  { id: "signals", icon: BarChart3, path: "/signals", label: "Diagnostics" },
-  { id: "vault", icon: ShieldCheck, path: "/vault", label: "Sync Vault" },
+  { id: "intel", icon: LayoutDashboard, path: "/dashboard", label: "Insights" },
+  { id: "market", icon: ShoppingBag, path: "/marketplace", label: "Marketplace" },
+  { id: "profile", icon: User, path: "/profile", label: "Profile" },
+  { id: "signals", icon: BarChart3, path: "/signals", label: "Signals" },
+  { id: "vault", icon: ShieldCheck, path: "/vault", label: "Vault" },
 ];
 
 export default function DashboardSidebar() {

@@ -21,7 +21,7 @@ export default function ExchangePage() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <MessageSquare className="w-5 h-5 text-zinc-400" />
-            <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">INTEL_EXCHANGE</h1>
+            <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">Intelligence Exchange</h1>
           </div>
           <p className="text-zinc-500 text-xs font-bold tracking-[0.3em] uppercase">Authorized marketplace for AI problem intelligence and data acquisition</p>
         </div>
@@ -29,7 +29,7 @@ export default function ExchangePage() {
           onClick={() => setShowPost(true)}
           className="px-6 py-3 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-zinc-200 transition-all flex items-center gap-2"
         >
-          <Plus className="w-4 h-4" /> LIST_INTEL
+          <Plus className="w-4 h-4" /> List Intelligence
         </button>
       </div>
 
@@ -51,12 +51,12 @@ export default function ExchangePage() {
                  </div>
                  <div className="flex flex-col items-end">
                     <span className="text-[10px] font-black text-white tracking-widest">{item.price}</span>
-                    <span className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-1">Acquisition_Cost</span>
+                    <span className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-1">Price</span>
                  </div>
               </div>
 
               <h3 className="text-base font-black text-white uppercase italic tracking-tight mb-4 group-hover:text-cyan-400 transition-colors">{item.title}</h3>
-              <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-10">Verification_Hash: {item.id}</p>
+              <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-10">ID: {item.id}</p>
 
               <div className="mt-auto flex items-center justify-between pt-8 border-t border-white/5">
                  <div className="flex items-center gap-2">
@@ -107,18 +107,18 @@ export default function ExchangePage() {
                   setShowPost(false);
                 }} className="space-y-6">
                   <div className="space-y-4">
-                    <input name="title" placeholder="INTEL_TITLE (e.g. Cluster Alpha Leak)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white" required />
-                    <input name="price" placeholder="ACQUISITION_PRICE (e.g. 2.4 ETH)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white" required />
+                    <input name="title" placeholder="Title (e.g. Cluster Alpha Leak)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white" required />
+                    <input name="price" placeholder="Price (e.g. 2.4 ETH)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white" required />
                     <select name="category" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                      <option value="VULNERABILITY">VULNERABILITY_LEAK</option>
-                      <option value="EXPLOIT">EXPLOIT_PAYLOAD</option>
-                      <option value="DATASET">TRAINING_DATASET</option>
+                      <option value="VULNERABILITY">Security Gap</option>
+                      <option value="EXPLOIT">Exploit</option>
+                      <option value="DATASET">Dataset</option>
                     </select>
-                    <textarea name="description" placeholder="INTEL_SYNOPSIS" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white h-32" required />
+                    <textarea name="description" placeholder="Description" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest text-white h-32" required />
                   </div>
 
                   <button type="submit" className="w-full py-5 bg-white text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-3">
-                    FINALIZE_LISTING <Send className="w-4 h-4" />
+                    Confirm Listing <Send className="w-4 h-4" />
                   </button>
                 </form>
               </div>

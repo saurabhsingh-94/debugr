@@ -48,10 +48,10 @@ export default function PublicProfilePage() {
            <UserCircle className="w-12 h-12 text-zinc-800" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-2">Node_Not_Found</h1>
-          <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">The requested intelligence agent is not synced with the network</p>
+          <h1 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-2">User Not Found</h1>
+          <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">This user profile could not be found.</p>
         </div>
-        <button onClick={() => window.history.back()} className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Return_to_Core</button>
+        <button onClick={() => window.history.back()} className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Return Home</button>
       </div>
     );
   }

@@ -6,7 +6,7 @@ const DATA = [
   { id: "SIG-882", title: "Recursive Agent Loop in GPT-4o", priority: 9.4, user: "Saurabh S.", date: "Oct 24, 2026", status: "Active", color: "#ef4444" },
   { id: "SIG-741", title: "Token Hallucination in JSON Parser", priority: 6.2, user: "Alex M.", date: "Oct 23, 2026", status: "Resolved", color: "#22c55e" },
   { id: "SIG-612", title: "Vector DB Latency Spike (A-1)", priority: 8.5, user: "Sarah K.", date: "Oct 22, 2026", status: "Pending", color: "#facc15" },
-  { id: "SIG-559", title: "Ouroboros Prompt Injection Flow", priority: 7.8, user: "DevOps_J", date: "Oct 21, 2026", status: "Active", color: "#ef4444" },
+  { id: "SIG-559", title: "Ouroboros Prompt Injection Flow", priority: 7.8, user: "DevOps J", date: "Oct 21, 2026", status: "Active", color: "#ef4444" },
   { id: "SIG-442", title: "Whisper V3 Silence Hallucination", priority: 4.1, user: "Root", date: "Oct 20, 2026", status: "Resolved", color: "#22c55e" },
 ];
 

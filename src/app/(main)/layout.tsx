@@ -3,6 +3,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import NeonSidebar from "@/components/NeonSidebar";
+import FloatingPostButton from "@/components/FloatingPostButton";
+import Footer from "@/components/Footer";
+import { useSession } from "next-auth/react";
 
 export default function MainLayout({
   children,
@@ -29,8 +32,11 @@ export default function MainLayout({
               {children}
             </motion.div>
           </AnimatePresence>
+          <Footer />
         </div>
       </main>
+
+      <FloatingPostButton />
     </div>
   );
 }

@@ -31,7 +31,7 @@ const mockPrompts = [
     id: "1",
     title: "Cybernetic Monolith",
     thumbnail: "/marketplace/marketplace_thumb_cybernetic_1774544429086.png",
-    model: "MIDJOURNEY_V6",
+    model: "Midjourney v6",
     price: "$12.00",
     prompt: "A high-fidelity, hyper-realistic cybernetic architecture visualization. Brutalist concrete merged with neon-integrated circuitry. Vertical gardens on obsidian monoliths. Ethereal atmospheric fog. 8k resolution, cinematic lighting, conceptual art. Style: Ghost Minimalist.",
     initialLocked: true
@@ -40,7 +40,7 @@ const mockPrompts = [
     id: "2",
     title: "Ethereal Haven",
     thumbnail: "/marketplace/marketplace_thumb_ethereal_1774544446702.png",
-    model: "SDXL_TURBO",
+    model: "SDXL Turbo",
     price: "$8.50",
     prompt: "An ethereal, dreamlike landscape of floating translucent islands connected by white light filaments. Volumetric clouds with soft iridescent gradients. Minimalist white structures. Peaceful, high-fantasy, high-fidelity conceptual art. Style: Ghost Minimalist.",
     initialLocked: true
@@ -49,7 +49,7 @@ const mockPrompts = [
     id: "3",
     title: "Obsidian Flow",
     thumbnail: "/marketplace/marketplace_thumb_obsidian_1774544486807.png",
-    model: "DALL-E_3",
+    model: "DALL-E 3",
     price: "$15.00",
     prompt: "Dark obsidian liquid flowing through a white minimalist architectural room. Sharp contrasts, high-fidelity surfaces, volumetric lighting. Abstract but structural. 8k, cinematic, conceptual art. Style: Ghost Minimalist.",
     initialLocked: true
@@ -59,7 +59,7 @@ const mockPrompts = [
     id: "4",
     title: "Cybernetic Monolith Alpha",
     thumbnail: "/marketplace/marketplace_thumb_cybernetic_1774544429086.png",
-    model: "MIDJOURNEY_V6",
+    model: "Midjourney v6",
     price: "$12.00",
     prompt: "A high-fidelity, hyper-realistic cybernetic architecture visualization. Brutalist concrete merged with neon-integrated circuitry.",
     initialLocked: true
@@ -68,7 +68,7 @@ const mockPrompts = [
     id: "5",
     title: "Ethereal Haven Beta",
     thumbnail: "/marketplace/marketplace_thumb_ethereal_1774544446702.png",
-    model: "SDXL_TURBO",
+    model: "SDXL Turbo",
     price: "$8.50",
     prompt: "An ethereal, dreamlike landscape of floating translucent islands connected by white light filaments.",
     initialLocked: false
@@ -77,7 +77,7 @@ const mockPrompts = [
     id: "6",
     title: "Obsidian Flow Gamma",
     thumbnail: "/marketplace/marketplace_thumb_obsidian_1774544486807.png",
-    model: "DALL-E_3",
+    model: "DALL-E 3",
     price: "$15.00",
     prompt: "Dark obsidian liquid flowing through a white minimalist architectural room.",
     initialLocked: true
@@ -95,10 +95,10 @@ export default function MarketplacePage() {
       {/* ATLAS_MARKETPLACE_HEADER */}
       <div className="space-y-8">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="space-y-4">
+            <div className="space-y-4">
             <div className="flex items-center gap-3">
                <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-               <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.4em]">Registry_Gallery_Stable</span>
+               <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.4em]">Intelligence Registry</span>
             </div>
             <h1 className="text-7xl lg:text-8xl font-serif text-white tracking-tighter leading-[0.8] italic uppercase">
               Prompt <br /> <span className="text-zinc-700">Market</span>
@@ -110,13 +110,13 @@ export default function MarketplacePage() {
               className="flex items-center gap-3 px-8 py-4 bg-white text-black text-[11px] font-bold uppercase tracking-[0.3em] rounded-full hover:bg-zinc-200 transition-all active:scale-95 shadow-xl"
             >
                <Sparkles className="w-4 h-4" />
-               Initiate Registry
+               List Prompt
             </button>
             <div className="hidden lg:flex items-center gap-4 px-6 py-4 bg-white/[0.02] border border-white/5 rounded-full text-zinc-600 focus-within:text-white transition-colors group">
               <Search className="w-4 h-4" />
               <input 
                 type="text" 
-                placeholder="Search registries..." 
+                placeholder="Search marketplace..." 
                 className="bg-transparent border-none outline-none text-[11px] font-medium tracking-tight w-48 focus:w-64 transition-all duration-700"
               />
             </div>
@@ -179,7 +179,7 @@ export default function MarketplacePage() {
       {/* FOOTER_INFO */}
       <div className="pt-32 pb-20 text-center space-y-4">
          <Zap className="w-6 h-6 text-zinc-800 mx-auto" />
-         <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">Synchronizing Intelligence Registries</p>
+         <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.5em]">Marketplace Synchronized</p>
       </div>
     </div>
   );

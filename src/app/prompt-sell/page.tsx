@@ -17,7 +17,7 @@ export default function PromptSellPage() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <Store className="w-5 h-5 text-zinc-400" />
-          <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">TOOL_STORE</h1>
+          <h1 className="text-2xl font-black tracking-tighter text-white uppercase italic">Tool Marketplace</h1>
         </div>
         <p className="text-zinc-500 text-xs font-bold tracking-[0.3em] uppercase">Premium AI diagnostic tools, prompts, and behavioral filters</p>
       </div>
@@ -53,7 +53,7 @@ export default function PromptSellPage() {
               <div className="mt-auto flex items-center justify-between pt-10 border-t border-white/5">
                  <div className="flex flex-col">
                     <span className="text-2xl font-black text-white tracking-tighter italic">{tool.price}</span>
-                    <span className="text-[8px] font-black text-zinc-800 uppercase tracking-widest mt-1">One-Time_License</span>
+                    <span className="text-[8px] font-black text-zinc-800 uppercase tracking-widest mt-1">One-Time License</span>
                  </div>
                  <button className="p-4 bg-white text-black rounded-2xl hover:bg-zinc-200 transition-all active:scale-95 shadow-xl">
                     <ShoppingCart className="w-5 h-5" />
@@ -73,7 +73,7 @@ export default function PromptSellPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-none" />
         <div className="relative flex flex-col md:flex-row items-center justify-between gap-12">
            <div className="space-y-4 text-center md:text-left">
-              <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter">Monetize Your Intel</h2>
+              <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter">Sell Your Prompts</h2>
               <p className="text-xs font-bold text-zinc-600 uppercase tracking-[0.2em] max-w-md leading-relaxed">List your high-performance prompts and diagnostic filters on the Global Tool Store.</p>
            </div>
            <button className="px-10 py-5 bg-white text-black text-[11px] font-black uppercase tracking-[0.3em] rounded-3xl hover:bg-cyan-400 transition-all shadow-2xl flex items-center gap-3 group/btn">

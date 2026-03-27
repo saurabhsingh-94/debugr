@@ -4,10 +4,12 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Image as ImageIcon, Link as LinkIcon, AtSign, Smile, Send, User } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { postPost } from "@/app/actions";
 
 export default function CreatePost() {
   const [content, setContent] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -21,11 +23,22 @@ export default function CreatePost() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
-    toast.success("Posted!");
-    setContent("");
-    setIsFocused(false);
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    if (!content.trim() || isPosting) return;
+
+    setIsPosting(true);
+    const id = toast.loading("Broadcasting...");
+    
+    try {
+      await postPost(content);
+      toast.success("Identity Post Synchronized", { id });
+      setContent("");
+      setIsFocused(false);
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
+    } catch (error) {
+      toast.error("Transmission Error", { id });
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   const charLimit = 280;
@@ -34,12 +47,12 @@ export default function CreatePost() {
   const isOverLimit = remaining < 0;
 
   return (
-    <div className="nn-card p-6 transition-all">
+    <div className="nn-card p-6 transition-all ring-1 ring-white/5 hover:ring-white/10">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-3">
           {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
-            <User className="w-[18px] h-[18px] text-violet-400/60" />
+          <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+             <User className="w-[18px] h-[18px] text-violet-400/60" />
           </div>
 
           {/* Input area */}
@@ -63,7 +76,6 @@ export default function CreatePost() {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Attachment actions + submit */}
                   <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
                     <div className="flex items-center gap-0.5">
                       {[
@@ -84,10 +96,8 @@ export default function CreatePost() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      {/* Character counter */}
                       {content.length > 0 && (
                         <div className="flex items-center gap-1.5">
-                          {/* Ring progress */}
                           <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
                             <circle cx="10" cy="10" r="8" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="2" />
                             <circle
@@ -110,10 +120,10 @@ export default function CreatePost() {
 
                       <button
                         type="submit"
-                        disabled={!content.trim() || isOverLimit}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all active:scale-95 shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_30px_rgba(124,58,237,0.5)]"
+                        disabled={!content.trim() || isOverLimit || isPosting}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-black uppercase tracking-wider transition-all active:scale-95 shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_30px_rgba(124,58,237,0.5)]"
                       >
-                        <Send className="w-4 h-4" />
+                        {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         Post
                       </button>
                     </div>
@@ -126,4 +136,10 @@ export default function CreatePost() {
       </form>
     </div>
   );
+}
+
+function Loader2({ className }: { className?: string }) {
+   return <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className={className}>
+      <Send className="w-4 h-4" />
+   </motion.div>;
 }

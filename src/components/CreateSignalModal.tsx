@@ -30,11 +30,11 @@ export default function CreateSignalModal({ isOpen, onClose }: CreateSignalModal
       data.append("tags", formData.tags);
 
       await submitProblem(data);
-      toast.success("SIGNAL_EMITTED: Sequence Initialized");
+      toast.success("Signal published successfully");
       onClose();
       setFormData({ title: "", description: "", tags: "" });
     } catch (error) {
-      toast.error("PROTOCOL_ERROR: Signal Transmission Failed");
+      toast.error("Submission failed: Protocol error");
     } finally {
       setIsLoading(false);
     }
@@ -64,8 +64,8 @@ export default function CreateSignalModal({ isOpen, onClose }: CreateSignalModal
                   <Cpu className="w-5 h-5 text-accent-cyan" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">Initiate_Signal</h3>
-                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">Define diagnostic parameters</p>
+                  <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">Post Signal</h3>
+                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5">Share your recent findings</p>
                 </div>
               </div>
               <button 
@@ -78,23 +78,23 @@ export default function CreateSignalModal({ isOpen, onClose }: CreateSignalModal
 
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-3">
-                <label className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Thread Identifier</label>
+                <label className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Signal Title</label>
                 <input
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. LLM_LOGIC_HALLUCINATION_EXHIBIT_01"
-                  className="w-full bg-white/5 border border-white/5 rounded-xl py-3.5 px-5 text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-accent-cyan/30 transition-all font-mono"
+                  placeholder="e.g. Critical Logic Error in GPT-4"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl py-3.5 px-5 text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-accent-cyan/30 transition-all"
                 />
               </div>
 
               <div className="space-y-3">
-                <label className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Payload Description</label>
+                <label className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Technical Details</label>
                 <textarea
                   required
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Provide technical details of the detected anomaly..."
+                  placeholder="Provide technical details of the signal..."
                   rows={4}
                   className="w-full bg-white/5 border border-white/5 rounded-xl py-3.5 px-5 text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-accent-cyan/30 transition-all resize-none"
                 />
@@ -103,7 +103,7 @@ export default function CreateSignalModal({ isOpen, onClose }: CreateSignalModal
               <div className="space-y-3">
                 <label className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
                   <TagIcon className="w-3 h-3" />
-                  Classification Tags
+                  Tags
                 </label>
                 <input
                   value={formData.tags}
@@ -116,7 +116,7 @@ export default function CreateSignalModal({ isOpen, onClose }: CreateSignalModal
               <div className="flex items-center gap-3 p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-xl">
                 <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" />
                 <p className="text-[9px] font-bold text-zinc-500 leading-relaxed tracking-wider uppercase">
-                  Verify all diagnostic data before broadcast. <span className="text-white">Improper signals</span> may result in system reputation penalties.
+                  Verify all data before posting. <span className="text-white">Inaccurate signals</span> may result in system reputation penalties.
                 </p>
               </div>
 
@@ -128,7 +128,7 @@ export default function CreateSignalModal({ isOpen, onClose }: CreateSignalModal
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    TRANSMITTING...
+                    POSTING...
                   </>
                 ) : (
                   <>

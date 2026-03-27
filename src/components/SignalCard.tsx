@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUp, ChevronDown, MessageSquare, Share2, MoreHorizontal } from "lucide-react";
+import { ChevronUp, ChevronDown, MessageSquare, Share2, MoreHorizontal, ArrowBigUp, ArrowBigDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -39,21 +39,22 @@ export default function SignalCard({
         isProfile ? "p-6" : "p-8"
       )}
     >
-      {/* LEFT: VOTES / TELEMETRY_NODE */}
-      <div className="flex md:flex-col items-center justify-between md:justify-center gap-2 bg-white/[0.02] rounded-2xl p-4 min-w-0 md:min-w-[70px]">
-        <button className="text-zinc-600 hover:text-white transition-colors">
-          <ChevronUp className="w-5 h-5" />
+      {/* LEFT: ENGAGEMENT */}
+      <div className="flex flex-col items-center gap-4 py-4 px-2 border-r border-white/5">
+        <button className="p-3 rounded-2xl bg-white/[0.03] hover:bg-violet-500/20 group/btn transition-all">
+          <ArrowBigUp className="w-6 h-6 text-zinc-600 group-hover/btn:text-violet-400 group-hover/btn:scale-110 transition-all" />
         </button>
-        <span className="text-xl font-serif text-white tracking-tight leading-none">
-          {votes >= 1000 ? `${(votes / 1000).toFixed(1)}k` : votes}
-        </span>
-        <button className="text-zinc-600 hover:text-white transition-colors opacity-40 hover:opacity-100">
-          <ChevronDown className="w-5 h-5" />
+        <div className="flex flex-col items-center">
+          <span className="text-lg font-black text-white italic leading-none">{painScore.toFixed(0)}</span>
+          <span className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-1">Impact</span>
+        </div>
+        <button className="p-3 rounded-2xl bg-white/[0.03] hover:bg-rose-500/20 group/btn transition-all">
+          <ArrowBigDown className="w-6 h-6 text-zinc-600 group-hover/btn:text-rose-400 group-hover/btn:scale-110 transition-all" />
         </button>
       </div>
 
-      {/* CENTER: CONTENT_CORE */}
-      <div className="flex-1 space-y-4">
+      {/* CENTER: SIGNAL DETAILS */}
+      <div className="flex-1 p-8 space-y-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <h3 className="text-2xl font-serif text-zinc-200 group-hover:text-white transition-colors duration-700 leading-tight">
             {title}

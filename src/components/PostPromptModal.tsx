@@ -1,147 +1,144 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap, ShieldCheck, DollarSign, Image as ImageIcon, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { X, Zap, ShieldCheck, DollarSign, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
 import { postPrompt } from "@/app/actions";
+import { toast } from "react-hot-toast";
 
 interface PostPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onPostSuccess?: () => void;
 }
 
 const categories = [
-  "Cybernetic",
-  "Architectural",
-  "Ethereal",
-  "Minimalist",
-  "Neural Fluid",
-  "Hyper-Realistic"
+  "Artistic", "Code", "Marketing", "Scientific", "Writing"
 ];
 
-export default function PostPromptModal({ isOpen, onClose }: PostPromptModalProps) {
-  const [activeCategory, setActiveCategory] = useState("Cybernetic");
+const aiModels = [
+  "GPT-4", "Claude 3.5 Sonnet", "Midjourney v6", "DALL-E 3", "Llama 3"
+];
+
+export default function PostPromptModal({ isOpen, onClose, onPostSuccess }: PostPromptModalProps) {
+  const [activeCategory, setActiveCategory] = useState("Artistic");
+  const [activeModel, setActiveModel] = useState("GPT-4");
+  const [currency, setCurrency] = useState("INR");
+  const [isPending, setIsPending] = useState(false);
 
   const handleSubmit = async (formData: FormData) => {
-    formData.append("category", activeCategory);
-    // Mock thumbnail for demonstration
-    formData.append("thumbnailUrl", "/marketplace/marketplace_thumb_obsidian_1774544486807.png"); 
-    await postPrompt(formData);
-    onClose();
+    setIsPending(true);
+    try {
+      formData.append("category", activeCategory);
+      formData.append("aiModel", activeModel);
+      formData.append("currency", currency);
+      
+      await postPrompt(formData);
+      toast.success("Prompt listed successfully");
+      onPostSuccess?.();
+      onClose();
+    } catch (err: any) {
+      toast.error("Process failed: " + err.message);
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
-          />
-          
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="w-full max-w-2xl bg-[#080808] border border-white/10 rounded-3xl overflow-hidden relative shadow-2xl"
+            className="w-full max-w-2xl bg-[#080808] border border-white/10 rounded-[40px] overflow-hidden relative shadow-2xl flex flex-col max-h-[90vh]"
           >
             {/* MODAL_HEADER */}
-            <div className="p-8 border-b border-white/5 flex items-center justify-between">
+            <div className="p-8 border-b border-white/5 flex items-center justify-between flex-shrink-0">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-1 h-1 bg-white rounded-full animate-pulse" />
-                  <span className="text-[9px] font-bold text-zinc-700 uppercase tracking-[0.4em]">Initialize_Registry_Input</span>
+                  <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(124,58,237,0.8)]" />
+                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">List New Prompt</span>
                 </div>
-                <h2 className="text-3xl font-serif text-white italic tracking-tight uppercase">Initiate <span className="text-zinc-700">Registry</span></h2>
+                <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Sell <span className="text-zinc-700">Intelligence</span></h2>
               </div>
               <button 
                 onClick={onClose}
-                className="p-3 bg-white/[0.03] border border-white/10 rounded-full text-zinc-500 hover:text-white transition-all"
+                className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl text-zinc-500 hover:text-white transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* MODAL_FORM */}
-            <form action={handleSubmit} className="p-8 space-y-8">
+            <form action={handleSubmit} className="p-8 space-y-8 overflow-y-auto scrollbar-none">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  {/* TITLE_INPUT */}
                   <div className="space-y-3">
-                    <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] ml-2">Intelligence_Title</label>
-                    <input 
-                      name="title"
-                      type="text" 
-                      placeholder="e.g. Cybernetic Monolith Alpha"
-                      className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 px-6 text-[13px] text-white focus:outline-none focus:border-white/20 transition-all font-medium"
-                      required
-                    />
+                    <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Title</label>
+                    <input name="title" type="text" placeholder="Title of your prompt..." className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all" required />
                   </div>
 
-                  {/* PRICE_INPUT */}
                   <div className="space-y-3">
-                    <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] ml-2">Sync_Valuation_USD</label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700" />
-                      <input 
-                        name="price"
-                        type="number" 
-                        step="0.01"
-                        placeholder="0.00"
-                        className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 pl-14 pr-6 text-[13px] text-white focus:outline-none focus:border-white/20 transition-all font-medium"
-                        required
-                      />
+                    <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Price</label>
+                    <div className="flex gap-2">
+                       <button type="button" onClick={() => setCurrency("INR")} className={`px-4 py-3 rounded-xl text-[10px] font-black transition-all border ${currency === 'INR' ? 'bg-white text-black border-white' : 'bg-white/[0.02] text-zinc-600 border-white/5'}`}>INR</button>
+                       <button type="button" onClick={() => setCurrency("USD")} className={`px-4 py-3 rounded-xl text-[10px] font-black transition-all border ${currency === 'USD' ? 'bg-white text-black border-white' : 'bg-white/[0.02] text-zinc-600 border-white/5'}`}>USD</button>
+                       <input name="price" type="number" placeholder="Amount" className="flex-1 bg-white/[0.02] border border-white/5 rounded-2xl py-3 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30" required />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  {/* CATEGORY_SELECTION */}
                   <div className="space-y-3">
-                    <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] ml-2">Registry_Channel</label>
-                    <div className="grid grid-cols-2 gap-2">
-                       {categories.map((cat) => (
-                         <button
-                           key={cat}
-                           type="button"
-                           onClick={() => setActiveCategory(cat)}
-                           className={`py-3 px-4 rounded-xl text-[9px] font-bold uppercase tracking-wider transition-all border ${activeCategory === cat ? 'bg-white text-black border-white' : 'bg-white/[0.02] text-zinc-600 border-white/5 hover:border-white/10'}`}
-                         >
-                           {cat}
-                         </button>
-                       ))}
+                    <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">AI Model</label>
+                    <div className="relative">
+                      <select 
+                        value={activeModel} 
+                        onChange={(e) => setActiveModel(e.target.value)}
+                        className="w-full bg-[#0c0c12] border border-white/5 rounded-2xl py-4 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all appearance-none cursor-pointer"
+                      >
+                        {aiModels.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <Sparkles className="absolute right-6 top-1/2 -translate-y-1/2 w-3 h-3 text-violet-500/50 pointer-events-none" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Image URL</label>
+                    <div className="relative">
+                       <ImageIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-800" />
+                       <input name="thumbnailUrl" type="url" placeholder="Direct link to result image..." className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 pl-14 pr-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* PROMPT_CONTENT */}
               <div className="space-y-3">
-                <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em] ml-2">Registry_Definition_Prompt</label>
-                <textarea 
-                  name="content"
-                  rows={4}
-                  placeholder="Insert high-fidelity prompt parameters..."
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 px-6 text-[13px] text-white focus:outline-none focus:border-white/20 transition-all font-medium resize-none"
-                  required
-                />
+                <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Preview</label>
+                <textarea name="previewContent" rows={2} placeholder="Briefly describe what this prompt achieves (This is free to see)..." className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/30 transition-all resize-none" />
               </div>
 
-              {/* ACTIONS */}
-              <div className="pt-8 border-t border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-4 opacity-30">
-                   <ShieldCheck className="w-4 h-4 text-zinc-500" />
-                   <span className="text-[8px] font-bold text-zinc-700 uppercase tracking-[0.3em]">Validation Protocol Active</span>
+              <div className="space-y-3">
+                <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Full Prompt</label>
+                <textarea name="fullContent" rows={4} placeholder="The actual prompt text that will be revealed ONLY after payment..." className="w-full bg-white/[0.02] border border-white/10 rounded-2xl py-4 px-6 text-[11px] font-bold text-white focus:outline-none focus:border-violet-500/50 transition-all resize-none" required />
+              </div>
+
+              <div className="pt-8 border-t border-white/5 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-4 opacity-50">
+                   <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                   <div className="space-y-0.5">
+                       <p className="text-[8px] font-black text-white uppercase tracking-[0.2em]">Verified Transaction</p>
+                      <p className="text-[7px] font-black text-zinc-700 uppercase tracking-widest">Revenue distributed via Cashfree</p>
+                   </div>
                 </div>
                 <button 
                   type="submit"
-                  className="px-12 py-4 bg-white text-black text-[11px] font-bold uppercase tracking-[0.4em] rounded-full hover:bg-zinc-200 transition-all active:scale-95 flex items-center gap-3"
+                  disabled={isPending}
+                  className="px-12 py-5 bg-white text-black text-[11px] font-black uppercase tracking-[0.4em] rounded-[24px] hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 border-b-4 border-zinc-300 flex items-center gap-3"
                 >
-                  <Sparkles className="w-4 h-4" />
-                  Publish Intelligence
+                  {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Listing"}
                 </button>
               </div>
             </form>

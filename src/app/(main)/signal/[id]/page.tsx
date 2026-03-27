@@ -37,7 +37,7 @@ export default function SignalDetail({ params }: { params: { id: string } }) {
     <div className="space-y-10 py-10">
       <Link href="/" className="inline-flex items-center gap-3 text-zinc-700 hover:text-white transition-colors group">
          <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-         <span className="text-[10px] font-black uppercase tracking-[0.4em]">BACK_TO_Nexus</span>
+         <span className="text-[10px] font-black uppercase tracking-[0.4em]">Back to Dashboard</span>
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -70,23 +70,23 @@ export default function SignalDetail({ params }: { params: { id: string } }) {
                </div>
 
                <div className="space-y-6">
-                  <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">DIAGNOSTIC_SUMMARY</h3>
+                  <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">Summary</h3>
                   <p className="text-lg font-black text-zinc-500 italic leading-relaxed tracking-tight group-hover:text-zinc-300 transition-colors">
                     "{signal.description}"
                   </p>
                </div>
 
-               <div className="grid grid-cols-3 gap-6 pt-10 border-t border-white/[0.03]">
+                <div className="grid grid-cols-3 gap-6 pt-10 border-t border-white/[0.03]">
                   <div className="space-y-1">
-                    <p className="text-[9px] font-black text-zinc-800 uppercase tracking-widest">Priority_Index</p>
-                    <p className="text-3xl font-black text-white italic tracking-tighter italic">{(signal.votes * signal.painScore).toLocaleString()}</p>
+                    <p className="text-[9px] font-black text-zinc-800 uppercase tracking-widest">Priority Score</p>
+                    <p className="text-3xl font-black text-white italic tracking-tighter">{(signal.votes * signal.painScore).toLocaleString()}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[9px] font-black text-zinc-800 uppercase tracking-widest">Pain_Density</p>
+                    <p className="text-[9px] font-black text-zinc-800 uppercase tracking-widest">Severity</p>
                     <p className="text-3xl font-black text-white italic tracking-tighter">{signal.painScore}/10</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[9px] font-black text-zinc-800 uppercase tracking-widest">Verification_Nodes</p>
+                    <p className="text-[9px] font-black text-zinc-800 uppercase tracking-widest">Verifications</p>
                     <p className="text-3xl font-black text-white italic tracking-tighter">{signal.mergedFrom}</p>
                   </div>
                </div>
@@ -94,7 +94,7 @@ export default function SignalDetail({ params }: { params: { id: string } }) {
           </div>
 
           <div className="space-y-6">
-             <h2 className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.5em] px-4">Timeline_Decryption</h2>
+             <h2 className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.5em] px-4">Timeline</h2>
              <div className="space-y-4">
                {[1, 2, 3].map(i => (
                  <div key={i} className="bento-card p-8 flex items-center justify-between group cursor-pointer hover:bg-white/[0.02] transition-colors">
@@ -113,12 +113,12 @@ export default function SignalDetail({ params }: { params: { id: string } }) {
         <div className="lg:col-span-4 space-y-8">
            <section className="bento-card p-10 space-y-8">
               <div className="space-y-6">
-                 <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">Agent_Link</h4>
+                 <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">Author</h4>
                  <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-zinc-900 border border-white/5 rounded-2xl flex items-center justify-center grayscale"><User className="w-5 h-5 text-zinc-700" /></div>
                     <div>
                        <p className="text-xs font-black text-white italic tracking-tighter uppercase">@{signal.author.username}</p>
-                       <p className="text-[9px] font-black text-zinc-800 uppercase tracking-widest mt-0.5 whitespace-nowrap">Initial_Submission</p>
+                       <p className="text-[9px] font-black text-zinc-800 uppercase tracking-widest mt-0.5 whitespace-nowrap">Created</p>
                     </div>
                  </div>
               </div>
@@ -129,12 +129,12 @@ export default function SignalDetail({ params }: { params: { id: string } }) {
                        <Clock className="w-4 h-4 text-zinc-800" />
                        <span className="text-[9px] font-black text-zinc-800 uppercase tracking-widest">Timestamp</span>
                     </div>
-                    <span className="text-[10px] font-black text-white tracking-widest">26_MAR_2026</span>
+                    <span className="text-[10px] font-black text-white tracking-widest">26 MAR 2026</span>
                  </div>
                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                        <ExternalLink className="w-4 h-4 text-zinc-800" />
-                       <span className="text-[9px] font-black text-zinc-800 uppercase tracking-widest">Network_URL</span>
+                       <span className="text-[9px] font-black text-zinc-800 uppercase tracking-widest">URL</span>
                     </div>
                     <span className="text-[10px] font-black text-zinc-500 tracking-widest italic shrink-0">debugr.io/s/842</span>
                  </div>
@@ -144,12 +144,12 @@ export default function SignalDetail({ params }: { params: { id: string } }) {
            <div className="bento-card p-10 bg-white">
               <div className="flex items-center gap-4 mb-4">
                  <Zap className="w-4 h-4 text-black" />
-                 <span className="text-[10px] font-black text-black uppercase tracking-[0.4em]">QUICK_ACTION</span>
+                 <span className="text-[10px] font-black text-black uppercase tracking-[0.4em]">Action</span>
               </div>
               <p className="text-[9px] font-bold text-zinc-500 uppercase leading-relaxed tracking-tight mb-8">
-                 Authorize neural verification for this signal node to increase network trust coefficients.
+                 Authorize verification for this signal to increase network trust.
               </p>
-              <button className="w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl transition-all active:scale-[0.98]">Verify_Intelligence</button>
+              <button className="w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl transition-all active:scale-[0.98]">Verify Signal</button>
            </div>
         </div>
       </div>
