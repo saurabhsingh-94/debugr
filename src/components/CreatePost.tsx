@@ -34,7 +34,7 @@ export default function CreatePost() {
   const isOverLimit = remaining < 0;
 
   return (
-    <div className="nn-card p-5 transition-all">
+    <div className="nn-card p-6 transition-all">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-3">
           {/* Avatar */}

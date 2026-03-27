@@ -42,7 +42,7 @@ export default function PostFeed() {
   const posts = Array.isArray(data?.posts) ? data.posts : [];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       <AnimatePresence mode="popLayout">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <LoadingCard key={i} delay={i * 0.06} />)
@@ -84,7 +84,7 @@ function PostCard({ post }: { post: any }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="px-4 py-4 hover:bg-white/[0.015] transition-colors cursor-pointer group"
+      className="px-6 py-8 hover:bg-white/[0.015] transition-colors cursor-pointer group"
     >
       <div className="flex gap-3">
         {/* AVATAR */}
@@ -103,7 +103,7 @@ function PostCard({ post }: { post: any }) {
         {/* CONTENT */}
         <div className="flex-1 min-w-0">
           {/* Header */}
-          <div className="flex items-center gap-1 mb-0.5 flex-wrap">
+          <div className="flex items-center gap-1 mb-2 flex-wrap">
             <span className="text-[15px] font-bold text-white leading-tight">
               {post?.author?.name || `@${post?.author?.username}` || "Anonymous"}
             </span>
@@ -121,7 +121,7 @@ function PostCard({ post }: { post: any }) {
 
           {/* Tags */}
           {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
+            <div className="flex flex-wrap gap-1.5 mb-6">
               {tags.map((tag: string) => {
                 const key = tag.toLowerCase().replace("#", "");
                 const style = TAG_COLORS[key] || TAG_COLORS.default;
@@ -147,7 +147,7 @@ function PostCard({ post }: { post: any }) {
                 <span className="text-sm font-medium">{(post.likeCount || 0) + (liked ? 1 : 0) || ""}</span>
               </button>
             </div>
-            <div className="flex items-center gap-0">
+            <div className="flex items-center gap-6">
               <button
                 onClick={() => setBookmarked(!bookmarked)}
                 className={`p-2 rounded-full transition-all ${bookmarked ? "text-violet-400" : "text-zinc-700 hover:text-violet-400 hover:bg-violet-400/10"}`}
