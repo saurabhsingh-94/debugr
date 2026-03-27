@@ -105,7 +105,7 @@ export async function POST(req: Request) {
       });
 
       // c. Upsert creator's wallet and credit pending balance
-      const wallet = await tx.wallet.upsert({
+      const wallet = await (tx as any).wallet.upsert({
         where: { userId: creatorId },
         update: {
           pendingBalance: { increment: creatorShare },
@@ -120,7 +120,7 @@ export async function POST(req: Request) {
       });
 
       // d. Log wallet transaction (unique on orderId + type prevents double credit)
-      await tx.walletTransaction.create({
+      await (tx as any).walletTransaction.create({
         data: {
           walletId: wallet.id,
           userId: creatorId,
@@ -140,9 +140,9 @@ export async function POST(req: Request) {
         data: { userId: creatorId, promptId: transaction.promptId, amount: creatorShare },
       });
 
-      // f. Notify creator (non-blocking: wrapped in try-catch inside transaction)
+      // f. Notify creator (non-blocking)
       try {
-        await tx.notification.create({
+        await (tx as any).notification.create({
           data: {
             userId: creatorId,
             actorId: buyerId,
