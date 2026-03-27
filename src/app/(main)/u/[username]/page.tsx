@@ -1,0 +1,91 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { 
+  Plus, 
+  Activity, 
+  Zap, 
+  Network,
+  Cpu,
+  UserCircle,
+  ShieldCheck,
+  TrendingUp
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import ProfileClient from "@/components/ProfileClient";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+
+export default function PublicProfilePage() {
+  const { username } = useParams();
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      // Find user by username in Prisma via a standard API or action
+      // For now, we simulate with a search on user metadata or a dedicated endpoint
+      const { data, error } = await supabase
+        .from('User') // Assuming Prisma table name in direct query if enabled, or use a server action
+        .select('*')
+        .eq('username', username)
+        .single();
+      
+      if (data) setUser(data);
+      setIsLoading(false);
+    };
+    fetchUser();
+  }, [username]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="w-10 h-10 border-2 border-white/5 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
+        <div className="p-6 bg-white/5 border border-white/10 rounded-full">
+           <UserCircle className="w-12 h-12 text-zinc-800" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-2">Node_Not_Found</h1>
+          <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">The requested intelligence agent is not synced with the network</p>
+        </div>
+        <button onClick={() => window.history.back()} className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Return_to_Core</button>
+      </div>
+    );
+  }
+
+  const stats = [
+    { label: "Detected Signals", value: "14" },
+    { label: "Solved Bounties", value: "03" },
+    { label: "Trust Score", value: "92%" },
+  ];
+
+  const profileData = {
+    name: user.name || "Unidentified Agent",
+    email: user.email,
+    avatarUrl: user.avatarUrl,
+    bio: user.bio,
+    github: user.githubProfile,
+    x: user.xProfile,
+    username: user.username,
+  };
+
+  return (
+    <div className="space-y-12">
+       <ProfileClient 
+          user={profileData} 
+          stats={stats} 
+          problems={[]} 
+          isPublic={true}
+       />
+    </div>
+  );
+}

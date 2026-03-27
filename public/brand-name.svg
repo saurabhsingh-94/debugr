@@ -1,0 +1,6 @@
+<svg width="400" height="100" viewBox="0 0 400 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .text { font: 900 70px "Inter", sans-serif; letter-spacing: -3px; font-style: italic; }
+  </style>
+  <text x="0" y="70" class="text" fill="#5EEAD4">debugr</text>
+</svg>
