@@ -34,7 +34,7 @@ export async function castVote(problemId: string, painScore: number) {
   if (!user?.id) throw new Error("Unauthorized");
 
   // Ensure user exists in Prisma
-  await (prisma.user as any).upsert({
+  await prisma.user.upsert({
     where: { id: user.id },
     update: { 
       email: user.email!,
@@ -89,7 +89,7 @@ export async function updateUserProfile(formData: FormData) {
   const instagramProfile = formData.get("instagramProfile") as string;
   const avatarUrl = formData.get("avatarUrl") as string;
 
-  await (prisma.user as any).update({
+  await prisma.user.update({
     where: { id: user.id },
     data: { 
       name, 
@@ -182,15 +182,15 @@ export async function postPrompt(formData: FormData) {
   const price = formData.get("price") ? Number(formData.get("price")) : null;
   const thumbnailUrl = formData.get("thumbnailUrl") as string; // Will be handled by a mock or future upload
 
-  await (prisma as any).prompt.create({
+  await prisma.prompt.create({
     data: {
       title,
       description,
       content,
-      category,
-      price,
+      category: category || "general",
+      price: price || 0,
       thumbnailUrl,
-      authorId: user.id,
+      creatorId: user.id, // Correct field name in schema
     },
   });
 
