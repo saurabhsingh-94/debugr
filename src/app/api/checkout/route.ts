@@ -67,10 +67,11 @@ export async function POST(req: Request) {
     };
 
     const response = await createCashfreeOrder(cfRequest);
+    console.log("Generated orderId:", orderId);
+    console.log("Cashfree response data:", response);
     
     return NextResponse.json({
-      paymentSessionId: response.payment_session_id,
-      orderId: orderId,
+      paymentSessionId: response.payment_session_id
     });
   } catch (err: any) {
     console.error("POST /api/checkout error:", err.message || err);

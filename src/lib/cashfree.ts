@@ -1,4 +1,4 @@
-import axios from "axios";
+// Cashfree API Helpers
 
 const CASHFREE_BASE_URL = "https://sandbox.cashfree.com/pg/orders"; // Sandbox
 
@@ -14,12 +14,14 @@ export const createCashfreeOrder = async (orderData: any) => {
     body: JSON.stringify(orderData),
   });
 
+  const data = await response.json();
+  console.log("Cashfree dynamic response:", JSON.stringify(data, null, 2));
+
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to create Cashfree order");
+    throw new Error(data.message || "Failed to create Cashfree order");
   }
 
-  return response.json();
+  return data;
 };
 
 /**

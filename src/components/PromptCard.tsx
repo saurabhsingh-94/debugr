@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Unlock, Copy, Zap, Info, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import toast from "react-hot-toast";
 
 interface PromptCardProps {
   id: string;
   title: string;
   thumbnail: string;
   model: string;
-  price: string;
+  price: string | number;
   prompt: string;
   initialLocked?: boolean;
 }
@@ -27,6 +28,7 @@ export default function PromptCard({
   const [isLocked, setIsLocked] = useState(initialLocked);
   const [isHovered, setIsHovered] = useState(false);
   const [showCopyFeedback, setShowCopyFeedback] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleCopy = () => {
     if (isLocked) return;
@@ -35,9 +37,39 @@ export default function PromptCard({
     setTimeout(() => setShowCopyFeedback(false), 2000);
   };
 
-  const handleUnlock = () => {
-    // Mock unlock logic
-    setIsLocked(false);
+  const handleUnlock = async () => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    const toastId = toast.loading("Initializing secure checkout...");
+
+    try {
+      // 1. Create Checkout Session
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ promptId: id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to start checkout");
+
+      // 2. Initialize Cashfree SDK
+      const cashfree = new (window as any).Cashfree({ mode: "sandbox" }); 
+      
+      // 3. Launch Checkout
+      await cashfree.checkout({
+        paymentSessionId: data.paymentSessionId,
+        redirectTarget: "_self" 
+      });
+
+      toast.success("Redirecting to checkout...", { id: toastId });
+    } catch (err: any) {
+      console.error("Unlock Error:", err);
+      toast.error(err.message || "Failed to initialize checkout", { id: toastId });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (

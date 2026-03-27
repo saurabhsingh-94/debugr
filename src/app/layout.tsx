@@ -25,6 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} scroll-smooth`}>
+      <head>
+        <script src="https://sdk.cashfree.com/js/v3/cashfree.js" async></script>
+      </head>
       <body className="bg-[#05050a] text-[#f0f0ff] font-sans antialiased overflow-x-hidden">
         <SessionProvider>
           <ThemeProvider>
