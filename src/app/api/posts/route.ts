@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -38,10 +38,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const session = await auth();
+  const user = session?.user;
 
-  if (authError || !user) {
+  if (!user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -56,35 +56,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Upsert on Auth Pattern: Ensure Prisma user exists
-    // We check for username because it's required in the schema now.
-    // NOTE: In production, we'd ensure the metadata has a username or redirect first.
-    // For this flow, we assume the user has a username cached in metadata or DB.
-    
-    const dbUser = await prisma.user.upsert({
-      where: { id: user.id },
-      update: {
-        email: user.email!, // Keep email in sync
-      },
-      create: {
-        id: user.id,
-        email: user.email!,
-        username: user.user_metadata?.username || `user_${user.id.slice(0, 8)}`, // Fallback for safety
-        name: user.user_metadata?.full_name || user.email?.split("@")[0],
-        avatarUrl: user.user_metadata?.avatar_url,
-      },
-    });
-
     const post = await prisma.post.create({
       data: {
         content: content.trim(),
-        authorId: dbUser.id,
+        userId: user.id,
       },
       include: {
-        author: {
+        user: {
           select: {
             username: true,
-            avatarUrl: true,
+            image: true,
             name: true,
           },
         },

@@ -24,7 +24,7 @@ import {
   ShieldAlert
 } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { useSession } from "next-auth/react";
 import { updateUserProfile, syncUser } from "@/app/actions";
 import toast from "react-hot-toast";
 import Image from "next/image";
@@ -65,13 +65,12 @@ export default function SettingsPage() {
     avatarUrl: ""
   });
 
-  const supabase = createClient();
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser(user);
+      if (session?.user) {
+        setUser(session.user);
         // Sync & Fetch from Prisma
         const prismaUser = await syncUser();
         if (prismaUser) {
@@ -82,14 +81,14 @@ export default function SettingsPage() {
             githubProfile: (prismaUser as any).githubProfile || "",
             xProfile: (prismaUser as any).xProfile || "",
             instagramProfile: (prismaUser as any).instagramProfile || "",
-            avatarUrl: (prismaUser as any).avatarUrl || ""
+            avatarUrl: (prismaUser as any).image || ""
           });
         }
       }
       setIsLoading(false);
     };
     fetchUser();
-  }, [supabase.auth]);
+  }, [session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

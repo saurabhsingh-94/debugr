@@ -2,18 +2,17 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
 async function getAuthUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  const session = await auth();
+  return session?.user;
 }
 
 export async function submitProblem(formData: FormData) {
   const user = await getAuthUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user?.id) throw new Error("Unauthorized");
 
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
@@ -32,20 +31,20 @@ export async function submitProblem(formData: FormData) {
 
 export async function castVote(problemId: string, painScore: number) {
   const user = await getAuthUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user?.id) throw new Error("Unauthorized");
 
   // Ensure user exists in Prisma
   await (prisma.user as any).upsert({
     where: { id: user.id },
     update: { 
       email: user.email!,
-      avatarUrl: (user.user_metadata.avatar_url as string) || (user.user_metadata.picture as string) || null
+      image: user.image
     },
     create: { 
       id: user.id, 
       email: user.email!,
-      name: (user.user_metadata.full_name as string) || (user.user_metadata.name as string) || (user.email?.split('@')[0] as string),
-      avatarUrl: (user.user_metadata.avatar_url as string) || (user.user_metadata.picture as string) || null
+      name: user.name || user.email?.split('@')[0],
+      image: user.image
     },
   });
 
@@ -59,31 +58,28 @@ export async function castVote(problemId: string, painScore: number) {
 }
 
 export async function syncUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const session = await auth();
+  const user = session?.user;
   if (!user) return null;
-
-  const avatarUrl = user.user_metadata.avatar_url || user.user_metadata.picture || null;
-  const name = user.user_metadata.full_name || user.user_metadata.name || user.email?.split('@')[0] || "Anonymous";
 
   return await (prisma.user as any).upsert({
     where: { id: user.id },
     update: { 
       email: user.email!,
-      avatarUrl: avatarUrl,
+      image: user.image,
     },
     create: { 
       id: user.id, 
       email: user.email!,
-      name: name,
-      avatarUrl: avatarUrl,
+      name: user.name || user.email?.split('@')[0] || "Anonymous",
+      image: user.image,
     },
   });
 }
 
 export async function updateUserProfile(formData: FormData) {
   const user = await getAuthUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user?.id) throw new Error("Unauthorized");
 
   const name = formData.get("name") as string;
   const username = formData.get("username") as string;
@@ -111,7 +107,7 @@ export async function updateUserProfile(formData: FormData) {
 }
 export async function postSignal(formData: FormData) {
   const user = await getAuthUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user?.id) throw new Error("Unauthorized");
 
   const type = formData.get("type") as string;
   const origin = formData.get("origin") as string;
@@ -134,7 +130,7 @@ export async function postSignal(formData: FormData) {
 
 export async function postBounty(formData: FormData) {
   const user = await getAuthUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user?.id) throw new Error("Unauthorized");
 
   const task = formData.get("task") as string;
   const reward = formData.get("reward") as string;
@@ -156,7 +152,7 @@ export async function postBounty(formData: FormData) {
 
 export async function postIntelAsset(formData: FormData) {
   const user = await getAuthUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user?.id) throw new Error("Unauthorized");
 
   const title = formData.get("title") as string;
   const price = formData.get("price") as string;
@@ -177,7 +173,7 @@ export async function postIntelAsset(formData: FormData) {
 }
 export async function postPrompt(formData: FormData) {
   const user = await getAuthUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user?.id) throw new Error("Unauthorized");
 
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;

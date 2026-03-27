@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 

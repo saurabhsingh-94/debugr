@@ -10,8 +10,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { useSession } from "next-auth/react";
 
 const navItems = [
   { icon: Zap, label: "Feed", href: "/", badge: null },
@@ -27,26 +26,15 @@ const systemItems = [
 export default function NeonSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
+  const user = session?.user;
+  const isLoading = status === "loading";
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-    });
+  // Session is handled by useSession automatically
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Anonymous";
-  const displayUsername = user?.user_metadata?.username || user?.email?.split("@")[0] || "user";
-  const avatarUrl = user?.user_metadata?.avatar_url;
+  const displayName = user?.name || user?.email?.split("@")[0] || "Anonymous";
+  const displayUsername = (user as any)?.username || user?.email?.split("@")[0] || "user";
+  const avatarUrl = user?.image;
 
   return (
     <>
@@ -132,7 +120,7 @@ export default function NeonSidebar() {
 
         {/* AUTH FOOTER */}
         <div className="p-4 border-t border-white/5">
-          {loading ? (
+          {isLoading ? (
             <div className="flex items-center gap-3 p-2">
               <div className="w-8 h-8 rounded-full bg-white/5 animate-pulse" />
               <div className="flex-1 space-y-1.5">

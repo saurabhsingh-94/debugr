@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSession } from "next-auth/react";
 import { syncUser, updateUserProfile } from "@/app/actions";
 
 type Theme = "dark" | "light" | "glass";
@@ -15,14 +15,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("glass");
-  const supabase = createClient();
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchTheme = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Fetch from Prisma via syncUser to get current theme
-        const res = await fetch(`/api/user?id=${user.id}`);
+      if (session?.user?.id) {
+        // Fetch from Prisma to get current theme
+        const res = await fetch(`/api/user?id=${session.user.id}`);
         if (res.ok) {
           const prismaUser = await res.json();
           if (prismaUser.theme) {
@@ -33,7 +32,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       }
     };
     fetchTheme();
-  }, [supabase.auth]);
+  }, [session]);
 
   const setTheme = async (newTheme: Theme) => {
     setThemeState(newTheme);
