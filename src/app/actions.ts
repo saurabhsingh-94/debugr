@@ -74,6 +74,21 @@ export async function syncUser() {
       name: user.name || user.email?.split('@')[0] || "Anonymous",
       image: user.image,
     },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      username: true,
+      bio: true,
+      image: true,
+      avatarUrl: true,
+      location: true,
+      website: true,
+      githubProfile: true,
+      xProfile: true,
+      instagramProfile: true,
+      createdAt: true,
+    }
   });
 }
 
@@ -217,10 +232,14 @@ export async function getUserByUsername(username: string) {
       email: true,
       username: true,
       bio: true,
+      image: true,
       avatarUrl: true,
+      location: true,
+      website: true,
       githubProfile: true,
       xProfile: true,
       instagramProfile: true,
+      createdAt: true,
     }
   });
 }

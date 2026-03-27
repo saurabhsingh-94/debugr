@@ -52,7 +52,7 @@ export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("Profile");
+  const [activeTab, setActiveTab] = useState("Accounts");
   const { theme, setTheme } = useTheme();
   
   const [formData, setFormData] = useState({
@@ -110,7 +110,6 @@ export default function SettingsPage() {
   };
 
   const SETTINGS_TABS = [
-    { label: "Profile", icon: User },
     { label: "Accounts", icon: Fingerprint },
     { label: "Theme", icon: Palette },
     { label: "Notifications", icon: Bell },
@@ -181,117 +180,6 @@ export default function SettingsPage() {
             {/* Main Form Area */}
             <div className="lg:col-span-3">
                <AnimatePresence mode="wait">
-                 {activeTab === "Profile" && (
-                   <motion.form 
-                     key="profile-form"
-                     initial={{ opacity: 0, x: 20 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     exit={{ opacity: 0, x: -20 }}
-                     onSubmit={handleSubmit} 
-                     className="space-y-12"
-                   >
-                     {/* Identity Section */}
-                     <div className="space-y-8">
-                       <h3 className="text-[12px] font-black text-white uppercase tracking-[0.4em] flex items-center gap-3">
-                         <div className="w-1.5 h-1.5 rounded-full bg-white italic" /> Basic_Identity
-                       </h3>
-                       
-                       <div className="flex flex-col md:flex-row gap-12 items-start">
-                          <div className="relative group shrink-0">
-                            <div className="absolute inset-0 bg-white/20 blur-[60px] rounded-full opacity-0 group-hover:opacity-30 transition-opacity" />
-                            <div className="relative w-32 h-32 md:w-44 md:h-44 bg-zinc-900 border-2 border-white/5 rounded-[40px] flex items-center justify-center overflow-hidden transition-all group-hover:border-white/20 group-hover:scale-[1.02]">
-                              {formData.avatarUrl ? (
-                                <Image src={formData.avatarUrl} alt="avatar" fill className="object-cover transition-transform group-hover:scale-110" />
-                              ) : (
-                                <User className="w-12 h-12 text-zinc-800" />
-                              )}
-                              <button type="button" className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Camera className="w-8 h-8 text-white/50" />
-                              </button>
-                            </div>
-                          </div>
-                          
-                          <div className="flex-1 w-full space-y-6">
-                             <div className="relative group">
-                               <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-800 group-focus-within:text-white transition-colors" />
-                               <input 
-                                 type="text"
-                                 value={formData.name}
-                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                 className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-xs text-white placeholder:text-zinc-800 focus:outline-none focus:border-white/20 transition-all font-black uppercase tracking-widest"
-                                 placeholder="IDENTITY_NAME"
-                               />
-                             </div>
-                             <div className="relative group">
-                               <Fingerprint className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-800 group-focus-within:text-white transition-colors" />
-                               <input 
-                                 type="text"
-                                 value={formData.username}
-                                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                 className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-xs text-white placeholder:text-zinc-800 focus:outline-none focus:border-white/20 transition-all font-black uppercase tracking-widest"
-                                 placeholder="SYSTEM_ALIAS / USERNAME"
-                               />
-                             </div>
-                          </div>
-                       </div>
-
-                       <textarea 
-                         value={formData.bio}
-                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                         rows={4}
-                         className="w-full bg-white/[0.02] border border-white/5 rounded-3xl py-6 px-8 text-xs text-white placeholder:text-zinc-800 focus:outline-none focus:border-white/20 transition-all resize-none font-bold leading-relaxed uppercase tracking-wider"
-                         placeholder="DIAGNOSTIC_BIO: Describe your operative methodology..."
-                       />
-                     </div>
-
-                     {/* Social Links Section */}
-                     <div className="space-y-8">
-                        <h3 className="text-[12px] font-black text-white uppercase tracking-[0.4em] flex items-center gap-3">
-                          <div className="w-1.5 h-1.5 rounded-full bg-white italic" /> Social_Uplinks
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           <div className="relative group">
-                             <Github className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-800 group-focus-within:text-white transition-colors" />
-                             <input 
-                               type="text"
-                               value={formData.githubProfile}
-                               onChange={(e) => setFormData({ ...formData, githubProfile: e.target.value })}
-                               className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-xs text-white placeholder:text-zinc-800 focus:outline-none focus:border-white/20 transition-all font-bold tracking-widest"
-                               placeholder="GITHUB_HANDLE"
-                             />
-                           </div>
-                           <div className="relative group">
-                             <Twitter className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-800 group-focus-within:text-white transition-colors" />
-                             <input 
-                               type="text"
-                               value={formData.xProfile}
-                               onChange={(e) => setFormData({ ...formData, xProfile: e.target.value })}
-                               className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-xs text-white placeholder:text-zinc-800 focus:outline-none focus:border-white/20 transition-all font-bold tracking-widest"
-                               placeholder="X_HANDLE"
-                             />
-                           </div>
-                           <div className="relative group">
-                             <Instagram className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-800 group-focus-within:text-white transition-colors" />
-                             <input 
-                               type="text"
-                               value={formData.instagramProfile}
-                               onChange={(e) => setFormData({ ...formData, instagramProfile: e.target.value })}
-                               className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-xs text-white placeholder:text-zinc-800 focus:outline-none focus:border-white/20 transition-all font-bold tracking-widest"
-                               placeholder="INSTAGRAM_HANDLE"
-                             />
-                           </div>
-                        </div>
-                     </div>
-
-                     <button
-                       type="submit"
-                       disabled={isSaving}
-                       className="w-full md:w-auto px-16 py-6 bg-white text-black font-black uppercase tracking-[0.4em] text-[11px] rounded-3xl hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-2xl flex items-center justify-center gap-4 disabled:opacity-50"
-                     >
-                       {isSaving ? "SYNCHRONIZING..." : (<><Save className="w-5 h-5" /> COMMIT_CHANGES</>)}
-                     </button>
-                   </motion.form>
-                 )}
 
                   {activeTab === "Theme" && (
                     <motion.div 

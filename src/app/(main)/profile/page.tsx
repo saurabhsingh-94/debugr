@@ -64,14 +64,17 @@ export default function ProfilePage() {
   ];
 
   const profileData = {
-    name: (prismaUser as any)?.name || sessionUser?.name || "Unidentified Agent",
+    name: prismaUser?.name || sessionUser?.name || "Unidentified Agent",
     email: sessionUser.email!,
-    avatarUrl: (prismaUser as any)?.avatarUrl || sessionUser?.image || null,
-    bio: (prismaUser as any)?.bio || null,
-    github: (prismaUser as any)?.githubProfile,
-    x: (prismaUser as any)?.xProfile,
-    instagram: (prismaUser as any)?.instagramProfile,
-    username: (prismaUser as any)?.username,
+    avatarUrl: prismaUser?.avatarUrl || sessionUser?.image || null,
+    bio: prismaUser?.bio || null,
+    githubProfile: prismaUser?.githubProfile,
+    xProfile: prismaUser?.xProfile,
+    instagramProfile: prismaUser?.instagramProfile,
+    username: prismaUser?.username,
+    location: prismaUser?.location,
+    website: prismaUser?.website,
+    createdAt: prismaUser?.createdAt,
   };
 
   return (
