@@ -54,16 +54,16 @@ export default function FloatingPostButton() {
         {showPostModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <div className="w-full max-w-[600px] bg-[#0c0c12] border border-white/10 rounded-[40px] p-8 relative">
-              <button onClick={() => setShowPostModal(false)} className="absolute top-6 right-6 p-3 rounded-2xl hover:bg-white/5 text-zinc-600">
-                <X className="w-4 h-4" />
+              <button onClick={() => setShowPostModal(false)} className="absolute top-6 right-6 p-3 rounded-2xl hover:bg-white/5 text-zinc-600 transition-all z-[110]">
+                <X className="w-5 h-5" />
               </button>
-              <CreatePost onPostSuccess={() => setShowPostModal(false)} />
+              <CreatePost onPostSuccess={() => setShowPostModal(false)} onCancel={() => setShowPostModal(false)} />
             </div>
           </div>
         )}
 
         {showPromptModal && (
-          <PostPromptModal onClose={() => setShowPromptModal(false)} />
+          <PostPromptModal isOpen={true} onClose={() => setShowPromptModal(false)} />
         )}
       </AnimatePresence>
     </>

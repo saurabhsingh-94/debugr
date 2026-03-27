@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   User, Settings, MapPin, Calendar, Link as LinkIcon,
   MessageSquare, Repeat2, Heart, Share, ArrowLeft,
-  MoreHorizontal, BadgeCheck, Bookmark, X, Camera, Save, Loader2, Github, Twitter, Instagram
+  MoreHorizontal, BadgeCheck, Bookmark, X, Camera, Save, Loader2, Github, Twitter, Instagram, Image as ImageIcon
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -66,12 +66,12 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
         {/* Avatar + Action row */}
         <div className="flex items-end justify-between -mt-[52px] mb-3">
           <div className="relative">
-            <div className="w-[110px] h-[110px] rounded-[32px] border-4 border-[#050505] overflow-hidden bg-[#111118] shadow-2xl relative">
+            <div className="w-[110px] h-[110px] rounded-[32px] border-4 border-[#050505] overflow-hidden bg-zinc-900 shadow-2xl relative">
               {user?.avatarUrl ? (
                 <Image src={user.avatarUrl} alt={user.name || "user"} fill className="object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-600/20 to-indigo-950/40 border border-white/5">
-                  <span className="text-3xl font-black text-violet-400 italic tracking-tighter">{getInitial()}</span>
+                <div className="w-full h-full flex items-center justify-center bg-zinc-800">
+                  <User className="w-10 h-10 text-zinc-600" />
                 </div>
               )}
             </div>
@@ -204,6 +204,8 @@ export default function ProfileClient({ user, stats, problems = [], prompts = []
 
 function EditProfileModal({ user, onClose }: { user: any; onClose: () => void }) {
   const [isPending, startTransition] = useTransition();
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const [banner, setBanner] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: user.name || "",
     username: user.username || "",
@@ -221,6 +223,9 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
       try {
         const data = new FormData();
         Object.entries(formData).forEach(([key, value]) => data.append(key, value));
+        if (avatar) data.append("avatar", avatar);
+        if (banner) data.append("banner", banner);
+        
         await updateUserProfile(data);
         toast.success("Profile Updated");
         onClose();
@@ -260,6 +265,47 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto scrollbar-none">
+           {/* Image Uploads */}
+           <div className="flex gap-6 items-center pb-4 border-b border-white/5">
+              <div className="space-y-3 flex-1">
+                 <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Profile Picture</label>
+                 <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center relative overflow-hidden">
+                       {avatar ? (
+                          <img src={URL.createObjectURL(avatar)} className="w-full h-full object-cover" />
+                       ) : user.avatarUrl ? (
+                          <img src={user.avatarUrl} className="w-full h-full object-cover" />
+                       ) : (
+                          <User className="w-6 h-6 text-zinc-700" />
+                       )}
+                    </div>
+                    <label className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-bold text-white cursor-pointer transition-all">
+                       Change PFP
+                       <input type="file" className="hidden" accept="image/*" onChange={e => e.target.files?.[0] && setAvatar(e.target.files[0])} />
+                    </label>
+                 </div>
+              </div>
+              
+              <div className="space-y-3 flex-1">
+                 <label className="text-[9px] font-black text-zinc-700 uppercase tracking-widest px-2">Banner Image</label>
+                 <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center relative overflow-hidden">
+                       {banner ? (
+                          <img src={URL.createObjectURL(banner)} className="w-full h-full object-cover" />
+                       ) : user.bannerUrl ? (
+                          <img src={user.bannerUrl} className="w-full h-full object-cover" />
+                       ) : (
+                          <ImageIcon className="w-6 h-6 text-zinc-700" />
+                       )}
+                    </div>
+                    <label className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-bold text-white cursor-pointer transition-all">
+                       Change Banner
+                       <input type="file" className="hidden" accept="image/*" onChange={e => e.target.files?.[0] && setBanner(e.target.files[0])} />
+                    </label>
+                 </div>
+              </div>
+           </div>
+
            <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-2">

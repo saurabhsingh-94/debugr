@@ -6,7 +6,7 @@ import {
   PenSquare, X, Camera, Save, Loader2, Github, 
   Twitter, Instagram, MapPin, Link as LinkIcon, 
   Calendar, MoreHorizontal, Compass, ShoppingBag, 
-  LayoutDashboard, Settings, Mail
+  LayoutDashboard, Settings, Mail, Menu, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,6 +14,7 @@ import { useState, useTransition } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Logo from "./Logo";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: Logo, label: "Home", href: "/", badge: null },
@@ -30,6 +31,7 @@ const systemItems = [
 export default function NeonSidebar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const user = session?.user;
   const isLoading = status === "loading";
 
@@ -39,17 +41,30 @@ export default function NeonSidebar() {
 
   return (
     <>
-      <aside className="hidden lg:flex flex-col w-[260px] h-screen fixed left-0 top-0 bg-[#050505] border-r border-white/5 z-50 overflow-y-auto scrollbar-none">
+      <motion.aside 
+        initial={false}
+        animate={{ width: isCollapsed ? 88 : 260 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="hidden lg:flex flex-col h-screen fixed left-0 top-0 bg-[#050505] border-r border-white/5 z-50 overflow-y-auto scrollbar-none"
+      >
         
-        {/* LOGO */}
-        <div className="p-8">
-          <Link href="/" className="flex items-center gap-3 group">
-            <Logo className="w-10 h-10 group-hover:scale-110 transition-transform" />
-            <div className="flex flex-col">
-              <span className="text-lg font-black italic uppercase tracking-tighter text-white">Debugr</span>
-              <span className="text-[9px] font-bold text-zinc-700 uppercase tracking-[0.4em] -mt-1">Intelligence</span>
-            </div>
+        {/* LOGO & TOGGLE */}
+        <div className={cn("p-8 flex items-center justify-between", isCollapsed && "px-6")}>
+          <Link href="/" className="flex items-center gap-3">
+            <Logo className="w-8 h-8" />
+            {!isCollapsed && <span className="text-xl font-black italic tracking-tighter text-white">Debugr</span>}
           </Link>
+          <button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="group relative flex items-center justify-center w-9 h-9 border border-white/10 rounded-xl bg-white/[0.03] hover:bg-white hover:text-black transition-all duration-500 shadow-xl overflow-hidden"
+          >
+            <motion.div
+              animate={{ rotate: isCollapsed ? 180 : 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            >
+              {isCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+            </motion.div>
+          </button>
         </div>
 
         {/* NAVIGATION */}
@@ -59,15 +74,17 @@ export default function NeonSidebar() {
             return (
               <Link key={item.href} href={item.href}>
                 <motion.div
-                  whileHover={{ x: 4 }}
-                  className={`flex items-center gap-4 px-4 py-4 rounded-3xl transition-all group ${
-                    isActive ? "bg-white/[0.03] border border-white/5 text-white" : "text-zinc-500 hover:text-white hover:bg-white/[0.01]"
-                  }`}
+                  whileHover={{ x: isCollapsed ? 0 : 2 }}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all group",
+                    isActive ? "bg-white/[0.04] text-white" : "text-zinc-500 hover:text-white",
+                    isCollapsed && "justify-center px-0 w-12 mx-auto"
+                  )}
                 >
-                  <item.icon className={`w-6 h-6 flex-shrink-0 ${isActive ? "text-violet-400" : "group-hover:text-violet-400 transition-colors"}`} />
-                  <span className={`text-[16px] font-black uppercase tracking-tight ${isActive ? "" : "opacity-60"}`}>{item.label}</span>
-                  {item.badge && (
-                    <span className="ml-auto text-[9px] font-black uppercase tracking-widest bg-violet-500/20 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded-full">
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  {!isCollapsed && <span className="text-[13px] font-medium tracking-tight">{item.label}</span>}
+                  {!isCollapsed && item.badge && (
+                    <span className="ml-auto text-[8px] font-bold uppercase tracking-widest bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-full">
                       {item.badge}
                     </span>
                   )}
@@ -78,49 +95,59 @@ export default function NeonSidebar() {
 
           <div className="nn-divider my-6 opacity-30" />
 
-          <p className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.4em] mb-4 px-4">Registry</p>
+          {!isCollapsed && <p className="text-[10px] font-bold text-zinc-800 uppercase tracking-widest mb-2 px-4">Registry</p>}
           {systemItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link key={item.href} href={item.href}>
-                <div className={`flex items-center gap-4 px-4 py-4 rounded-3xl transition-all ${
-                  isActive ? "bg-white/5 text-white shadow-2xl" : "text-zinc-500 hover:text-white"
-                }`}>
-                  <item.icon className="w-6 h-6 flex-shrink-0" />
-                  <span className={`text-[16px] font-black uppercase tracking-tight ${isActive ? "" : "opacity-60"}`}>{item.label}</span>
+                <div className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all",
+                  isActive ? "bg-white/5 text-white shadow-2xl" : "text-zinc-600 hover:text-white",
+                  isCollapsed && "justify-center px-0 w-12 mx-auto"
+                )}>
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  {!isCollapsed && <span className="text-[13px] font-medium tracking-tight">{item.label}</span>}
                 </div>
               </Link>
             );
           })}
         </nav>
 
-        {/* AUTH FOOTER */}
         <div className="p-4 border-t border-white/5 mb-8">
           {isLoading ? (
             <div className="flex items-center gap-3 p-4 bg-white/[0.01] rounded-[24px]">
               <div className="w-10 h-10 rounded-2xl bg-white/5 animate-spin" />
-              <div className="flex-1 space-y-2">
-                <div className="h-2 bg-white/5 rounded animate-pulse" />
-                <div className="h-1.5 bg-white/5 rounded w-2/3 animate-pulse" />
-              </div>
+              {!isCollapsed && (
+                <div className="flex-1 space-y-2">
+                  <div className="h-2 bg-white/5 rounded animate-pulse" />
+                  <div className="h-1.5 bg-white/5 rounded w-2/3 animate-pulse" />
+                </div>
+              )}
             </div>
           ) : user ? (
             <Link href="/profile">
-              <div className="flex items-center gap-4 p-4 rounded-[24px] hover:bg-white/[0.03] border border-transparent hover:border-white/5 transition-all cursor-pointer group">
+              <div className={cn(
+                "flex items-center gap-4 p-4 rounded-[24px] hover:bg-white/[0.03] border border-transparent hover:border-white/5 transition-all cursor-pointer group",
+                isCollapsed && "p-2 justify-center"
+              )}>
                 <div className="w-10 h-10 rounded-2xl overflow-hidden bg-violet-500/10 border border-white/10 flex-shrink-0 relative">
                   {avatarUrl ? (
                     <Image src={avatarUrl} alt={displayName} fill className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-violet-400/40" />
+                      <User className="w-5 h-5 text-zinc-800" />
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-black text-white truncate uppercase tracking-tight">{displayName}</p>
-                  <p className="text-[11px] font-bold text-zinc-700 truncate">@{displayUsername}</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-800 group-hover:text-violet-400 transition-colors" />
+                {!isCollapsed && (
+                  <>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-black text-white truncate uppercase tracking-tight">{displayName}</p>
+                      <p className="text-[11px] font-bold text-zinc-700 truncate">@{displayUsername}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-zinc-800 group-hover:text-violet-400 transition-colors" />
+                  </>
+                )}
               </div>
             </Link>
           ) : (
@@ -128,15 +155,18 @@ export default function NeonSidebar() {
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-4 p-4 rounded-[24px] bg-violet-600 hover:bg-violet-500 text-white shadow-2xl shadow-violet-600/20 transition-all cursor-pointer group"
+                className={cn(
+                  "flex items-center gap-4 p-4 rounded-[24px] bg-white hover:bg-zinc-200 text-black shadow-2xl transition-all cursor-pointer group",
+                  isCollapsed && "p-2 justify-center"
+                )}
               >
-                <LogIn className="w-5 h-5 text-white" />
-                <span className="text-[13px] font-black uppercase tracking-[0.2em]">Sign In</span>
+                <LogIn className="w-5 h-5" />
+                {!isCollapsed && <span className="text-[11px] font-black uppercase tracking-[0.2em]">Sign In</span>}
               </motion.div>
             </Link>
           )}
         </div>
-      </aside>
+      </motion.aside>
 
       {/* MOBILE BOTTOM NAV */}
       <div className="lg:hidden fixed bottom-6 left-6 right-6 z-50">

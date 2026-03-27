@@ -16,7 +16,7 @@ export default function TermsPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-3">
              <div className="w-1.5 h-1.5 bg-violet-500 rounded-full shadow-[0_0_8px_rgba(124,58,237,0.8)]" />
-             <h1 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Section 01: Service Protocols</h1>
+             <h1 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Terms and Conditions</h1>
           </div>
           <h2 className="text-5xl font-black italic uppercase tracking-tighter">Terms of <span className="text-zinc-700">Service</span></h2>
         </div>

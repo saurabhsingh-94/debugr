@@ -23,10 +23,16 @@ import {
   ShieldCheck,
   Globe,
   MapPin,
-  Lock
+  Lock,
+  Headphones,
+  Key,
+  ShieldAlert,
+  Smartphone,
+  CreditCard,
+  Target
 } from "lucide-react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { updateUserProfile, syncUser } from "@/app/actions";
 import toast from "react-hot-toast";
 import Image from "next/image";
@@ -119,11 +125,12 @@ export default function SettingsPage() {
   };
 
   const SETTINGS_TABS = [
-    { label: "Profile", icon: User },
+    { label: "Account", icon: User },
     { label: "Appearance", icon: Palette },
-    { label: "Notifications", icon: Bell },
-    { label: "Security", icon: Shield },
-    { label: "Accounts", icon: Fingerprint },
+    { label: "Security", icon: Key },
+    { label: "Privacy", icon: Eye },
+    { label: "Payments", icon: CreditCard },
+    { label: "Contact Us", icon: Headphones },
   ];
 
   if (isLoading) {
@@ -192,98 +199,64 @@ export default function SettingsPage() {
             {/* Main Content Area */}
             <div className="lg:col-span-3">
                <AnimatePresence mode="wait">
-                  {activeTab === "Profile" && (
+                  {activeTab === "Account" && (
                     <motion.div 
-                      key="profile-settings"
+                      key="account-settings"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       className="glass-morphism rounded-[48px] p-8 md:p-12 border border-white/10 shadow-3xl space-y-12"
                     >
-                      <form onSubmit={handleSubmit} className="space-y-10">
-                        {/* Profile Identity */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                          <div className="space-y-4">
-                            <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-1">Full Name</label>
-                            <div className="relative group">
-                              <User className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-violet-400 transition-colors" />
-                              <input 
-                                type="text" 
-                                value={formData.name}
-                                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 pl-14 pr-6 text-white text-sm focus:bg-white/[0.05] focus:border-violet-500/30 focus:ring-1 focus:ring-violet-500/20 outline-none transition-all"
-                                placeholder="Your full name"
-                              />
-                            </div>
-                          </div>
-                          <div className="space-y-4">
-                            <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-1">Username</label>
-                            <div className="relative group">
-                              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 font-bold text-sm group-focus-within:text-violet-400">@</span>
-                              <input 
-                                type="text" 
-                                value={formData.username}
-                                onChange={(e) => setFormData({...formData, username: e.target.value})}
-                                className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 pl-10 pr-6 text-white text-sm focus:bg-white/[0.05] focus:border-violet-500/30 focus:ring-1 focus:ring-violet-500/20 outline-none transition-all"
-                                placeholder="username"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Bio */}
-                        <div className="space-y-4">
-                          <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-1">About You</label>
-                          <textarea 
-                            value={formData.bio}
-                            onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                            className="w-full bg-white/[0.02] border border-white/5 rounded-3xl py-6 px-6 text-white text-sm focus:bg-white/[0.05] focus:border-violet-500/30 focus:ring-1 focus:ring-violet-500/20 outline-none transition-all min-h-[140px] resize-none"
-                            placeholder="Tell the community about yourself..."
-                          />
-                        </div>
-
-                        {/* Social Links */}
-                        <div className="space-y-8 pt-6">
-                           <h3 className="text-sm font-bold text-white flex items-center gap-3">
-                              <Globe className="w-4 h-4 text-violet-400" />
-                              Online Presence
-                           </h3>
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {[
-                                { id: "website", icon: Globe, label: "Website", placeholder: "https://example.com" },
-                                { id: "location", icon: MapPin, label: "Location", placeholder: "San Francisco, CA" },
-                                { id: "githubProfile", icon: Github, label: "GitHub", placeholder: "github.com/user" },
-                                { id: "xProfile", icon: Twitter, label: "X / Twitter", placeholder: "x.com/user" },
-                              ].map((f) => (
-                                <div key={f.id} className="space-y-3">
-                                  <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1">{f.label}</label>
-                                  <div className="relative group">
-                                    <f.icon className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700 group-focus-within:text-violet-400 transition-colors" />
-                                    <input 
-                                      type="text" 
-                                      value={(formData as any)[f.id]}
-                                      onChange={(e) => setFormData({...formData, [f.id]: e.target.value})}
-                                      className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-3.5 pl-14 pr-6 text-white text-xs focus:bg-white/[0.05] focus:border-violet-500/30 outline-none transition-all"
-                                      placeholder={f.placeholder}
-                                    />
+                      <div className="space-y-10">
+                         <div className="space-y-4">
+                            <h3 className="text-xl font-black text-white uppercase tracking-tighter">Linked Accounts</h3>
+                            <p className="text-zinc-500 text-sm">Connect your social identities for easier access.</p>
+                         </div>
+                         
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button 
+                              onClick={() => signIn('github')}
+                              className="flex items-center justify-between p-6 bg-white/[0.03] border border-white/5 rounded-3xl hover:bg-white/5 transition-all group"
+                            >
+                               <div className="flex items-center gap-4">
+                                  <div className="p-3 bg-black rounded-xl">
+                                     <Github className="w-5 h-5 text-white" />
                                   </div>
-                                </div>
-                              ))}
-                           </div>
-                        </div>
+                                  <div className="text-left">
+                                     <p className="text-sm font-bold text-white">GitHub</p>
+                                     <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Connect Account</p>
+                                  </div>
+                               </div>
+                               <div className="px-4 py-2 bg-white/5 rounded-full text-[9px] font-black text-zinc-400 uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all">Link</div>
+                            </button>
 
-                        {/* Submit */}
-                        <div className="flex justify-end pt-8">
-                           <button 
-                             type="submit"
-                             disabled={isSaving}
-                             className="px-10 py-5 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-3xl active:scale-95 disabled:opacity-50 flex items-center gap-3"
-                           >
-                              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                              Synchronize Changes
-                           </button>
-                        </div>
-                      </form>
+                             <button 
+                               onClick={() => signIn('google')}
+                               className="flex items-center justify-between p-6 bg-white/[0.03] border border-white/5 rounded-3xl hover:bg-white/5 transition-all group"
+                             >
+                                <div className="flex items-center gap-4">
+                                   <div className="p-3 bg-white rounded-xl">
+                                      <Image src="https://www.google.com/favicon.ico" alt="Google" width={20} height={20} className="w-5 h-5" />
+                                   </div>
+                                   <div className="text-left">
+                                      <p className="text-sm font-bold text-white">Google</p>
+                                      <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Connect Account</p>
+                                   </div>
+                                </div>
+                                <div className="px-4 py-2 bg-white/5 rounded-full text-[9px] font-black text-zinc-400 uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all">Link</div>
+                             </button>
+                         </div>
+
+                         <div className="nn-divider" />
+
+                         <div className="space-y-6">
+                            <h3 className="text-lg font-black text-white uppercase tracking-tight">Danger Zone</h3>
+                            <button className="flex items-center gap-4 px-8 py-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[11px] font-black uppercase tracking-[0.2em] transition-all">
+                               <ShieldAlert className="w-4 h-4" />
+                               Deactivate Account
+                            </button>
+                         </div>
+                      </div>
                     </motion.div>
                   )}
 
@@ -345,24 +318,90 @@ export default function SettingsPage() {
                     </motion.div>
                   )}
 
-                  {(activeTab !== "Profile" && activeTab !== "Appearance") && (
-                    <motion.div
-                      key="under-dev"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="glass-morphism rounded-[48px] p-24 text-center border border-white/10 border-dashed"
+                   {activeTab === "Security" && (
+                    <motion.div 
+                      key="security-settings"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="glass-morphism rounded-[48px] p-12 border border-white/10 space-y-8"
                     >
-                      <div className="w-20 h-20 bg-white/[0.02] rounded-[32px] flex items-center justify-center mx-auto mb-8">
-                         <Lock className="w-8 h-8 text-zinc-700" />
+                      <h3 className="text-xl font-black text-white uppercase tracking-tighter">Security Protocols</h3>
+                      <div className="space-y-4">
+                         <div className="flex items-center justify-between p-6 bg-white/[0.02] rounded-3xl border border-white/5">
+                            <div className="flex items-center gap-4">
+                               <Smartphone className="w-5 h-5 text-violet-400" />
+                               <div>
+                                  <p className="text-sm font-bold text-white">Two-Factor Authentication</p>
+                                  <p className="text-xs text-zinc-500">Add an extra layer of security</p>
+                               </div>
+                            </div>
+                            <button className="px-6 py-2 bg-white/5 hover:bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest transition-all">Enable</button>
+                         </div>
                       </div>
-                      <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-4">Registry Locked</h3>
-                      <p className="text-sm font-medium text-zinc-600 max-w-xs mx-auto mb-10">This section is currently being encrypted. You will be notified once the protocol is online.</p>
-                      <button 
-                        onClick={() => setActiveTab("Profile")}
-                        className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] transition-all"
-                      >
-                         Return to Profile
-                      </button>
+                    </motion.div>
+                  )}
+
+                  {activeTab === "Privacy" && (
+                    <motion.div 
+                      key="privacy-settings"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="glass-morphism rounded-[48px] p-12 border border-white/10 space-y-8"
+                    >
+                      <h3 className="text-xl font-black text-white uppercase tracking-tighter">Data Privacy</h3>
+                      <p className="text-zinc-500 text-sm">Manage how your data is used and visible to others.</p>
+                      <div className="flex items-center justify-between px-2">
+                         <span className="text-sm font-bold text-white">Public Profile Visibility</span>
+                         <div className="w-12 h-6 bg-violet-500 rounded-full relative">
+                            <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-lg" />
+                         </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === "Contact Us" && (
+                    <motion.div 
+                      key="contact-settings"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="glass-morphism rounded-[48px] p-12 border border-white/10 shadow-3xl space-y-12"
+                    >
+                       <div className="space-y-8">
+                          <div className="flex items-center gap-4">
+                             <div className="w-12 h-12 bg-white text-black rounded-2xl flex items-center justify-center">
+                                <Mail className="w-6 h-6" />
+                             </div>
+                             <div>
+                                <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none">Support Center</h3>
+                                <p className="text-zinc-500 text-xs mt-1 uppercase tracking-widest font-bold">Identity Help Desk</p>
+                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl space-y-4">
+                                <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Founders</p>
+                                <div className="space-y-2">
+                                   <p className="text-sm font-bold text-white">Saurabh Kumar Singh</p>
+                                   <p className="text-sm font-bold text-white">Dennis Pradhan</p>
+                                </div>
+                             </div>
+
+                             <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl space-y-4">
+                                <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Global Inquiries</p>
+                                <div className="flex items-center gap-3 group cursor-pointer">
+                                   <p className="text-sm font-bold text-zinc-400 group-hover:text-white transition-colors">work.debugr@gmail.com</p>
+                                   <ArrowLeft className="w-4 h-4 rotate-180 text-zinc-800 group-hover:text-white transition-all" />
+                                </div>
+                             </div>
+                          </div>
+
+                          <div className="p-10 bg-zinc-900/50 border border-white/5 rounded-[40px] text-center space-y-6">
+                             <h4 className="text-sm font-black text-white uppercase tracking-widest">Need real-time help?</h4>
+                             <p className="text-xs text-zinc-500 max-w-sm mx-auto">Our specialized response team is available for identity synchronization and platform issues.</p>
+                             <button className="px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-zinc-200 transition-all">Submit Protocol Ticket</button>
+                          </div>
+                       </div>
                     </motion.div>
                   )}
                </AnimatePresence>

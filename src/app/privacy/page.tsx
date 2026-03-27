@@ -16,7 +16,7 @@ export default function PrivacyPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-3">
              <div className="w-1.5 h-1.5 bg-rose-500 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
-             <h1 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Section 02: Neural Privacy</h1>
+             <h1 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">How We Use Your Information</h1>
           </div>
           <h2 className="text-5xl font-black italic uppercase tracking-tighter">Privacy <span className="text-zinc-700">Directive</span></h2>
         </div>

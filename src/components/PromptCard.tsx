@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Unlock, Copy, Heart, Bookmark, UserPlus, ShieldCheck, Share2, MoreHorizontal } from "lucide-react";
+import { Lock, Unlock, Copy, Heart, Bookmark, UserPlus, ShieldCheck, Share2, MoreHorizontal, Zap } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -10,22 +10,28 @@ import { toggleLike, toggleBookmark, toggleFollow } from "@/app/actions";
 interface PromptCardProps {
   id: string;
   title: string;
-  thumbnail: string;
-  model: string;
-  price: string | number;
-  prompt: string;
-  creatorId?: string;
+  thumbnailUrl?: string | null;
+  aiModel?: string | null;
+  price: number;
+  currency?: string;
+  content?: string | null;
+  creatorId: string;
+  author?: string | null;
+  authorUsername?: string | null;
   initialLocked?: boolean;
 }
 
 export default function PromptCard({ 
   id, 
   title, 
-  thumbnail, 
-  model, 
+  thumbnailUrl, 
+  aiModel, 
   price, 
-  prompt, 
+  currency = "INR",
+  content, 
   creatorId,
+  author,
+  authorUsername,
   initialLocked = true 
 }: PromptCardProps) {
   const [isLocked, setIsLocked] = useState(initialLocked);
@@ -38,8 +44,8 @@ export default function PromptCard({
   const [following, setFollowing] = useState(false);
 
   const handleCopy = () => {
-    if (isLocked) return;
-    navigator.clipboard.writeText(prompt);
+    if (isLocked || !content) return;
+    navigator.clipboard.writeText(content);
     setShowCopyFeedback(true);
     setTimeout(() => setShowCopyFeedback(false), 2000);
   };
@@ -102,12 +108,18 @@ export default function PromptCard({
       className="relative aspect-[4/5] overflow-hidden group border border-white/5 cursor-pointer bg-[#0A0A0A] rounded-[32px] transition-all hover:border-violet-500/20 shadow-2xl"
     >
       {/* THUMBNAIL */}
-      <Image 
-        src={thumbnail} 
-        alt={title} 
-        fill 
-        className={`object-cover transition-all duration-1000 group-hover:scale-105 ${isHovered ? 'filter blur-[4px] opacity-30' : 'opacity-80'}`}
-      />
+      {thumbnailUrl ? (
+        <Image 
+          src={thumbnailUrl} 
+          alt={title} 
+          fill 
+          className={`object-cover transition-all duration-1000 group-hover:scale-105 ${isHovered ? 'filter blur-[4px] opacity-30' : 'opacity-80'}`}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
+           <Zap className="w-12 h-12 text-zinc-800" />
+        </div>
+      )}
 
       {/* INTERACTION OVERLAY */}
       <AnimatePresence>
@@ -122,9 +134,17 @@ export default function PromptCard({
             <div className="flex justify-between items-start">
               <div className="space-y-2">
                 <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest bg-violet-400/10 px-3 py-1.5 rounded-xl border border-violet-400/20">
-                   {model}
+                   {aiModel || "GPT-4"}
                 </span>
                 <p className="text-xl font-black text-white leading-tight pt-2 uppercase tracking-tighter italic">{title}</p>
+                {author && (
+                   <div className="flex items-center gap-2 pt-1">
+                      <div className="w-4 h-4 rounded-full bg-zinc-800 flex items-center justify-center">
+                         <UserPlus className="w-2.5 h-2.5 text-zinc-500" />
+                      </div>
+                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">By {author}</span>
+                   </div>
+                )}
               </div>
               
               <div className="flex flex-col gap-2">
@@ -154,7 +174,7 @@ export default function PromptCard({
                ) : (
                   <div className="w-full p-6 bg-white/[0.03] border border-white/5 rounded-3xl">
                      <p className="text-[12px] text-zinc-300 font-medium leading-relaxed tracking-tight italic line-clamp-5">
-                        {prompt}
+                        {content}
                      </p>
                   </div>
                )}
@@ -167,7 +187,7 @@ export default function PromptCard({
                     onClick={(e) => { e.stopPropagation(); handleUnlock(); }}
                     className="w-full py-4 bg-white text-black text-[11px] font-black uppercase tracking-[0.3em] active:scale-95 transition-all flex items-center justify-center gap-2 rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                   >
-                     Unlock Access • {price}
+                     Unlock Access • {currency} {price}
                   </button>
                ) : (
                   <button 
@@ -192,7 +212,7 @@ export default function PromptCard({
          {isLocked ? (
             <div className="flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-xl rounded-full border border-white/10 shadow-2xl">
                <Lock className="w-3 h-3 text-violet-400" />
-               <span className="text-[10px] font-black text-white tracking-widest uppercase">{price}</span>
+               <span className="text-[10px] font-black text-white tracking-widest uppercase">{currency} {price}</span>
             </div>
          ) : (
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 backdrop-blur-xl rounded-full border border-emerald-500/20 shadow-2xl shadow-emerald-500/10">

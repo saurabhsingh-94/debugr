@@ -2,11 +2,16 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Image as ImageIcon, Link as LinkIcon, AtSign, Smile, Send, User } from "lucide-react";
+import { Image as ImageIcon, Link as LinkIcon, AtSign, Smile, Send, User, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { postPost } from "@/app/actions";
 
-export default function CreatePost() {
+interface CreatePostProps {
+  onPostSuccess?: () => void;
+  onCancel?: () => void;
+}
+
+export default function CreatePost({ onPostSuccess, onCancel }: CreatePostProps) {
   const [content, setContent] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
@@ -30,10 +35,11 @@ export default function CreatePost() {
     
     try {
       await postPost(content);
-      toast.success("Identity Post Synchronized", { id });
+      toast.success("Post shared", { id });
       setContent("");
       setIsFocused(false);
       if (textareaRef.current) textareaRef.current.style.height = "auto";
+      onPostSuccess?.();
     } catch (error) {
       toast.error("Transmission Error", { id });
     } finally {
@@ -51,8 +57,8 @@ export default function CreatePost() {
       <form onSubmit={handleSubmit}>
         <div className="flex gap-3">
           {/* Avatar */}
-          <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
-             <User className="w-[18px] h-[18px] text-violet-400/60" />
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-900 border border-white/5 flex items-center justify-center flex-shrink-0">
+             <User className="w-5 h-5 text-zinc-600" />
           </div>
 
           {/* Input area */}
@@ -65,7 +71,7 @@ export default function CreatePost() {
               onBlur={() => !content && setIsFocused(false)}
               placeholder="Share a problem, debug story, or insight..."
               rows={isFocused ? 3 : 1}
-              className="w-full bg-transparent border-none focus:ring-0 text-[15px] text-white placeholder-zinc-600 resize-none outline-none leading-relaxed min-h-[40px] max-h-[240px] overflow-y-auto scrollbar-none transition-all"
+              className="w-full bg-transparent border-none focus:ring-0 text-[16px] text-white placeholder-zinc-500 resize-none outline-none leading-relaxed min-h-[40px] max-h-[240px] overflow-y-auto scrollbar-none transition-all"
             />
 
             <AnimatePresence>
@@ -118,14 +124,28 @@ export default function CreatePost() {
                         </div>
                       )}
 
-                      <button
-                        type="submit"
-                        disabled={!content.trim() || isOverLimit || isPosting}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-black uppercase tracking-wider transition-all active:scale-95 shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_30px_rgba(124,58,237,0.5)]"
-                      >
-                        {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        Post
-                      </button>
+                      <div className="flex items-center gap-2">
+                         <button 
+                           type="button"
+                           onClick={() => {
+                             if (onCancel) onCancel();
+                             setIsFocused(false);
+                             if (!content) setContent("");
+                           }}
+                           className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all flex items-center gap-2 group"
+                         >
+                           <X className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
+                           {onCancel && <span className="text-[10px] font-black uppercase tracking-widest pr-1">Cancel</span>}
+                         </button>
+                         <button
+                           type="submit"
+                           disabled={!content.trim() || isOverLimit || isPosting}
+                           className="flex items-center gap-2 px-6 py-2 rounded-xl bg-white hover:bg-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed text-black text-[11px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-2xl"
+                         >
+                           {isPosting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                           Post
+                         </button>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
