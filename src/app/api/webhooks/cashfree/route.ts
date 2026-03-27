@@ -205,58 +205,100 @@ async function handlePaymentSuccess(data: any) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REFUND HANDLER
-// Deducts from creator's pendingBalance if still pending.
-// If already available, deducts from availableBalance.
+// REFUND HANDLER — Production Grade
+//
+// Fixes applied:
+//  1. Negative balance protection  — clamp to 0, log debt for future deduction
+//  2. Double-refund prevention     — check status === "refunded" first
+//  3. Platform fee reversal        — marks platform_fee record as "fee_refunded"
+//  4. Partial refund support       — proportional deduction by refund_amount
+//  5. Status history preserved     — never deletes, only updates status field
 // ─────────────────────────────────────────────────────────────────────────────
 async function handleRefund(data: any) {
-  const orderId = data?.order?.order_id || data?.refund?.order_id;
-  const refundAmount = Number(data?.refund?.refund_amount || data?.payment?.payment_amount || 0);
+  const orderId     = data?.order?.order_id || data?.refund?.order_id;
+  // Cashfree sends refund_amount for partial refunds; fall back to full amount
+  const refundAmount = Number(
+    data?.refund?.refund_amount || data?.payment?.payment_amount || 0
+  );
 
-  if (!orderId) {
-    return NextResponse.json({ error: "Missing orderId for refund" }, { status: 400 });
+  if (!orderId || !refundAmount) {
+    return NextResponse.json({ error: "Missing orderId or refund amount" }, { status: 400 });
   }
 
-  console.warn(`[Webhook - REFUND] Processing refund for order: ${orderId}, amount: ₹${refundAmount}`);
+  // Find the original sale_credit transaction
+  const originalTxn = await (prisma as any).walletTransaction.findFirst({
+    where: { orderId, type: "sale_credit" },
+  });
 
-  const creatorShare = parseFloat((refundAmount * CREATOR_SHARE).toFixed(2));
+  if (!originalTxn) {
+    console.warn(`[Refund] No sale_credit found for ${orderId} — skipped`);
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  // ── FIX 2: Double-refund prevention ────────────────────────────────────────
+  if (originalTxn.status === "refunded") {
+    console.log(`[Refund] ${orderId} already refunded — skipped`);
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  // ── FIX 4: Proportional partial refund ─────────────────────────────────────
+  // Derive creator's portion of THIS refund proportionally.
+  // e.g. original sale ₹1000 → creator got ₹800.
+  //      partial refund ₹500 → deduct ₹400 (80% of ₹500).
+  const creatorDeduction = parseFloat((refundAmount * CREATOR_SHARE).toFixed(2));
+  const platformDeduction = parseFloat((refundAmount * PLATFORM_SHARE).toFixed(2));
+
+  // Determine which balance bucket to deduct from
+  const deductFrom = originalTxn.status === "pending" ? "pendingBalance" : "availableBalance";
+
+  // Fetch current wallet to check for negative balance risk
+  const wallet = await (prisma as any).wallet.findUnique({
+    where: { userId: originalTxn.userId },
+    select: { id: true, pendingBalance: true, availableBalance: true, totalEarned: true },
+  });
+
+  if (!wallet) {
+    console.error(`[Refund] Wallet not found for user ${originalTxn.userId}`);
+    return NextResponse.json({ error: "Wallet not found" }, { status: 500 });
+  }
+
+  // ── FIX 1: Negative balance protection ─────────────────────────────────────
+  const currentBalance = Number(
+    deductFrom === "pendingBalance" ? wallet.pendingBalance : wallet.availableBalance
+  );
+  const actualDeduction = Math.min(creatorDeduction, currentBalance); // never go below 0
+  const debt            = parseFloat((creatorDeduction - actualDeduction).toFixed(2));
+
+  console.warn(
+    `[Refund] orderId: ${orderId} | deductFrom: ${deductFrom} | ` +
+    `creatorDeduction: ₹${creatorDeduction} | available: ₹${currentBalance} | ` +
+    `actualDeduction: ₹${actualDeduction} | debt: ₹${debt}`
+  );
 
   try {
-    // Find the original wallet transaction
-    const originalTxn = await (prisma as any).walletTransaction.findFirst({
-      where: { orderId, type: "sale_credit" },
-    });
-
-    if (!originalTxn) {
-      console.warn(`[Refund] No wallet transaction found for ${orderId}`);
-      return NextResponse.json({ ok: true, skipped: true });
-    }
-
-    // Deduct from whichever balance bucket the funds currently sit in
-    const deductFrom = originalTxn.status === "pending" ? "pendingBalance" : "availableBalance";
-
     await prisma.$transaction(async (tx) => {
-      // Mark original transaction as refunded
+      // 1. Mark original sale_credit as "refunded" (preserves history)
       await (tx as any).walletTransaction.update({
         where: { id: originalTxn.id },
-        data: { status: "refunded" },
+        data:  { status: "refunded" },
       });
 
-      // Deduct from wallet
+      // 2. Deduct from wallet — clamped to never go negative
+      const walletUpdate: Record<string, any> = {
+        totalEarned: { decrement: actualDeduction },
+      };
+      walletUpdate[deductFrom] = { decrement: actualDeduction };
       await (tx as any).wallet.update({
         where: { userId: originalTxn.userId },
-        data: {
-          [deductFrom]:  { decrement: creatorShare },
-          totalEarned:   { decrement: creatorShare },
-        },
+        data:  walletUpdate,
       });
 
-      // Log the debit
+      // 3. Log the refund debit record
       await (tx as any).walletTransaction.create({
         data: {
-          walletId:    originalTxn.walletId,
+          walletId:    wallet.id,
           userId:      originalTxn.userId,
-          amount:      creatorShare,
+          amount:      actualDeduction,
           platformFee: 0,
           type:        "refund_debit",
           status:      "completed",
@@ -266,11 +308,60 @@ async function handleRefund(data: any) {
           releaseAt:   null,
         },
       });
+
+      // 4. If user's balance couldn't cover the full refund, log the debt
+      //    Future payout logic should check this record before releasing funds
+      if (debt > 0) {
+        console.error(
+          `[Refund] ⚠️  Debt created: ₹${debt} for user ${originalTxn.userId} — ` +
+          `will deduct from future earnings`
+        );
+        await (tx as any).walletTransaction.create({
+          data: {
+            walletId:    wallet.id,
+            userId:      originalTxn.userId,
+            amount:      debt,
+            platformFee: 0,
+            type:        "debt_record",        // future payout will honour this
+            status:      "pending",
+            source:      "refund",
+            orderId:     `${orderId}_debt`,
+            promptId:    originalTxn.promptId,
+            releaseAt:   null,
+          },
+        });
+      }
+
+      // 5. FIX 3: Reverse the platform fee record too — mark as "fee_refunded"
+      const feeTxn = await (tx as any).walletTransaction.findFirst({
+        where: { orderId: `${orderId}_fee`, type: "platform_fee" },
+      });
+      if (feeTxn) {
+        await (tx as any).walletTransaction.update({
+          where: { id: feeTxn.id },
+          data:  { status: "fee_refunded" },
+        });
+        // Log the platform fee reversal for analytics accuracy
+        await (tx as any).walletTransaction.create({
+          data: {
+            walletId:    wallet.id,
+            userId:      originalTxn.userId,
+            amount:      platformDeduction,
+            platformFee: platformDeduction,
+            type:        "platform_fee_refund",
+            status:      "completed",
+            source:      "refund",
+            orderId:     `${orderId}_fee_refund`,
+            promptId:    originalTxn.promptId,
+            releaseAt:   null,
+          },
+        });
+      }
     });
 
-    console.log(`[Refund] ₹${creatorShare} deducted from ${deductFrom} for order ${orderId}`);
+    console.log(`[Refund] ✅ Complete — order: ${orderId} | deducted: ₹${actualDeduction} | debt: ₹${debt}`);
   } catch (err: any) {
-    console.error("[Refund] Error:", err.message);
+    console.error("[Refund] Fatal error:", err.message);
     return NextResponse.json({ error: "Refund processing failed" }, { status: 500 });
   }
 
