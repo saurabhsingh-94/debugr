@@ -129,6 +129,19 @@ export default function NeonSidebar() {
               </Link>
             );
           })}
+
+          {(user as any)?.isAdmin && (
+            <Link href="/admin/verification">
+              <div className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all",
+                pathname === "/admin/verification" ? "bg-violet-500/10 text-violet-400 shadow-[0_0_20px_rgba(124,58,237,0.1)]" : "text-zinc-600 hover:text-violet-400",
+                isCollapsed && "justify-center px-0 w-12 mx-auto"
+              )}>
+                <ShieldCheck className="w-5 h-5 flex-shrink-0" />
+                {!isCollapsed && <span className="text-[13px] font-black uppercase tracking-widest text-[10px]">Admin Console</span>}
+              </div>
+            </Link>
+          )}
         </nav>
 
         <div className="p-4 border-t border-white/5 mb-8">

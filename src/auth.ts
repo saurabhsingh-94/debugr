@@ -19,7 +19,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           select: { 
             username: true, 
             isProfessional: true, 
-            professionalStatus: true 
+            professionalStatus: true,
+            isAdmin: true
           }
         });
         
@@ -27,6 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (session.user as any).username = dbUser.username;
           (session.user as any).isProfessional = dbUser.isProfessional;
           (session.user as any).professionalStatus = dbUser.professionalStatus;
+          (session.user as any).isAdmin = dbUser.isAdmin;
         }
       }
       return session;

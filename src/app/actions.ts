@@ -69,6 +69,7 @@ export async function syncUser() {
       email: user.email!,
       name: user.name || user.email?.split("@")[0] || "Anonymous",
       avatarUrl: (user as any).avatarUrl || user.image,
+      isAdmin: user.email === "rsaurabhsingh84@gmail.com",
       username:
         (user.name || user.email?.split("@")[0])
           ?.toLowerCase()
@@ -83,6 +84,7 @@ export async function syncUser() {
       username: true,
       bio: true,
       avatarUrl: true,
+      isAdmin: true,
       location: true,
       website: true,
       githubProfile: true,
@@ -156,24 +158,79 @@ export async function switchToProfessional() {
   }
 }
 
+async function verifyBankAccount(accountNumber: string, ifsc: string, name: string) {
+  try {
+    const response = await fetch("https://api.cashfree.com/verification/bank", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-client-id": process.env.CASHFREE_APP_ID || "",
+        "x-client-secret": process.env.CASHFREE_SECRET_KEY || "",
+      },
+      body: JSON.stringify({
+        beneficiary_account: accountNumber,
+        beneficiary_ifsc: ifsc,
+        beneficiary_name: name,
+      }),
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Cashfree Verification Error:", error);
+    return null;
+  }
+}
+
 export async function updateBankDetails(formData: FormData) {
   try {
     const user = await getAuthUser();
     if (!user?.id) throw new Error("Unauthorized");
 
+    const bankName = formData.get("bankName") as string;
+    const accountNumber = formData.get("accountNumber") as string;
+    const ifscCode = formData.get("ifscCode") as string;
+    const accountHolderName = formData.get("accountHolderName") as string;
+
+    // Trigger Automated "1 Rupee Test"
+    const verification = await verifyBankAccount(accountNumber, ifscCode, accountHolderName);
+    
+    let status = "PENDING";
+    let isProfessional = false;
+
+    if (verification?.status === "SUCCESS") {
+      const bankNameFromRecord = verification.data?.accountHolderName?.toLowerCase();
+      const providedName = accountHolderName.toLowerCase();
+      
+      // Simple word-based matching for robustness
+      const bankWords = bankNameFromRecord.split(/\s+/);
+      const userWords = providedName.split(/\s+/);
+      const matchEntries = userWords.filter(word => bankWords.includes(word));
+      
+      if (matchEntries.length >= 2 || bankNameFromRecord === providedName) {
+        status = "VERIFIED";
+        isProfessional = true;
+      }
+    }
+
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        bankName: formData.get("bankName") as string,
-        accountNumber: formData.get("accountNumber") as string,
-        ifscCode: formData.get("ifscCode") as string,
-        accountHolderName: formData.get("accountHolderName") as string,
-        professionalStatus: "PENDING",
+        bankName,
+        accountNumber,
+        ifscCode,
+        accountHolderName,
+        professionalStatus: status,
+        isProfessional: isProfessional,
       },
     });
 
     revalidatePath("/dashboard/creator");
-    return { success: true };
+    return { 
+      success: true, 
+      verified: status === "VERIFIED",
+      message: status === "VERIFIED" ? "Identity instantly synchronized." : "Verification pending administrative review."
+    };
   } catch (error: any) {
     return { error: error.message };
   }
@@ -203,6 +260,50 @@ export async function postPost(content: string) {
   });
 
   revalidatePath("/");
+}
+
+export async function getPendingVerifications() {
+  const user = await getAuthUser();
+  if (!user?.isAdmin) throw new Error("Unauthorized");
+
+  return await prisma.user.findMany({
+    where: { professionalStatus: "PENDING" },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function approveUser(userId: string) {
+  const admin = await getAuthUser();
+  if (!admin?.isAdmin) throw new Error("Unauthorized");
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { 
+      professionalStatus: "VERIFIED",
+      isProfessional: true 
+    },
+  });
+
+  revalidatePath("/admin/verification");
+  revalidatePath("/dashboard/creator");
+  return { success: true };
+}
+
+export async function rejectUser(userId: string) {
+  const admin = await getAuthUser();
+  if (!admin?.isAdmin) throw new Error("Unauthorized");
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { 
+      professionalStatus: "UNCONFIGURED",
+      isProfessional: false 
+    },
+  });
+
+  revalidatePath("/admin/verification");
+  revalidatePath("/dashboard/creator");
+  return { success: true };
 }
 
 /**

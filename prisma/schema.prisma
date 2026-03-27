@@ -44,6 +44,7 @@ model User {
   signals               Signal[]
   isProfessional        Boolean          @default(false)
   professionalStatus    String           @default("UNCONFIGURED")
+  isAdmin               Boolean          @default(false)
   bankName              String?
   accountNumber         String?
   ifscCode              String?
