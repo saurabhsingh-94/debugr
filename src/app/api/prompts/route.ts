@@ -11,7 +11,7 @@ export async function GET() {
         previewContent: true,
         price: true,
         createdAt: true,
-        creator: {
+        author: {
           select: {
             id: true,
             name: true,
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         previewContent,
         fullContent,
         price: parseFloat(price),
-        creatorId: session.user.id,
+        authorId: session.user.id,
       },
     });
 

@@ -21,7 +21,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const prompt = await prisma.prompt.findUnique({
       where: { id: promptId },
       include: {
-        creator: {
+        author: {
           select: {
             id: true,
             name: true,
@@ -38,7 +38,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const { fullContent, ...previewPrompt } = prompt;
 
     // Return fullContent if purchased OR if the user IS the creator
-    const canAccess = !!purchase || userId === prompt.creatorId;
+    const canAccess = !!purchase || userId === prompt.authorId;
 
     return NextResponse.json({
       ...previewPrompt,

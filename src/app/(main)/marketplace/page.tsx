@@ -4,7 +4,7 @@ import MarketplaceClient from "@/components/MarketplaceClient";
 export default async function MarketplacePage() {
   const prompts = await prisma.prompt.findMany({
     include: {
-      creator: {
+      author: {
         select: {
           name: true,
           username: true,

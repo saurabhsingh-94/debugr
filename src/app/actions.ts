@@ -1,4 +1,12 @@
 "use server";
+export async function isUsernameAvailable(username: string) {
+  const user = await prisma.user.findUnique({
+    where: { username: username.toLowerCase() },
+    select: { id: true }
+  });
+  return !user;
+}
+
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
