@@ -3,19 +3,15 @@ import { prisma } from "@/lib/db";
 
 /**
  * GET /api/cron/release-earnings
- * 
- * Vercel Cron Job — runs daily at midnight IST.
- * Finds all WalletTransactions where:
- *   - status = "pending"
- *   - releaseAt <= now()
- * 
- * Moves amounts to availableBalance atomically.
- * 
- * Secure this endpoint using CRON_SECRET env variable.
- * In vercel.json: { "crons": [{ "path": "/api/cron/release-earnings", "schedule": "0 18 * * *" }] }
+ *
+ * Runs every hour via Vercel Cron.
+ * Condition-based only: releaseAt <= now (no time-of-day dependency).
+ *
+ * A transaction at 11:31 PM will be released by 12:31 AM at most.
+ * Never misses by more than 1 hour regardless of when it was created.
  */
 export async function GET(req: Request) {
-  // Security: Only allow Vercel cron runner (or your own cron secret)
+  // Security: Vercel passes CRON_SECRET as Bearer token automatically
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,43 +19,42 @@ export async function GET(req: Request) {
 
   const now = new Date();
 
-  // Find all pending transactions that are due for release
-  const dueTransactions = await prisma.walletTransaction.findMany({
+  // ── Find all pending transactions where release date has passed ──────────
+  const dueTransactions = await (prisma as any).walletTransaction.findMany({
     where: {
-      status: "pending",
-      type: "sale_credit",
-      releaseAt: { lte: now },
+      type:      "sale_credit",
+      status:    "pending",
+      releaseAt: { lte: now },   // ONLY condition — date-based, not time-based
     },
     select: {
-      id: true,
+      id:       true,
       walletId: true,
-      userId: true,
-      amount: true,
+      userId:   true,
+      amount:   true,
     },
   });
 
   if (dueTransactions.length === 0) {
-    console.log("[Cron] No transactions due for release.");
-    return NextResponse.json({ released: 0 });
+    return NextResponse.json({ released: 0, message: "No transactions due." });
   }
 
   let releasedCount = 0;
   let totalReleased = 0;
+  const errors: string[] = [];
 
-  // Process each transaction atomically
   for (const txn of dueTransactions) {
     try {
       await prisma.$transaction([
-        // 1. Mark transaction as available
-        prisma.walletTransaction.update({
+        // 1. Mark this transaction as available
+        (prisma as any).walletTransaction.update({
           where: { id: txn.id },
-          data: { status: "available" },
+          data:  { status: "available" },
         }),
-        // 2. Move from pendingBalance → availableBalance
-        prisma.wallet.update({
+        // 2. Atomically move pending → available on the wallet
+        (prisma as any).wallet.update({
           where: { id: txn.walletId },
           data: {
-            pendingBalance: { decrement: Number(txn.amount) },
+            pendingBalance:   { decrement: Number(txn.amount) },
             availableBalance: { increment: Number(txn.amount) },
           },
         }),
@@ -67,12 +62,18 @@ export async function GET(req: Request) {
 
       releasedCount++;
       totalReleased += Number(txn.amount);
-      console.log(`[Cron] Released ₹${txn.amount} for wallet ${txn.walletId}`);
     } catch (err: any) {
-      console.error(`[Cron] Failed to release txn ${txn.id}:`, err.message);
+      console.error(`[Cron] Failed txn ${txn.id}:`, err.message);
+      errors.push(txn.id);
     }
   }
 
-  console.log(`[Cron] ✅ Released ${releasedCount} transactions totalling ₹${totalReleased}`);
-  return NextResponse.json({ released: releasedCount, totalReleased });
+  console.log(`[Cron] ✅ Released ${releasedCount} txns | Total: ₹${totalReleased.toFixed(2)} | Errors: ${errors.length}`);
+
+  return NextResponse.json({
+    released:       releasedCount,
+    totalReleased:  parseFloat(totalReleased.toFixed(2)),
+    errors:         errors.length,
+    checkedAt:      now.toISOString(),
+  });
 }
