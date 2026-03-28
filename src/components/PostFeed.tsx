@@ -200,12 +200,14 @@ function PostCard({ post, feedParam }: { post: any; feedParam: string }) {
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex items-center gap-2 mb-2">
-            <Link href={`/u/${post?.user?.username}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
+            <Link href={`/u/${post?.user?.username || 'unknown'}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
               <span className="text-[15px] font-black text-white leading-tight uppercase tracking-tight">
-                {post?.user?.name || post?.user?.username || "Anonymous"}
+                {post?.user?.name || (post?.user?.username ? `@${post.user.username}` : "Agent")}
               </span>
             </Link>
-            <span className="text-[13px] font-bold text-zinc-700 tracking-tight">@{post?.user?.username || "user"}</span>
+            {post?.user?.username && (
+              <span className="text-[13px] font-bold text-zinc-700 tracking-tight">@{post.user.username}</span>
+            )}
             <span className="text-zinc-800">·</span>
             <span className="text-[12px] font-medium text-zinc-600">{timeAgo}</span>
             <button 

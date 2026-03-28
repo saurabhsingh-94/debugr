@@ -63,16 +63,17 @@ export async function syncUser() {
     update: {
       email: user.email!,
       avatarUrl: (user as any).avatarUrl || user.image,
-      // Strictly do NOT update username here to prevent overwriting user-set values
+      // Repair logic: if name is missing or generic, update it from session/email
+      name: user.name || user.email?.split("@")[0] || "Agent",
     },
     create: {
       id: user.id,
       email: user.email!,
-      name: user.name || user.email?.split("@")[0] || "Anonymous",
+      name: user.name || user.email?.split("@")[0] || "Agent",
       avatarUrl: (user as any).avatarUrl || user.image,
       isAdmin: user.email === "rsaurabhsingh84@gmail.com",
       username:
-        (user.name || user.email?.split("@")[0])
+        (user.name || user.email?.split("@")[0] || "agent")
           ?.toLowerCase()
           .replace(/\s+/g, "_") +
         "_" +
@@ -269,6 +270,19 @@ export async function postPost(content: string) {
   await handleMentions(content, user.id, post.id);
 
   revalidatePath("/");
+}
+
+export async function incrementPostView(postId: string) {
+  try {
+    await prisma.post.update({
+      where: { id: postId },
+      data: { viewCount: { increment: 1 } }
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("View increment error:", error);
+    return { error: "Failed to increment view" };
+  }
 }
 
 export async function getPendingVerifications() {

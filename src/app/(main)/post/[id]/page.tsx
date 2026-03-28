@@ -1,4 +1,4 @@
-import { getPostWithComments, getAuthUser } from "@/app/actions";
+import { getPostWithComments, getAuthUser, incrementPostView } from "@/app/actions";
 import { notFound, redirect } from "next/navigation";
 import CommentSection from "@/components/CommentSection";
 import { 
@@ -10,6 +10,7 @@ import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 
 export default async function PostDetailPage({ params }: { params: { id: string } }) {
+  await incrementPostView(params.id);
   const post = await getPostWithComments(params.id);
   const user = await getAuthUser();
 
