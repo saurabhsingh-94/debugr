@@ -53,7 +53,7 @@ export default function ProfileClient({ user: initialUser, stats, problems = [],
         </Link>
         <div>
           <p className="text-[15px] font-bold text-white leading-tight">{user?.name || "Profile"}</p>
-          <p className="text-xs text-zinc-600 font-bold uppercase tracking-widest">{problems.length} posts</p>
+          <p className="text-xs text-zinc-600 font-bold uppercase tracking-widest">{problems.length} post{problems.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
 
@@ -254,9 +254,10 @@ export default function ProfileClient({ user: initialUser, stats, problems = [],
                   key={p.id} 
                   id={p.id}
                   title={p.title}
-                  thumbnailUrl={p.thumbnailUrl || "/placeholder.png"}
+                  thumbnailUrl={p.thumbnailUrl}
                   aiModel={p.aiModel || "GPT-4"}
                   price={Number(p.price)}
+                  currency={p.currency || "INR"}
                   content={p.previewContent || p.description}
                   creatorId={p.authorId}
                   author={p.author?.name}

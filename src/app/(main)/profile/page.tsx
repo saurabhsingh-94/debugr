@@ -1,70 +1,63 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { 
-  Plus, 
-  Activity, 
-  Layers, 
-  Zap, 
-  LayoutDashboard,
-  ShieldCheck,
-  ZapOff,
-  Network,
-  Cpu,
-} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import ProfileClient from "@/components/ProfileClient";
 import { syncUser } from "@/app/actions";
+import { ZapOff } from "lucide-react";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const [prismaUser, setPrismaUser] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [prompts, setPrompts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const sessionUser = session?.user;
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (sessionUser) {
-        const pUser = await syncUser();
+    if (status === "loading") return;
+    if (!sessionUser?.id) { setLoading(false); return; }
+
+    const fetchAll = async () => {
+      try {
+        const [pUser, postsRes, promptsRes] = await Promise.all([
+          syncUser(),
+          fetch(`/api/user/${sessionUser.id}/posts`).then((r) => r.json()),
+          fetch(`/api/user/${sessionUser.id}/prompts`).then((r) => r.json()),
+        ]);
         setPrismaUser(pUser);
+        setPosts(Array.isArray(postsRes) ? postsRes : postsRes.posts || []);
+        setPrompts(Array.isArray(promptsRes) ? promptsRes : promptsRes.prompts || []);
+      } catch (e) {
+        console.error("Profile fetch error:", e);
+      } finally {
+        setLoading(false);
       }
     };
-    if (status !== "loading") {
-      fetchProfile();
-    }
+
+    fetchAll();
   }, [sessionUser, status]);
 
-  const isLoading = status === "loading";
-
-  if (isLoading) {
-     return (
-       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-         <div className="w-12 h-12 border-4 border-white/5 border-t-white rounded-full animate-spin" />
-       </div>
-     );
-  }
-
-  if (!sessionUser) {
+  if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-6 text-center">
-        <ZapOff className="w-16 h-16 text-zinc-800 mb-8" />
-        <h1 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-4">ACCESS_DENIED</h1>
-        <p className="text-zinc-600 text-xs font-black uppercase tracking-[0.3em] mb-12">Session credentials not verified by the network</p>
-        <button className="px-10 py-4 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-zinc-200 transition-all">Authenticate Required</button>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-white/5 border-t-violet-500 rounded-full animate-spin" />
       </div>
     );
   }
 
-  // Stats mapped from Prisma or real model data
-  const stats = [
-    { label: "Detected Signals", value: "24" },
-    { label: "Solved Bounties", value: "08" },
-    { label: "Assets Listed", value: "03" },
-    { label: "Trust Score", value: "98%" },
-  ];
+  if (!sessionUser) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <ZapOff className="w-16 h-16 text-zinc-800 mb-8" />
+        <h1 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-4">Sign in required</h1>
+        <p className="text-zinc-600 text-xs font-black uppercase tracking-[0.3em]">Please sign in to view your profile</p>
+      </div>
+    );
+  }
 
   const profileData = {
-    name: prismaUser?.name || sessionUser?.name || "Unidentified Agent",
+    name: prismaUser?.name || sessionUser?.name || "Anonymous",
     email: sessionUser.email!,
     avatarUrl: prismaUser?.avatarUrl || sessionUser?.image || null,
     bio: prismaUser?.bio || null,
@@ -75,15 +68,24 @@ export default function ProfilePage() {
     location: prismaUser?.location,
     website: prismaUser?.website,
     createdAt: prismaUser?.createdAt,
+    isProfessional: prismaUser?.isProfessional,
+    professionalStatus: prismaUser?.professionalStatus,
+    expertise: prismaUser?.expertise,
+    gender: prismaUser?.gender,
+    isPrivate: prismaUser?.isPrivate,
+  };
+
+  const stats = {
+    followersCount: 0,
+    followingCount: 0,
   };
 
   return (
-    <div className="space-y-12">
-       <ProfileClient 
-          user={profileData} 
-          stats={stats} 
-          problems={[]} // Signals would be fetched here in a real expanded version
-       />
-    </div>
+    <ProfileClient
+      user={profileData}
+      stats={stats}
+      problems={posts}
+      prompts={prompts}
+    />
   );
 }
