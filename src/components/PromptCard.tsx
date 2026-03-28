@@ -40,6 +40,7 @@ export default function PromptCard({
   const [isProcessing, setIsProcessing] = useState(false);
   
   const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
   const [following, setFollowing] = useState(false);
 
@@ -56,6 +57,7 @@ export default function PromptCard({
       if (action === 'like') {
         const newLiked = !liked;
         setLiked(newLiked);
+        setLikeCount((c) => newLiked ? c + 1 : c - 1);
         await toggleLike(id, 'prompt');
       } else if (action === 'bookmark') {
         const newBookmarked = !bookmarked;
@@ -208,7 +210,7 @@ export default function PromptCard({
       </AnimatePresence>
 
       {/* STATIC STATUS */}
-      <div className={`absolute bottom-6 left-6 z-0 transition-all duration-500 ${isHovered ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
+      <div className={`absolute bottom-6 left-6 right-6 z-0 transition-all duration-500 flex items-center justify-between ${isHovered ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
          {isLocked ? (
             <div className="flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-xl rounded-full border border-white/10 shadow-2xl">
                <Lock className="w-3 h-3 text-violet-400" />
@@ -217,9 +219,17 @@ export default function PromptCard({
          ) : (
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 backdrop-blur-xl rounded-full border border-emerald-500/20 shadow-2xl shadow-emerald-500/10">
                <Unlock className="w-3 h-3 text-emerald-500" />
-               <span className="text-[10px] font-black text-emerald-500 tracking-widest uppercase">Decrypted</span>
+               <span className="text-[10px] font-black text-emerald-500 tracking-widest uppercase">Unlocked</span>
             </div>
          )}
+         {/* Upvote count badge */}
+         <button
+           onClick={(e) => handleSocialAction('like', e)}
+           className={`flex items-center gap-1.5 px-3 py-2 bg-black/60 backdrop-blur-xl rounded-full border shadow-2xl transition-all ${liked ? "border-rose-500/40 text-rose-400" : "border-white/10 text-zinc-400 hover:text-rose-400"}`}
+         >
+           <Heart className={`w-3 h-3 ${liked ? "fill-rose-400" : ""}`} />
+           <span className="text-[10px] font-black">{likeCount}</span>
+         </button>
       </div>
     </motion.div>
   );
