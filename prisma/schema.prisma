@@ -141,8 +141,10 @@ model Prompt {
   comments       Comment[]
   earnings       CreatorEarning[]
   likes          Like[]
-  author         User             @relation("CreatedPrompts", fields: [authorId], references: [id])
+  notifications  Notification[]
+  author         User             @relation("CreatedPrompts", fields: [authorId], references: [id], onDelete: Cascade)
   purchases      Purchase[]
+  transactions   Transaction[]
 }
 
 model Signal {
@@ -198,6 +200,7 @@ model Transaction {
   status    String
   paymentId String?
   createdAt DateTime @default(now())
+  Prompt    Prompt   @relation(fields: [promptId], references: [id])
 }
 
 model CreatorEarning {
@@ -343,6 +346,7 @@ model Notification {
   createdAt DateTime @default(now())
   actor     User     @relation("Actor", fields: [actorId], references: [id], onDelete: Cascade)
   user      User     @relation("Receiver", fields: [userId], references: [id], onDelete: Cascade)
+  Prompt    Prompt?  @relation(fields: [promptId], references: [id])
 }
 
 model Mention {

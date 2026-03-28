@@ -33,6 +33,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Prompt not found" }, { status: 404 });
     }
 
+    // Free prompts don't need payment — grant access directly
+    if (prompt.price === 0) {
+      await prisma.purchase.upsert({
+        where: { userId_promptId: { userId: session.user.id, promptId } },
+        update: {},
+        create: { userId: session.user.id, promptId },
+      });
+      return NextResponse.json({ free: true, message: "Free prompt — access granted" });
+    }
+
     // Check if already purchased
     const existingPurchase = await prisma.purchase.findUnique({
       where: {
@@ -63,7 +73,7 @@ export async function POST(req: Request) {
 
     const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-    // Create pending transaction
+    // Create pending transaction (Restored from Ledger migration deletion)
     await prisma.transaction.create({
       data: {
         orderId,
@@ -73,6 +83,9 @@ export async function POST(req: Request) {
         status: "PENDING",
       },
     });
+
+    // Note: The payment fulfillment (verify route) handles granting the 'Purchase' access.
+    // For Phase 1 we can rely on Cashfree order metadata for fulfilling purchases via webhook/verify.
 
     // Create Cashfree Order via Direct API Helper
     const cfRequest = {
@@ -92,8 +105,12 @@ export async function POST(req: Request) {
 
     const response = await createCashfreeOrder(cfRequest);
     console.log("Generated orderId:", orderId);
-    console.log("Cashfree response data:", response);
     
+    if (!response.payment_session_id) {
+      console.error("Cashfree did not return payment_session_id:", response);
+      throw new Error(response.message || response.error || "Cashfree did not return a payment session");
+    }
+
     return NextResponse.json({
       paymentSessionId: response.payment_session_id
     });
@@ -104,8 +121,7 @@ export async function POST(req: Request) {
       hint: "Check Cashfree credentials and network status"
     });
     return NextResponse.json({ 
-      error: "Internal Server Error",
-      details: process.env.NODE_ENV === "development" ? err.message : undefined
+      error: err.message || "Payment gateway error. Please try again.",
     }, { status: 500 });
   }
 }
