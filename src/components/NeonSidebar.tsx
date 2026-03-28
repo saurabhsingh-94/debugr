@@ -113,7 +113,7 @@ export default function NeonSidebar() {
 
           <div className="nn-divider my-6 opacity-30" />
 
-          {!isCollapsed && <p className="text-[10px] font-bold text-zinc-800 uppercase tracking-widest mb-2 px-4">Registry</p>}
+          {!isCollapsed && <p className="text-[10px] font-bold text-zinc-800 uppercase tracking-widest mb-2 px-4">More</p>}
           {systemItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -138,7 +138,7 @@ export default function NeonSidebar() {
                 isCollapsed && "justify-center px-0 w-12 mx-auto"
               )}>
                 <ShieldCheck className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && <span className="text-[13px] font-black uppercase tracking-widest text-[10px]">Admin Console</span>}
+                {!isCollapsed && <span className="text-[13px] font-black uppercase tracking-widest text-[10px]">Admin Panel</span>}
               </div>
             </Link>
           )}

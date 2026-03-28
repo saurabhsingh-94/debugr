@@ -15,10 +15,10 @@ export default function Footer() {
         <div className="md:col-span-5 space-y-8">
           <div className="flex items-center gap-3">
              <div className="w-2 h-2 bg-violet-500 rounded-full shadow-[0_0_12px_rgba(124,58,237,0.8)]" />
-             <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">Debugr <span className="text-zinc-800">Intelligence</span></h2>
+             <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">Debugr <span className="text-zinc-800">— Problem Tracker</span></h2>
           </div>
           <p className="text-zinc-600 text-[13px] font-medium leading-relaxed max-w-sm">
-            Forging the next generation of developer intelligence. A high-integrity network for problem solvers, builders, and elite prompt engineers.
+            A community platform where developers and AI users share problems, discover solutions, and buy or sell useful AI prompts.
           </p>
           
           <div className="flex items-center gap-6 pt-4">
@@ -34,16 +34,16 @@ export default function Footer() {
         </div>
 
         <div className="md:col-span-3 space-y-6">
-           <h3 className="text-[11px] font-black text-zinc-800 uppercase tracking-[0.4em]">Protocols</h3>
+           <h3 className="text-[11px] font-black text-zinc-800 uppercase tracking-[0.4em]">Links</h3>
            <nav className="flex flex-col gap-4">
-              <FooterLink href="/terms" icon={<Shield className="w-3.5 h-3.5" />} label="Service Terms" />
-              <FooterLink href="/privacy" icon={<Lock className="w-3.5 h-3.5" />} label="Privacy Directive" />
+              <FooterLink href="/terms" icon={<Shield className="w-3.5 h-3.5" />} label="Terms of Service" />
+              <FooterLink href="/privacy" icon={<Lock className="w-3.5 h-3.5" />} label="Privacy Policy" />
               <FooterLink href="/docs" icon={<ExternalLink className="w-3.5 h-3.5" />} label="Documentation" />
            </nav>
         </div>
 
         <div className="md:col-span-4 space-y-8">
-           <h3 className="text-[11px] font-black text-zinc-800 uppercase tracking-[0.4em]">Support</h3>
+           <h3 className="text-[11px] font-black text-zinc-800 uppercase tracking-[0.4em]">Contact Us</h3>
            <a 
               href="mailto:work.debugr@gmail.com"
               className="group block p-6 bg-white/[0.02] border border-white/5 rounded-[32px] hover:bg-white/[0.04] transition-all hover:border-violet-500/20"
@@ -54,17 +54,17 @@ export default function Footer() {
                  </div>
                  <ExternalLink className="w-4 h-4 text-zinc-800 group-hover:text-white transition-all" />
               </div>
-              <p className="text-[10px] font-black text-zinc-700 uppercase tracking-widest mb-1">Official Support</p>
+              <p className="text-[10px] font-black text-zinc-700 uppercase tracking-widest mb-1">Email Support</p>
               <p className="text-sm font-black text-white">work.debugr@gmail.com</p>
            </a>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto mt-24 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 opacity-30">
-         <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">© 2024 Debugr v0.2.0 • All rights reserved</p>
+         <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">© 2026 Debugr • All rights reserved</p>
          <div className="flex items-center gap-2">
             <div className="w-1 h-1 bg-emerald-500 rounded-full" />
-            <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Status: Optimized</p>
+            <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">All systems running</p>
          </div>
       </div>
     </footer>

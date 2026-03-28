@@ -20,7 +20,7 @@ export default function PrivacyPage() {
           <h1 className="text-4xl sm:text-5xl font-black italic uppercase tracking-tighter">
             Privacy <span className="text-zinc-700">Policy</span>
           </h1>
-          <p className="text-zinc-600 text-xs font-medium">Effective Date: March 2025 · Last Updated: March 2025</p>
+          <p className="text-zinc-600 text-xs font-medium">Effective Date: March 2026 · Last Updated: March 2026</p>
         </div>
 
         <p className="text-zinc-400 text-sm leading-relaxed">
@@ -107,7 +107,7 @@ export default function PrivacyPage() {
 
           <div className="pt-8 border-t border-white/5 text-center">
             <p className="text-[10px] font-black text-zinc-800 uppercase tracking-widest">
-              © 2025 Debugr · All rights reserved
+              © 2026 Debugr · All rights reserved
             </p>
           </div>
         </div>

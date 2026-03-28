@@ -14,8 +14,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "debugr | intelligent problem tracking",
-  description: "Premium developer intelligence platform.",
+  title: "Debugr | Track Problems & Share AI Prompts",
+  description: "A community platform where you can post problems, discover solutions, and buy or sell AI prompts.",
 };
 
 export const viewport = {
