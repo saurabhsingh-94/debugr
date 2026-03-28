@@ -82,13 +82,13 @@ export default function LoginPage() {
                   <Image src="/logo.svg" alt="debugr" fill className="object-contain" />
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500 tracking-[0.2em] uppercase font-medium">Welcome to</p>
+                  <p className="text-[10px] text-zinc-500 tracking-[0.2em] uppercase font-medium">Welcome to</p>
                   <h1 className="text-3xl font-extrabold text-white tracking-tight mt-0.5">debugr</h1>
                 </div>
               </div>
 
               <p className="text-sm text-zinc-400 leading-relaxed max-w-[240px]">
-                The intelligence platform for developers. Share problems, find solutions, collaborate globally.
+                Post problems, find solutions, and buy or sell AI prompts — all in one place.
               </p>
 
               <div className="pt-2 space-y-2 w-full">
@@ -123,7 +123,7 @@ export default function LoginPage() {
                   <ArrowRight className="w-4 h-4 text-white" />
                   <h2 className="text-xl font-bold text-white">Sign In</h2>
                 </div>
-                <p className="text-sm text-zinc-600 pl-6">Access your intelligence dashboard</p>
+                <p className="text-sm text-zinc-600 pl-6">Welcome back — sign in to your account</p>
               </div>
 
               {/* OAuth buttons */}
@@ -216,7 +216,9 @@ export default function LoginPage() {
               {/* TOS */}
               <p className="text-center text-[11px] text-zinc-700">
                 By continuing, you agree to our{" "}
-                <a href="#" className="text-zinc-500 hover:text-white transition-colors underline underline-offset-2">Terms of Service</a>
+                <Link href="/terms" className="text-zinc-500 hover:text-white transition-colors underline underline-offset-2">Terms of Service</Link>
+                {" & "}
+                <Link href="/privacy" className="text-zinc-500 hover:text-white transition-colors underline underline-offset-2">Privacy Policy</Link>
               </p>
             </div>
           </div>

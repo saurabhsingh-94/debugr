@@ -56,7 +56,7 @@ export default function TermsPage() {
           <Section icon={<CreditCard className="w-4 h-4 text-violet-400" />} title="4. Payments, Marketplace & Fees">
             <p>Transactions on the Debugr Marketplace are processed via <strong className="text-white">Cashfree Payments</strong>. By making a purchase, you agree to Cashfree's terms in addition to ours.</p>
             <ul className="list-disc list-inside space-y-1 mt-2 text-zinc-500">
-              <li>Debugr charges a platform fee on each Marketplace transaction (currently 10–15%)</li>
+              <li>Debugr charges a platform fee on each Marketplace transaction (currently 15–20%)</li>
               <li>All sales are final once a prompt is unlocked and delivered to the buyer</li>
               <li>Refunds are only issued in cases of technical failure or fraudulent listings, at Debugr's sole discretion</li>
               <li>Creators are responsible for accurate pricing and prompt descriptions</li>
