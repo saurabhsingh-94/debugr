@@ -144,6 +144,7 @@ export async function updateUserProfile(formData: FormData) {
     });
 
     revalidatePath("/profile");
+    revalidatePath("/settings");
     return { success: true };
   } catch (error: any) {
     return { error: error.message };
