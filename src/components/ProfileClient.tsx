@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   User, Settings, MapPin, Calendar, Link as LinkIcon,
   MessageSquare, Repeat2, Heart, Share, ArrowLeft,
-  MoreHorizontal, BadgeCheck, Bookmark, X, Camera, Save, Loader2, Github, Twitter, Instagram, Image as ImageIcon,
-  Check, Trash2, Upload
+  BadgeCheck, X, Camera, Loader2, Github, Twitter, Instagram,
+  Check, Trash2, Upload, FileText, Twitter as TwitterIcon
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useTransition, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { updateUserProfile } from "@/app/actions";
+import { updateUserProfile, getUserPurchases } from "@/app/actions";
 import toast from "react-hot-toast";
 import PromptCard from "./PromptCard";
 import { cn } from "@/lib/utils";
@@ -25,20 +25,40 @@ interface ProfileClientProps {
   isPublic?: boolean;
 }
 
-const TABS = ["Posts", "Marketplace", "Bookmarks"];
-
-export default function ProfileClient({ user: initialUser, stats, problems = [], prompts = [], bookmarks = [], isPublic = false }: ProfileClientProps) {
+export default function ProfileClient({ 
+  user: initialUser, 
+  stats, 
+  problems = [], 
+  prompts = [], 
+  bookmarks = [], 
+  isPublic = false 
+}: ProfileClientProps) {
   const [user, setUser] = useState(initialUser);
   const [activeTab, setActiveTab] = useState("Posts");
   const [following, setFollowing] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [purchasedPrompts, setPurchasedPrompts] = useState<any[]>([]);
+  const [isPurchasesLoading, setIsPurchasesLoading] = useState(false);
 
-  // Sync state if initialUser changes (e.g. after async fetch in parent)
+  const TABS = isPublic 
+    ? ["Posts", "Marketplace", "Bookmarks"] 
+    : ["Posts", "Marketplace", "Purchases", "Bookmarks"];
+
   useEffect(() => {
     if (initialUser) {
       setUser(initialUser);
     }
   }, [initialUser]);
+
+  useEffect(() => {
+    if (!isPublic && activeTab === "Purchases" && purchasedPrompts.length === 0) {
+      setIsPurchasesLoading(true);
+      getUserPurchases().then((data) => {
+        setPurchasedPrompts(data);
+        setIsPurchasesLoading(false);
+      });
+    }
+  }, [activeTab, isPublic, purchasedPrompts.length]);
 
   const formattedJoinDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
@@ -71,7 +91,6 @@ export default function ProfileClient({ user: initialUser, stats, problems = [],
 
       {/* PROFILE INFO BLOCK */}
       <div className="px-4 pb-0">
-        {/* Avatar + Action row */}
         <div className="flex items-end justify-between -mt-[52px] mb-3">
           <div className="relative">
             <div className="w-[110px] h-[110px] rounded-[32px] border-4 border-[#050505] overflow-hidden bg-zinc-900 shadow-2xl relative">
@@ -157,7 +176,7 @@ export default function ProfileClient({ user: initialUser, stats, problems = [],
            <div className="flex items-center gap-4">
               {user?.xProfile && (
                 <a href={`https://x.com/${user.xProfile}`} target="_blank" className="p-2.5 bg-white/[0.03] border border-white/10 rounded-xl text-zinc-500 hover:text-white hover:border-white/20 transition-all">
-                  <Twitter className="w-4 h-4" />
+                  <TwitterIcon className="w-4 h-4" />
                 </a>
               )}
               {user?.instagramProfile && (
@@ -269,6 +288,42 @@ export default function ProfileClient({ user: initialUser, stats, problems = [],
           ) : (
             <EmptyState tab="Marketplace" message={`No intelligence assets listed by @${user?.username || "user"}.`} />
           )
+        ) : activeTab === "Purchases" ? (
+          isPurchasesLoading ? (
+            <div className="flex items-center justify-center py-32">
+              <Loader2 className="w-10 h-10 border-2 border-white/5 border-t-white rounded-full animate-spin" />
+            </div>
+          ) : purchasedPrompts.length > 0 ? (
+             <div className="py-12 grid grid-cols-1 md:grid-cols-2 gap-8 px-6">
+                {purchasedPrompts.map((p: any) => (
+                  <div key={p.id} className="relative group">
+                    <PromptCard 
+                      id={p.id}
+                      title={p.title}
+                      thumbnailUrl={p.thumbnailUrl}
+                      aiModel={p.aiModel || "GPT-4"}
+                      price={Number(p.price)}
+                      currency={p.currency || "INR"}
+                      content={p.previewContent}
+                      creatorId={p.authorId}
+                      author={p.author?.name}
+                      authorUsername={p.author?.username}
+                    />
+                    {p.orderId && (
+                      <Link 
+                        href={`/marketplace/receipt/${p.orderId}`}
+                        className="absolute top-4 right-4 p-3 bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-all hover:bg-violet-600 hover:border-violet-500 flex items-center gap-2 group/btn shadow-2xl"
+                      >
+                        <FileText className="w-4 h-4 text-violet-400 group-hover/btn:text-white" />
+                        <span className="text-[9px] font-black text-white uppercase tracking-widest overflow-hidden w-0 group-hover/btn:w-20 transition-all">View Receipt</span>
+                      </Link>
+                    )}
+                  </div>
+                ))}
+             </div>
+          ) : (
+            <EmptyState tab="Purchases" message="Neural decryptor idle. No acquisitions detected in your sector." />
+          )
         ) : activeTab === "Bookmarks" ? (
           bookmarks.length > 0 ? (
             <div className="divide-y divide-white/[0.04]">
@@ -335,10 +390,7 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
         const data = new FormData();
         Object.entries(formData).forEach(([key, value]) => data.append(key, String(value)));
         
-        // Image logic
         if (avatarFile) {
-          // In a real app, upload avatarFile here and get URL
-          // For now we'll simulate by passing the file object to the action
           data.append("avatarUrl", "MOCK_NEW_URL"); 
         } else if (avatarPreview === null) {
           data.append("avatarUrl", "REMOVE");
@@ -347,7 +399,6 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
         const res = await updateUserProfile(data);
         if (res.error) throw new Error(res.error);
         
-        // Update Session to reflect new username/identity immediately
         await updateSession({
           ...session,
           user: {
@@ -358,7 +409,6 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
 
         toast.success("Identity Updated");
         onClose();
-        // Optional: window.location.reload(); if you want a full refresh, but updateSession handles most things.
       } catch (err: any) {
         toast.error("Internal Error: " + err.message);
       }
@@ -389,7 +439,6 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
         </div>
 
         <form onSubmit={handleSubmit} className="p-10 space-y-10 max-h-[75vh] overflow-y-auto scrollbar-none">
-           {/* AVATAR CENTER */}
            <div className="flex flex-col items-center gap-6 pb-10 border-b border-white/5">
               <div className="relative group">
                  <button 
@@ -398,7 +447,7 @@ function EditProfileModal({ user, onClose }: { user: any; onClose: () => void })
                   className="w-32 h-32 rounded-[48px] overflow-hidden bg-zinc-900 border-4 border-white/5 relative group cursor-pointer"
                  >
                     {avatarPreview ? (
-                      <img src={avatarPreview} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                      <img src={avatarPreview} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt="Avatar preview" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-zinc-800">
                          <User className="w-12 h-12 text-zinc-600" />

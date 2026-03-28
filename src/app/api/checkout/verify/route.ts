@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCashfreeOrder } from "@/lib/cashfree";
+import { sendPurchaseConfirmation, sendSaleNotification } from "@/lib/resend";
 
 const CREATOR_SHARE = 0.80;
 const PLATFORM_SHARE = 0.20;
@@ -33,7 +34,6 @@ export async function GET(req: Request) {
     // 2. Fetch real-time status from Cashfree
     const cfOrder = await getCashfreeOrder(orderId);
     
-    // Cashfree v3 Order Statuses: 'PAID', 'ACTIVE', 'EXPIRED'
     if (cfOrder.order_status !== "PAID") {
       return NextResponse.json({ 
         status: transaction.status, 
@@ -47,7 +47,21 @@ export async function GET(req: Request) {
     const creatorId = prompt.authorId;
     const buyerId = transaction.userId;
     const rawAmount = Number(cfOrder.order_amount);
-    const cfPaymentId = "VERIFIED_VIA_API"; // Suffix to indicate manual verify
+    const cfPaymentId = "VERIFIED_VIA_API"; 
+
+    // Fetch Emails
+    const buyer = await prisma.user.findUnique({
+      where: { id: buyerId },
+      select: { email: true }
+    });
+    
+    const promptWithAuthor = await prisma.prompt.findUnique({
+      where: { id: transaction.promptId },
+      select: { author: { select: { email: true } } }
+    });
+
+    const buyerEmail = buyer?.email || "";
+    const creatorEmail = promptWithAuthor?.author.email || "";
 
     const creatorShare = parseFloat((rawAmount * CREATOR_SHARE).toFixed(2));
     const platformFee  = parseFloat((rawAmount * PLATFORM_SHARE).toFixed(2));
@@ -87,7 +101,6 @@ export async function GET(req: Request) {
           walletId:    wallet.id,
           userId:      creatorId,
           amount:      creatorShare,
-          platformFee: 0,
           type:        "sale_credit",
           status:      "pending",
           source:      "sale",
@@ -97,7 +110,6 @@ export async function GET(req: Request) {
         },
       });
 
-      // Platform Fee record
       await (tx as any).walletTransaction.create({
         data: {
           walletId:    wallet.id,
@@ -109,15 +121,22 @@ export async function GET(req: Request) {
           source:      "sale",
           orderId:     `${orderId}_fee`,
           promptId:    transaction.promptId,
-          releaseAt:   null,
         },
       });
     });
 
+    // ── SEND EMAILS ────────────────────────────────────────────────────────
+    if (buyerEmail) {
+        await Promise.allSettled([
+            sendPurchaseConfirmation(buyerEmail, prompt.title, orderId, rawAmount),
+            sendSaleNotification(creatorEmail, prompt.title, creatorShare)
+        ]);
+    }
+
     revalidatePath("/marketplace");
     revalidatePath("/dashboard");
 
-    return NextResponse.json({ status: "SUCCESS", message: "Purchase fulfilled manually" });
+    return NextResponse.json({ status: "SUCCESS", message: "Purchase fulfilled manually and notified" });
 
   } catch (error: any) {
     console.error("Verification Error:", error);

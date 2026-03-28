@@ -1048,3 +1048,31 @@ export async function getWalletTransactions(limit = 20) {
     platformFee: Number(t.platformFee),
   }));
 }
+export async function getUserPurchases() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const purchases = await prisma.purchase.findMany({
+    where: { userId: session.user.id },
+    include: {
+      prompt: {
+        include: {
+          author: { select: { name: true, username: true } }
+        }
+      }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  // We also need the transaction orderId for the receipt link
+  const transactions = await prisma.transaction.findMany({
+    where: { userId: session.user.id, status: "SUCCESS" },
+    select: { promptId: true, orderId: true }
+  });
+
+  return purchases.map(p => ({
+    ...p.prompt,
+    purchaseDate: p.createdAt,
+    orderId: transactions.find(t => t.promptId === p.promptId)?.orderId
+  }));
+}
