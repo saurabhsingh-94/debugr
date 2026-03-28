@@ -21,10 +21,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Checkout System Offline: Internal Config Error" }, { status: 500 });
     }
 
-    if (!process.env.NEXT_PUBLIC_APP_URL) {
-      console.error("CRITICAL: NEXT_PUBLIC_APP_URL missing in environment.");
-      return NextResponse.json({ error: "Checkout System Offline: URL Config Error" }, { status: 500 });
-    }
+    // Smart URL detection
+    const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+    console.log("Using origin for checkout:", origin);
 
     const prompt = await prisma.prompt.findUnique({
       where: { id: promptId },
@@ -72,8 +71,8 @@ export async function POST(req: Request) {
         customer_phone: "9999999999", 
       },
       order_meta: {
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/marketplace/status?order_id=${orderId}`,
-        notify_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/cashfree`,
+        return_url: `${origin}/marketplace/status?order_id=${orderId}`,
+        notify_url: `${origin}/api/webhooks/cashfree`,
       },
     };
 
