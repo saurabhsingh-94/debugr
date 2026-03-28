@@ -641,23 +641,63 @@ export async function addComment(
 
 export async function searchEverything(query: string) {
   try {
-    return await prisma.prompt.findMany({
-      where: {
-        OR: [
-          { title: { contains: query, mode: "insensitive" } },
-          { description: { contains: query, mode: "insensitive" } },
-        ],
-      },
-      include: {
-        author: {
-          select: { name: true, username: true, avatarUrl: true },
+    const [users, prompts, posts] = await Promise.all([
+      prisma.user.findMany({
+        where: {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { username: { contains: query, mode: "insensitive" } },
+            { bio: { contains: query, mode: "insensitive" } },
+          ],
         },
-      },
-      take: 10,
-    });
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          avatarUrl: true,
+          image: true,
+          bio: true,
+          isProfessional: true,
+          professionalStatus: true,
+        },
+        take: 8,
+      }),
+      prisma.prompt.findMany({
+        where: {
+          OR: [
+            { title: { contains: query, mode: "insensitive" } },
+            { description: { contains: query, mode: "insensitive" } },
+            { previewContent: { contains: query, mode: "insensitive" } },
+            { category: { contains: query, mode: "insensitive" } },
+            { aiModel: { contains: query, mode: "insensitive" } },
+          ],
+        },
+        include: {
+          author: {
+            select: { name: true, username: true, avatarUrl: true },
+          },
+        },
+        take: 12,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.post.findMany({
+        where: {
+          content: { contains: query, mode: "insensitive" },
+        },
+        include: {
+          author: {
+            select: { name: true, username: true, avatarUrl: true },
+          },
+        },
+        take: 8,
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+
+    return { users, prompts, posts };
   } catch (error) {
     console.error("searchEverything error:", error);
-    return [];
+    return { users: [], prompts: [], posts: [] };
   }
 }
 
