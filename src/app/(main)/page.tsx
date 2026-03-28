@@ -3,13 +3,13 @@
 import CreatePost from "@/components/CreatePost";
 import PostFeed from "@/components/PostFeed";
 import { motion } from "framer-motion";
-import { Globe, Users, TrendingUp } from "lucide-react";
+import { Globe, Users, Flame } from "lucide-react";
 import { useState } from "react";
 
 const filters = [
   { label: "For You", icon: Globe },
   { label: "Following", icon: Users },
-  { label: "Intelligence", icon: TrendingUp },
+  { label: "Hot", icon: Flame },
 ];
 
 export default function Home() {
@@ -28,7 +28,8 @@ export default function Home() {
             }`}
           >
             <div className="flex items-center gap-2 mb-4">
-               {label}
+              <Icon className="w-4 h-4" />
+              {label}
             </div>
             {active === label && (
               <motion.div
@@ -47,7 +48,7 @@ export default function Home() {
 
       {/* FEED */}
       <div className="divide-y divide-white/[0.04] mt-4">
-        <PostFeed />
+        <PostFeed feed={active} />
       </div>
     </div>
   );

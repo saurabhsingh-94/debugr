@@ -6,14 +6,44 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
   const cursor = searchParams.get("cursor");
+  const feed = searchParams.get("feed") || "foryou"; // "foryou" | "following" | "hot"
+
+  const session = await auth();
+  const userId = session?.user?.id;
 
   try {
+    let whereClause: any = {};
+
+    if (feed === "following") {
+      // Strictly only posts from users the current user follows
+      if (!userId) {
+        // Not logged in — return empty
+        return NextResponse.json({ posts: [], nextCursor: null });
+      }
+
+      const follows = await prisma.follow.findMany({
+        where: { followerId: userId },
+        select: { followingId: true },
+      });
+
+      const followingIds = follows.map((f) => f.followingId);
+
+      if (followingIds.length === 0) {
+        return NextResponse.json({ posts: [], nextCursor: null, empty: "not_following" });
+      }
+
+      whereClause = { authorId: { in: followingIds } };
+    } else if (feed === "hot") {
+      // Posts with most likes in the last 48 hours
+      const since = new Date(Date.now() - 48 * 60 * 60 * 1000);
+      whereClause = { createdAt: { gte: since } };
+    }
+    // "foryou" — no filter, all posts
+
     const posts = await prisma.post.findMany({
       take: limit,
-      ...(cursor && {
-        skip: 1,
-        cursor: { id: cursor },
-      }),
+      ...(cursor && { skip: 1, cursor: { id: cursor } }),
+      where: whereClause,
       include: {
         author: {
           select: {
@@ -26,16 +56,16 @@ export async function GET(request: Request) {
             professionalStatus: true,
           },
         },
-        _count: {
-          select: { likes: true, comments: true },
-        },
+        _count: { select: { likes: true, comments: true } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy:
+        feed === "hot"
+          ? [{ likes: { _count: "desc" } }, { createdAt: "desc" }]
+          : { createdAt: "desc" },
     });
 
     const nextCursor = posts.length === limit ? posts[posts.length - 1].id : null;
 
-    // Normalize: expose author as "user" so PostFeed doesn't need changes
     const normalized = posts.map((p) => ({
       ...p,
       user: p.author,

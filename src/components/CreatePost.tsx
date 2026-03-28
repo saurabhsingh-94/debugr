@@ -40,8 +40,12 @@ export default function CreatePost({ onPostSuccess, onCancel }: CreatePostProps)
       setContent("");
       setIsFocused(false);
       if (textareaRef.current) textareaRef.current.style.height = "auto";
-      // Immediately revalidate the feed
-      await mutate("/api/posts");
+      // Immediately revalidate all feed tabs
+      await Promise.all([
+        mutate("/api/posts?feed=foryou"),
+        mutate("/api/posts?feed=following"),
+        mutate("/api/posts?feed=hot"),
+      ]);
       onPostSuccess?.();
     } catch (error) {
       toast.error("Transmission Error", { id });

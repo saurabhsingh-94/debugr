@@ -23,9 +23,18 @@ const TAG_COLORS: Record<string, string> = {
   default: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
-export default function PostFeed() {
+export default function PostFeed({ feed = "For You" }: { feed?: string }) {
   const [mounted, setMounted] = useState(false);
-  const { data, error, isLoading } = useSWR("/api/posts", fetcher, {
+
+  // Map tab name to API query param
+  const feedParam =
+    feed === "Following" ? "following" :
+    feed === "Hot" ? "hot" :
+    "foryou";
+
+  const apiUrl = `/api/posts?feed=${feedParam}`;
+
+  const { data, error, isLoading } = useSWR(apiUrl, fetcher, {
     refreshInterval: 8000,
     revalidateOnFocus: true,
   });
@@ -56,12 +65,18 @@ export default function PostFeed() {
             <div className="w-16 h-16 rounded-[24px] bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-6">
               <Compass className="w-8 h-8 text-violet-400 animate-pulse" />
             </div>
-            <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-2">Feed Empty</h3>
-            <p className="text-sm font-medium text-zinc-600 max-w-xs mx-auto">No intelligence data detected. Be the first to synchronize a new insight with the network.</p>
+            <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-2">
+              {data?.empty === "not_following" ? "Not following anyone yet" : "Feed Empty"}
+            </h3>
+            <p className="text-sm font-medium text-zinc-600 max-w-xs mx-auto">
+              {data?.empty === "not_following"
+                ? "Follow people to see their posts here."
+                : "Be the first to post something."}
+            </p>
           </motion.div>
         ) : (
           posts.map((post: any) => (
-            <PostCard key={post?.id || Math.random()} post={post} />
+            <PostCard key={post?.id || Math.random()} post={post} feedParam={feedParam} />
           ))
         )}
       </AnimatePresence>
@@ -69,7 +84,7 @@ export default function PostFeed() {
   );
 }
 
-function PostCard({ post }: { post: any }) {
+function PostCard({ post, feedParam }: { post: any; feedParam: string }) {
   const [liked, setLiked] = useState(post.isLiked || false);
   const [bookmarked, setBookmarked] = useState(post.isBookmarked || false);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
@@ -86,11 +101,11 @@ function PostCard({ post }: { post: any }) {
     setLikeCount(prev => newLiked ? prev + 1 : prev - 1);
     try {
       await toggleLike(post.id, 'post');
-      mutate("/api/posts");
+      mutate(`/api/posts?feed=${feedParam}`);
     } catch (err) {
       setLiked(!newLiked);
       setLikeCount(prev => !newLiked ? prev + 1 : prev - 1);
-      toast.error("Social Protocol Sync Failed");
+      toast.error("Failed to like post");
     }
   };
 
@@ -100,11 +115,11 @@ function PostCard({ post }: { post: any }) {
     setBookmarked(newBookmarked);
     try {
       await toggleBookmark(post.id, 'post');
-      mutate("/api/posts");
-      toast.success(newBookmarked ? "Identity Saved" : "Identity Removed");
+      mutate(`/api/posts?feed=${feedParam}`);
+      toast.success(newBookmarked ? "Saved" : "Removed");
     } catch (err) {
       setBookmarked(!newBookmarked);
-      toast.error("Social Protocol Sync Failed");
+      toast.error("Failed to bookmark");
     }
   };
 
