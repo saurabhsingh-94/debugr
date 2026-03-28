@@ -64,10 +64,16 @@
     font-family: 'Space Grotesk', 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    selection-color: #7c3aed;
+    accent-color: #7c3aed;
     overflow-x: hidden;
     transition: background-color 0.5s ease, color 0.5s ease;
   }
+
+  ::selection {
+    background: rgba(124, 58, 237, 0.3);
+    color: #f0f0ff;
+  }
+
 
   /* Light theme body override */
   [data-theme="light"] body,
@@ -514,6 +520,8 @@
 [data-theme="light"] .nn-divider {
   background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.2), transparent);
 }
+
+.theme-transition-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -525,6 +533,7 @@
 .dark .theme-transition-overlay {
   background: black;
 }
+
 
 /* PREMIUM BUTTON HOVER */
 .premium-hover {
