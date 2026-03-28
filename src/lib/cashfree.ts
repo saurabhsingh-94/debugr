@@ -29,6 +29,25 @@ export const createCashfreeOrder = async (orderData: any) => {
   return data;
 };
 
+export const getCashfreeOrder = async (orderId: string) => {
+  const url = `${getCashfreeBaseUrl()}/${orderId}`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "x-client-id": process.env.CASHFREE_APP_ID || "",
+      "x-client-secret": process.env.CASHFREE_SECRET_KEY || "",
+      "x-api-version": "2023-08-01",
+    },
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch order status");
+  }
+
+  return data;
+};
+
 /**
  * Payout API Client
  */

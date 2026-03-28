@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { CheckCircle2, XCircle, Clock, ArrowRight, Zap } from "lucide-react";
 import Link from "next/link";
+import PaymentVerification from "@/components/PaymentVerification";
 
 export default async function PaymentStatusPage({
   searchParams,
@@ -36,7 +37,8 @@ export default async function PaymentStatusPage({
 
           {/* STATUS_CARD */}
           <div className="relative z-10 p-1 bg-white/[0.03] border border-white/5 rounded-[48px] backdrop-blur-3xl overflow-hidden shadow-2xl">
-             <div className="bg-[#0c0c18] rounded-[44px] p-12 text-center space-y-8">
+              {isPending && <PaymentVerification orderId={orderId} />}
+              <div className="bg-[#0c0c18] rounded-[44px] p-12 text-center space-y-8">
                 
                 {/* ICON_SECTION */}
                 <div className="flex justify-center">
