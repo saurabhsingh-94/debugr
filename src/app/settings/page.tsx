@@ -58,6 +58,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("Account");
+  const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
   const { theme, setTheme } = useTheme();
   
   const [formData, setFormData] = useState({
@@ -77,7 +78,10 @@ export default function SettingsPage() {
     const fetchUser = async () => {
       if (session?.user) {
         setUser(session.user);
-        const prismaUser = await syncUser();
+        const [prismaUser, accountsRes] = await Promise.all([
+          syncUser(),
+          fetch("/api/user/accounts").then((r) => r.json()),
+        ]);
         if (prismaUser) {
           setFormData({
             name: (prismaUser as any).name || "",
@@ -90,6 +94,7 @@ export default function SettingsPage() {
             instagramProfile: (prismaUser as any).instagramProfile || "",
           });
         }
+        setConnectedProviders(accountsRes.accounts || []);
       }
       setIsLoading(false);
     };
@@ -212,43 +217,71 @@ export default function SettingsPage() {
                       className="glass-morphism rounded-[48px] p-8 md:p-12 border border-white/10 shadow-3xl space-y-12"
                     >
                       <div className="space-y-10">
-                         <div className="space-y-4">
-                            <h3 className="text-xl font-black text-white uppercase tracking-tighter">Linked Accounts</h3>
-                            <p className="text-zinc-500 text-sm">Connect your social identities for easier access.</p>
+                         <div className="space-y-2">
+                            <h3 className="text-xl font-black text-white uppercase tracking-tighter">Connected Accounts</h3>
+                            <p className="text-zinc-500 text-sm">Your sign-in methods. Connected accounts are shown below.</p>
                          </div>
                          
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button 
-                              onClick={() => signIn('github')}
-                              className="flex items-center justify-between p-6 bg-white/[0.03] border border-white/5 rounded-3xl hover:bg-white/5 transition-all group"
-                            >
+                            {/* GITHUB */}
+                            <div className={cn(
+                              "flex items-center justify-between p-6 rounded-3xl border transition-all",
+                              connectedProviders.includes("github")
+                                ? "bg-emerald-500/5 border-emerald-500/20"
+                                : "bg-white/[0.02] border-white/5"
+                            )}>
                                <div className="flex items-center gap-4">
                                   <div className="p-3 bg-black rounded-xl">
                                      <Github className="w-5 h-5 text-white" />
                                   </div>
                                   <div className="text-left">
                                      <p className="text-sm font-bold text-white">GitHub</p>
-                                     <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Connect Account</p>
+                                     {connectedProviders.includes("github") ? (
+                                       <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-black">✓ Connected</p>
+                                     ) : (
+                                       <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Not connected</p>
+                                     )}
                                   </div>
                                </div>
-                               <div className="px-4 py-2 bg-white/5 rounded-full text-[9px] font-black text-zinc-400 uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all">Link</div>
-                            </button>
+                               {!connectedProviders.includes("github") && (
+                                 <button
+                                   onClick={() => signIn("github")}
+                                   className="px-4 py-2 bg-white/5 hover:bg-white hover:text-black rounded-full text-[9px] font-black text-zinc-400 uppercase tracking-widest transition-all"
+                                 >
+                                   Connect
+                                 </button>
+                               )}
+                            </div>
 
-                             <button 
-                               onClick={() => signIn('google')}
-                               className="flex items-center justify-between p-6 bg-white/[0.03] border border-white/5 rounded-3xl hover:bg-white/5 transition-all group"
-                             >
-                                <div className="flex items-center gap-4">
-                                   <div className="p-3 bg-white rounded-xl">
-                                      <Image src="https://www.google.com/favicon.ico" alt="Google" width={20} height={20} className="w-5 h-5" />
-                                   </div>
-                                   <div className="text-left">
-                                      <p className="text-sm font-bold text-white">Google</p>
-                                      <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Connect Account</p>
-                                   </div>
-                                </div>
-                                <div className="px-4 py-2 bg-white/5 rounded-full text-[9px] font-black text-zinc-400 uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all">Link</div>
-                             </button>
+                            {/* GOOGLE */}
+                            <div className={cn(
+                              "flex items-center justify-between p-6 rounded-3xl border transition-all",
+                              connectedProviders.includes("google")
+                                ? "bg-emerald-500/5 border-emerald-500/20"
+                                : "bg-white/[0.02] border-white/5"
+                            )}>
+                               <div className="flex items-center gap-4">
+                                  <div className="p-3 bg-white rounded-xl">
+                                     <Image src="https://www.google.com/favicon.ico" alt="Google" width={20} height={20} className="w-5 h-5" />
+                                  </div>
+                                  <div className="text-left">
+                                     <p className="text-sm font-bold text-white">Google</p>
+                                     {connectedProviders.includes("google") ? (
+                                       <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-black">✓ Connected</p>
+                                     ) : (
+                                       <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Not connected</p>
+                                     )}
+                                  </div>
+                               </div>
+                               {!connectedProviders.includes("google") && (
+                                 <button
+                                   onClick={() => signIn("google")}
+                                   className="px-4 py-2 bg-white/5 hover:bg-white hover:text-black rounded-full text-[9px] font-black text-zinc-400 uppercase tracking-widest transition-all"
+                                 >
+                                   Connect
+                                 </button>
+                               )}
+                            </div>
                          </div>
 
                          <div className="nn-divider" />
