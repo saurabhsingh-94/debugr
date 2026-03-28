@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCashfreeOrder } from "@/lib/cashfree";
 
@@ -112,6 +113,9 @@ export async function GET(req: Request) {
         },
       });
     });
+
+    revalidatePath("/marketplace");
+    revalidatePath("/dashboard");
 
     return NextResponse.json({ status: "SUCCESS", message: "Purchase fulfilled manually" });
 

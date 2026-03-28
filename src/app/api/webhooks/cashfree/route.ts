@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
 
@@ -189,6 +190,9 @@ async function handlePaymentSuccess(data: any) {
         console.warn("[Webhook] Notification failed (non-fatal):", e);
       }
     });
+
+    revalidatePath("/marketplace");
+    revalidatePath("/dashboard");
 
     console.log(`✅ [Webhook] ${orderId} — Creator ₹${creatorShare} / Platform ₹${platformFee}`);
   } catch (err: any) {
