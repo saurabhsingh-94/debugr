@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Image as ImageIcon, Link as LinkIcon, AtSign, Smile, Send, User, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { postPost } from "@/app/actions";
+import { mutate } from "swr";
 
 interface CreatePostProps {
   onPostSuccess?: () => void;
@@ -39,6 +40,8 @@ export default function CreatePost({ onPostSuccess, onCancel }: CreatePostProps)
       setContent("");
       setIsFocused(false);
       if (textareaRef.current) textareaRef.current.style.height = "auto";
+      // Immediately revalidate the feed
+      await mutate("/api/posts");
       onPostSuccess?.();
     } catch (error) {
       toast.error("Transmission Error", { id });

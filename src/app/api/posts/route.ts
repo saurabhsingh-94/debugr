@@ -15,22 +15,35 @@ export async function GET(request: Request) {
         cursor: { id: cursor },
       }),
       include: {
-        user: {
+        author: {
           select: {
+            id: true,
             username: true,
             avatarUrl: true,
+            image: true,
             name: true,
+            isProfessional: true,
+            professionalStatus: true,
           },
         },
+        _count: {
+          select: { likes: true, comments: true },
+        },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
     });
 
     const nextCursor = posts.length === limit ? posts[posts.length - 1].id : null;
 
-    return NextResponse.json({ posts, nextCursor });
+    // Normalize: expose author as "user" so PostFeed doesn't need changes
+    const normalized = posts.map((p) => ({
+      ...p,
+      user: p.author,
+      likeCount: p._count.likes,
+      commentCount: p._count.comments,
+    }));
+
+    return NextResponse.json({ posts: normalized, nextCursor });
   } catch (error) {
     console.error("Posts fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 });
@@ -59,20 +72,22 @@ export async function POST(request: Request) {
     const post = await prisma.post.create({
       data: {
         content: content.trim(),
-        userId: user.id,
+        authorId: user.id,
       },
       include: {
-        user: {
+        author: {
           select: {
+            id: true,
             username: true,
             avatarUrl: true,
+            image: true,
             name: true,
           },
         },
       },
     });
 
-    return NextResponse.json(post);
+    return NextResponse.json({ ...post, user: post.author });
   } catch (error) {
     console.error("Post creation error:", error);
     return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
