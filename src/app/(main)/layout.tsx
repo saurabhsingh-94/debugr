@@ -20,7 +20,7 @@ export default function MainLayout({
 
       {/* MAIN CONTENT */}
       <main className="flex-1 min-h-screen pl-0 lg:pl-[260px]">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-8 lg:py-12">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-6 pb-28 lg:pb-12 lg:py-12">
           <AnimatePresence mode="wait">
             <motion.div
               key={pathname}

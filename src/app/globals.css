@@ -291,6 +291,17 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Mobile touch targets */
+  @media (max-width: 1024px) {
+    button, a {
+      -webkit-tap-highlight-color: transparent;
+    }
+  }
 }
 
 /* CUSTOM SCROLLBAR */

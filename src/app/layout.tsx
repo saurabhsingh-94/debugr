@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   description: "Premium developer intelligence platform.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#05050a",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
