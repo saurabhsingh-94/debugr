@@ -1,9 +1,14 @@
 // Cashfree API Helpers
 
-const CASHFREE_BASE_URL = "https://api.cashfree.com/pg/orders"; // Production
+const getCashfreeBaseUrl = () => {
+  return process.env.CASHFREE_MODE === "sandbox" 
+    ? "https://sandbox.cashfree.com/pg/orders" 
+    : "https://api.cashfree.com/pg/orders";
+};
 
 export const createCashfreeOrder = async (orderData: any) => {
-  const response = await fetch(CASHFREE_BASE_URL, {
+  const url = getCashfreeBaseUrl();
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "x-client-id": process.env.CASHFREE_APP_ID || "",

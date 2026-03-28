@@ -15,6 +15,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "promptId is required" }, { status: 400 });
     }
 
+    // Strict config validation
+    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
+      console.error("CRITICAL: Cashfree Credentials missing in environment.");
+      return NextResponse.json({ error: "Checkout System Offline: Internal Config Error" }, { status: 500 });
+    }
+
+    if (!process.env.NEXT_PUBLIC_APP_URL) {
+      console.error("CRITICAL: NEXT_PUBLIC_APP_URL missing in environment.");
+      return NextResponse.json({ error: "Checkout System Offline: URL Config Error" }, { status: 500 });
+    }
+
     const prompt = await prisma.prompt.findUnique({
       where: { id: promptId },
     });
@@ -37,7 +48,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Prompt already purchased" }, { status: 400 });
     }
 
-    const orderId = `order_${Date.now()}`;
+    const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
     // Create pending transaction
     await prisma.transaction.create({
@@ -74,7 +85,14 @@ export async function POST(req: Request) {
       paymentSessionId: response.payment_session_id
     });
   } catch (err: any) {
-    console.error("POST /api/checkout error:", err.message || err);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("POST /api/checkout CRITICAL ERROR:", {
+      message: err.message || err,
+      stack: err.stack,
+      hint: "Check Cashfree credentials and network status"
+    });
+    return NextResponse.json({ 
+      error: "Internal Server Error",
+      details: process.env.NODE_ENV === "development" ? err.message : undefined
+    }, { status: 500 });
   }
 }

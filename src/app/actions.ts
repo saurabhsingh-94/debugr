@@ -63,6 +63,7 @@ export async function syncUser() {
     update: {
       email: user.email!,
       avatarUrl: (user as any).avatarUrl || user.image,
+      // Strictly do NOT update username here to prevent overwriting user-set values
     },
     create: {
       id: user.id,
@@ -108,9 +109,10 @@ export async function updateUserProfile(formData: FormData) {
     const user = await getAuthUser();
     if (!user?.id) throw new Error("Please sign in to update your profile");
 
+    const newUsername = (formData.get("username") as string)?.trim().toLowerCase();
+    
     const data: any = {
       name: formData.get("name") as string,
-      username: (formData.get("username") as string)?.toLowerCase(),
       bio: formData.get("bio") as string,
       location: formData.get("location") as string,
       website: formData.get("website") as string,
@@ -122,6 +124,11 @@ export async function updateUserProfile(formData: FormData) {
       expertise: formData.get("expertise") as string,
       mentionPrivacy: formData.get("mentionPrivacy") as string,
     };
+
+    // Only update username if its a valid, non-empty string
+    if (newUsername && newUsername.length >= 3) {
+      data.username = newUsername;
+    }
 
     const avatarUrl = formData.get("avatarUrl");
     if (avatarUrl === "REMOVE") {

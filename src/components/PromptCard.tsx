@@ -89,7 +89,14 @@ export default function PromptCard({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Payment session failed");
 
-      const cashfree = new (window as any).Cashfree({ mode: "production" }); 
+      if (!(window as any).Cashfree) {
+        throw new Error("Payment Gateway not ready. Please refresh or wait a moment.");
+      }
+
+      const cashfree = new (window as any).Cashfree({ 
+        mode: process.env.NEXT_PUBLIC_CASHFREE_MODE === "sandbox" ? "sandbox" : "production" 
+      }); 
+      
       await cashfree.checkout({
         paymentSessionId: data.paymentSessionId,
         redirectTarget: "_self" 
