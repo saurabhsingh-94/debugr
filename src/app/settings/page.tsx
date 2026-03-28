@@ -279,10 +279,11 @@ export default function SettingsPage() {
                             <Palette className="w-6 h-6 text-violet-400" /> Interface Theme
                           </h3>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {[
-                              { id: "dark", label: "Midnight", desc: "Pure Black Interface", color: "bg-black" },
-                              { id: "glass", label: "Glassmorphism", desc: "Cinematic Translucency", color: "bg-violet-500/20 backdrop-blur-md" }
+                              { id: "dark", label: "Dark", desc: "Pure black interface", color: "bg-black" },
+                              { id: "glass", label: "Glass", desc: "Frosted translucent look", color: "bg-violet-500/20 backdrop-blur-md" },
+                              { id: "light", label: "Light", desc: "Clean white interface", color: "bg-white border border-zinc-200" },
                             ].map((t) => (
                               <button
                                 key={t.id}

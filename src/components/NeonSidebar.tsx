@@ -46,7 +46,8 @@ export default function NeonSidebar() {
         initial={false}
         animate={{ width: isCollapsed ? 88 : 260 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="hidden lg:flex flex-col h-screen fixed left-0 top-0 bg-[#050505] border-r border-white/5 z-50 overflow-y-auto scrollbar-none"
+        className="hidden lg:flex flex-col h-screen fixed left-0 top-0 border-r border-white/5 z-50 overflow-y-auto scrollbar-none transition-colors duration-500"
+        style={{ background: "var(--sidebar-bg)" }}
       >
         
         {/* LOGO AREA */}

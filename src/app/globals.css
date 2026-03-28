@@ -4,7 +4,8 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
-:root {
+:root,
+[data-theme="dark"] {
   --bg-base: #05050a;
   --bg-surface: #0c0c18;
   --bg-card: rgba(255, 255, 255, 0.025);
@@ -18,14 +19,41 @@
   --text-primary: #f0f0ff;
   --text-secondary: #6b7280;
   --text-muted: #374151;
+  --sidebar-bg: rgba(5, 5, 10, 0.98);
+  --card-bg: rgba(255, 255, 255, 0.015);
+  --card-border: rgba(255, 255, 255, 0.05);
+  --input-bg: rgba(255, 255, 255, 0.03);
 }
 
 [data-theme="glass"] {
-  --bg-base: rgba(5, 5, 10, 0.6);
-  --bg-surface: rgba(12, 12, 24, 0.4);
-  --bg-card: rgba(255, 255, 255, 0.05);
-  --border-subtle: rgba(255, 255, 255, 0.1);
+  --bg-base: rgba(8, 8, 18, 0.75);
+  --bg-surface: rgba(15, 15, 30, 0.6);
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --border-accent: rgba(124, 58, 237, 0.45);
+  --sidebar-bg: rgba(5, 5, 15, 0.7);
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --text-primary: #f0f0ff;
+  --text-secondary: #8b92a8;
+  --text-muted: #4b5563;
+}
+
+[data-theme="light"] {
+  --bg-base: #f4f4f8;
+  --bg-surface: #ffffff;
+  --bg-card: rgba(0, 0, 0, 0.03);
+  --border-subtle: rgba(0, 0, 0, 0.08);
   --border-accent: rgba(124, 58, 237, 0.4);
+  --text-primary: #0f0f1a;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --sidebar-bg: #ffffff;
+  --card-bg: rgba(0, 0, 0, 0.02);
+  --card-border: rgba(0, 0, 0, 0.07);
+  --input-bg: rgba(0, 0, 0, 0.04);
+  --glow-violet: rgba(124, 58, 237, 0.08);
 }
 
 @layer base {
@@ -38,7 +66,19 @@
     -moz-osx-font-smoothing: grayscale;
     selection-color: #7c3aed;
     overflow-x: hidden;
-    transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1), color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+
+  /* Light theme body override */
+  [data-theme="light"] body,
+  [data-theme="light"] {
+    background-color: var(--bg-base) !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* Glass theme — frosted background */
+  [data-theme="glass"] body {
+    background-color: #08080f;
   }
 
   ::selection {
@@ -63,14 +103,19 @@
 
   .nn-background {
     @apply fixed inset-0 -z-10;
-    background-color: #050505;
+    background-color: var(--bg-base);
     background-image: radial-gradient(circle at 50% -20%, rgba(124, 58, 237, 0.05) 0%, transparent 70%);
+    transition: background-color 0.5s ease;
+  }
+
+  [data-theme="light"] .nn-background {
+    background-image: radial-gradient(circle at 50% -20%, rgba(124, 58, 237, 0.04) 0%, transparent 70%);
   }
 
   /* CARDS */
   .nn-card {
-    background: rgba(255, 255, 255, 0.015);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: 20px;
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -85,10 +130,10 @@
   }
 
   .glass-morphism {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--card-bg);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--card-border);
     box-shadow: 
       0 8px 32px 0 rgba(0, 0, 0, 0.37),
       inset 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -226,14 +271,14 @@
 
   /* SIDEBAR */
   .nn-sidebar {
-    background: rgba(5, 5, 10, 0.85);
+    background: var(--sidebar-bg);
     border-right: 1px solid var(--border-subtle);
     backdrop-filter: blur(24px);
   }
 
   /* INPUT */
   .nn-input {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--input-bg);
     border: 1px solid var(--border-subtle);
     border-radius: 10px;
     color: var(--text-primary);
