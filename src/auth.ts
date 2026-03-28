@@ -21,7 +21,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             username: true, 
             isProfessional: true, 
             professionalStatus: true,
-            isAdmin: true
+            role: true
           }
         });
         
@@ -30,7 +30,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (session.user as any).username = dbUser.username;
           (session.user as any).isProfessional = dbUser.isProfessional;
           (session.user as any).professionalStatus = dbUser.professionalStatus;
-          (session.user as any).isAdmin = dbUser.isAdmin;
+          (session.user as any).role = dbUser.role;
+          (session.user as any).isAdmin = dbUser.role !== "USER";
         }
       }
       return session;

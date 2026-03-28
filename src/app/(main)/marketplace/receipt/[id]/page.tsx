@@ -3,20 +3,17 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { CheckCircle2, IndianRupee, Printer, ArrowLeft, ShieldCheck, Download } from "lucide-react";
 import Link from "next/link";
+import PrintButton from "@/components/PrintButton";
 
 export default async function ReceiptPage({ params }: { params: { id: string } }) {
   const session = await auth();
   if (!session?.user?.id) return notFound();
 
-  const transaction = await prisma.transaction.findUnique({
+  // Unified lookup with access control
+  const txn = await prisma.transaction.findUnique({ 
     where: { orderId: params.id },
-    include: {
-      userId: true, // Wait, userId is a string. I need the user details.
-    }
   });
 
-  // Re-fetch with join manually because Prisma schema doesn't have the relation named nicely for direct string fields sometimes
-  const txn = await prisma.transaction.findUnique({ where: { orderId: params.id } });
   if (!txn || txn.userId !== session.user.id) return notFound();
 
   const prompt = await prisma.prompt.findUnique({
@@ -33,12 +30,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Dashboard
         </Link>
-        <button 
-          onClick={() => window.print()} 
-          className="p-3 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/10 transition-colors text-zinc-400 hover:text-white"
-        >
-          <Printer className="w-4 h-4" />
-        </button>
+        <PrintButton />
       </div>
 
       <div className="bento-card relative overflow-hidden">
