@@ -1,60 +1,55 @@
-import { prisma } from "@/lib/db";
-import { Decimal } from "@prisma/client/runtime/library";
+import { prisma } from '@/lib/db';
+import { LedgerGroupType, Prisma } from '@prisma/client';
 
-export interface LedgerEntryInput {
-  walletId: string;
-  amount: number | Decimal; // Negative for Debit, Positive for Credit
-  bucket: "availableBalance" | "pendingBalance";
-  description: string;
-}
+export type LedgerEntryInput = {
+  accountId: string;
+  amount: number | Prisma.Decimal;
+};
 
 export class LedgerService {
   /**
-   * Final Enterprise Ledger Engine
-   * Ensures SUM(amount) === 0 across all entries in the LedgerGroup.
+   * Executes a firm double-entry movement across accounts.
+   * GUARANTEE: Zero-sum rule enforced at code level.
    */
-  static async executeMovement(params: {
-    type: "SALE" | "PAYOUT" | "REFUND" | "ADJUSTMENT";
-    description: string;
-    entries: LedgerEntryInput[];
-    metadata?: any;
-  }) {
-    const total = params.entries.reduce(
-      (acc, entry) => acc.plus(new Decimal(entry.amount.toString())),
-      new Decimal(0)
-    );
-
-    if (!total.isZero()) {
-      throw new Error(`Accounting Error: Debit/Credit mismatch (${total.toString()}).`);
+  static async executeMovement(
+    type: LedgerGroupType,
+    entries: LedgerEntryInput[],
+    description?: string,
+    transferId?: string
+  ) {
+    // 1. Mandatory ZERO-SUM Guard
+    const total = entries.reduce((sum, e) => sum + Number(e.amount), 0);
+    
+    // Using a tiny epsilon for floating point safety if amounts are numbers
+    if (Math.abs(total) > 0.0001) {
+      throw new Error(`Ledger Imbalance: Total movement sum must be exactly 0. Current sum: ${total}`);
     }
 
     return await prisma.$transaction(async (tx) => {
+      // 2. Create the Ledger Group
       const group = await tx.ledgerGroup.create({
         data: {
-          type: params.type,
-          description: params.description,
-          metadata: params.metadata,
+          type,
+          description,
+          transferId,
+          entries: {
+            create: entries.map((e) => ({
+              accountId: e.accountId,
+              amount: new Prisma.Decimal(e.amount),
+            })),
+          },
         },
       });
 
-      for (const entry of params.entries) {
-        const amount = new Decimal(entry.amount.toString());
-
-        // 1. Immutable Ledger Entry
-        await tx.ledgerEntry.create({
+      // 3. Atomically Update All Account Balances
+      // NOTE: We do this sequentially in the transaction to maintain strict order
+      for (const entry of entries) {
+        await tx.financialAccount.update({
+          where: { id: entry.accountId },
           data: {
-            groupId: group.id,
-            walletId: entry.walletId,
-            accountId: entry.walletId, 
-            amount: amount,
-          },
-        });
-
-        // 2. Atomic Balance Update
-        await tx.wallet.update({
-          where: { id: entry.walletId },
-          data: {
-            [entry.bucket]: { increment: amount },
+            balance: {
+              increment: new Prisma.Decimal(entry.amount),
+            },
           },
         });
       }
@@ -64,25 +59,29 @@ export class LedgerService {
   }
 
   /**
-   * Safe Payout Lock: Available -> Pending (Locked)
-   * Guaranteed to fail if account is frozen or funds are insufficient.
+   * Reverses an existing movement by creating negated entries.
+   * Ensures an append-only audit trail (no deletes).
    */
-  static async lockFundsForPayout(userId: string, amount: number) {
-    const amt = new Decimal(amount.toString());
-    
-    return await prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({ where: { userId } });
-      if (!wallet) throw new Error("Wallet not found.");
-      if (wallet.isFrozen) throw new Error("Account is frozen.");
-      if (wallet.availableBalance.lessThan(amt)) throw new Error("Insufficient funds.");
-
-      return await tx.wallet.update({
-        where: { userId },
-        data: {
-          availableBalance: { decrement: amt },
-          pendingBalance:   { increment: amt },
-        },
-      });
+  static async reverseMovement(groupId: string, reason?: string) {
+    const originalGroup = await prisma.ledgerGroup.findUnique({
+      where: { id: groupId },
+      include: { entries: true },
     });
+
+    if (!originalGroup) throw new Error('Original Ledger Group not found');
+    if (originalGroup.type === LedgerGroupType.REVERSAL) {
+      throw new Error('Cannot reverse a reversal');
+    }
+
+    const reversalEntries: LedgerEntryInput[] = originalGroup.entries.map((e: any) => ({
+      accountId: e.accountId,
+      amount: new Prisma.Decimal(e.amount).negated(),
+    }));
+
+    return await this.executeMovement(
+      LedgerGroupType.REVERSAL,
+      reversalEntries,
+      `Reversal of ${groupId}${reason ? ': ' + reason : ''}`
+    );
   }
 }

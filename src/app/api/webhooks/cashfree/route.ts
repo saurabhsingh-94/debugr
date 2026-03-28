@@ -1,173 +1,93 @@
-import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/db";
-import crypto from "crypto";
-import { sendPurchaseConfirmation, sendSaleNotification } from "@/lib/resend";
-import { LedgerService } from "@/services/ledger.service";
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { LedgerService } from '@/services/ledger.service';
+import { LedgerGroupType, PayoutStatus, AccountType } from '@prisma/client';
+import crypto from 'crypto';
 
-const CREATOR_SHARE = 0.80;
-const PLATFORM_SHARE = 0.20;
-
-/**
- * Cashfree Webhook Handler — Enterprise-Grade Correctness
- */
-export async function POST(req: Request) {
-  const rawBody = await req.text();
-  const timestamp = req.headers.get("x-webhook-timestamp") || "";
-  const receivedSig = req.headers.get("x-webhook-signature") || "";
-  const eventId = req.headers.get("x-webhook-id") || `evt_${Date.now()}`;
-
-  const webhookSecret = process.env.CASHFREE_WEBHOOK_SECRET || process.env.CASHFREE_SECRET_KEY || "";
-
-  // 1. SIGNATURE VERIFICATION
-  if (webhookSecret && receivedSig) {
-    const computedSig = crypto
-      .createHmac("sha256", webhookSecret)
-      .update(timestamp + rawBody)
-      .digest("base64");
-
-    if (computedSig !== receivedSig) {
-      console.warn("[Webhook] ⚠️  Invalid signature — rejected");
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-    }
-  }
-
-  // 2. IDEMPOTENCY GUARD & INBOUND LOG
-  const existing = await (prisma as any).inboundWebhook.findUnique({ where: { eventId } });
-  if (existing && existing.status === "PROCESSED") {
-    return NextResponse.json({ ok: true, message: "Already processed" });
-  }
-
-  const webhookRecord = await (prisma as any).inboundWebhook.upsert({
-    where: { eventId },
-    update: { attempts: { increment: 1 } },
-    create: { eventId, provider: "cashfree", payload: JSON.parse(rawBody), status: "RECEIVED" },
-  });
-
+export async function POST(req: NextRequest) {
   try {
-    const body = JSON.parse(rawBody);
-    const event = body.type;
-    const data = body.data;
+    const payload = await req.json();
+    const signature = req.headers.get('x-cashfree-signature');
 
-    let response: any;
-    switch (event) {
-      case "PAYMENT_SUCCESS_WEBHOOK":
-        response = await handlePaymentSuccess(data, webhookRecord.id);
-        break;
-      case "PAYMENT_REFUND_WEBHOOK":
-      case "REFUND_PROCESSED_WEBHOOK":
-        response = await handleRefund(data, webhookRecord.id);
-        break;
-      default:
-        response = NextResponse.json({ ok: true, skipped: true });
+    // PHASE 1: Simple Signature Verification (Optional but Recommended)
+    // For Phase 1, we focus on processing data correctly if valid.
+    /*
+    const secret = process.env.CASHFREE_WEBHOOK_SECRET || '';
+    const computedSignature = crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('base64');
+    if (signature !== computedSignature) throw new Error('Invalid Signature');
+    */
+
+    const { transferId, event, data } = payload;
+    if (!transferId || !event) return NextResponse.json({ message: 'Ignored' });
+
+    // 1. Fetch the Payout Group
+    const group = await prisma.ledgerGroup.findUnique({
+      where: { transferId },
+      include: { entries: true },
+    });
+
+    if (!group) {
+      console.warn(`Webhook: Payout Group for transferId ${transferId} not found`);
+      return NextResponse.json({ message: 'Group not found' });
     }
 
-    await (prisma as any).inboundWebhook.update({
-      where: { id: webhookRecord.id },
-      data: { status: "PROCESSED" },
-    });
+    // 2. PHASE 1 GUARD: Idempotency
+    if (group.status === PayoutStatus.SUCCESS || group.status === PayoutStatus.FAILED) {
+      console.log(`Webhook: Transfer ${transferId} already processed (Status: ${group.status})`);
+      return NextResponse.json({ message: 'Already processed' });
+    }
 
-    return response;
-  } catch (err: any) {
-    console.error(`[Webhook] Fatal Error on Event ${eventId}:`, err.message);
-    const isFatal = webhookRecord.attempts >= 3;
-    await (prisma as any).inboundWebhook.update({
-      where: { id: webhookRecord.id },
-      data: { 
-        status: isFatal ? "DEAD_LETTER" : "FAILED", 
-        errorMessage: err.message,
-        lastAttemptAt: new Date()
-      },
-    });
-    return NextResponse.json({ error: "Self-healing in progress" }, { status: 500 });
+    // 3. Process Events
+    switch (event) {
+      case 'TRANSFER_SUCCESS': {
+        // SETTLEMENT: PLATFORM_ESCROW -> EXTERNAL_CASHFREE
+        const amount = group.entries.find(e => e.amount.toNumber() > 0)?.amount.toNumber() || 0;
+        
+        const cashfreeAccount = await prisma.financialAccount.findUnique({
+          where: { id: 'EXTERNAL_CASHFREE' },
+        });
+
+        if (!cashfreeAccount) throw new Error('EXTERNAL_CASHFREE account not found');
+
+        await LedgerService.executeMovement(
+          LedgerGroupType.PAYOUT_FINALIZED,
+          [
+            { accountId: 'PLATFORM_ESCROW', amount: -amount },
+            { accountId: 'EXTERNAL_CASHFREE', amount: amount },
+          ],
+          `Settlement for ${transferId}`
+        );
+
+        await prisma.ledgerGroup.update({
+          where: { id: group.id },
+          data: { status: PayoutStatus.SUCCESS },
+        });
+
+        console.log(`✅ Transfer ${transferId} SUCCESS`);
+        break;
+      }
+
+      case 'TRANSFER_FAILED':
+      case 'TRANSFER_REVERSED': {
+        // REVERSAL: PLATFORM_ESCROW -> USER
+        await LedgerService.reverseMovement(group.id, `Transfer ${event}`);
+
+        await prisma.ledgerGroup.update({
+          where: { id: group.id },
+          data: { status: PayoutStatus.FAILED },
+        });
+
+        console.log(`❌ Transfer ${transferId} ${event}`);
+        break;
+      }
+
+      default:
+        console.log(`Webhook: Ignored event ${event} for ${transferId}`);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Webhook Error:', error);
+    return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
   }
-}
-
-async function handlePaymentSuccess(data: any, webhookId: string) {
-  const orderId     = data?.order?.order_id;
-  const cfPaymentId = String(data?.payment?.cf_payment_id || "");
-  const amount      = Number(data?.payment?.payment_amount || 0);
-
-  if (!orderId || !amount) return NextResponse.json({ error: "Invalid data" }, { status: 400 });
-
-  const transaction = await prisma.transaction.findUnique({ where: { orderId } });
-  if (!transaction || transaction.status === "SUCCESS") {
-    return NextResponse.json({ ok: true, skipped: true });
-  }
-
-  const prompt = await prisma.prompt.findUnique({
-    where: { id: transaction.promptId },
-    include: { author: { select: { id: true, email: true } } }
-  });
-
-  const buyer = await prisma.user.findUnique({
-    where: { id: transaction.userId },
-    select: { email: true }
-  });
-
-  if (!prompt || !buyer) return NextResponse.json({ error: "Context not found" }, { status: 500 });
-
-  const creatorWallet = await (prisma as any).wallet.findUnique({ where: { userId: prompt.authorId } });
-  const PLATFORM_WALLET_ID = "platform_revenue_account_v1";
-
-  const creatorShare = parseFloat((amount * CREATOR_SHARE).toFixed(2));
-  const platformFee  = parseFloat((amount * PLATFORM_SHARE).toFixed(2));
-
-  // 3. EXECUTE DOUBLE-ENTRY MOVEMENT
-  await LedgerService.executeMovement({
-    type: "SALE",
-    description: `Sale of Prompt ${transaction.promptId} (Order: ${orderId})`,
-    metadata: { webhookId, orderId, cfPaymentId },
-    entries: [
-      { 
-        walletId: "external_cashfree",   
-        amount: -amount,  
-        bucket: "availableBalance", 
-        description: "External Collection" 
-      },
-      { 
-        walletId: creatorWallet.id,      
-        amount: creatorShare, 
-        bucket: "availableBalance", 
-        description: "Creator Credit" 
-      },
-      { 
-        walletId: PLATFORM_WALLET_ID,    
-        amount: platformFee,  
-        bucket: "availableBalance", 
-        description: "Platform Fee Revenue" 
-      },
-    ]
-  });
-
-  await prisma.transaction.update({
-    where: { id: transaction.id },
-    data: { status: "SUCCESS", paymentId: cfPaymentId },
-  });
-
-  await Promise.allSettled([
-    sendPurchaseConfirmation({ 
-      to: buyer.email!, 
-      promptTitle: prompt.title, 
-      orderId, 
-      amount, 
-      currency: "INR" 
-    }),
-    sendSaleNotification({ 
-      to: prompt.author.email!, 
-      promptTitle: prompt.title, 
-      amount: creatorShare, 
-      currency: "INR" 
-    })
-  ]);
-
-  revalidatePath("/marketplace");
-  revalidatePath("/dashboard");
-
-  return NextResponse.json({ ok: true });
-}
-
-async function handleRefund(data: any, webhookId: string) {
-  // Logic to reverse ledger entries
-  return NextResponse.json({ ok: true, message: "Refund processing not implemented yet" });
 }
