@@ -13,10 +13,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.sub && session.user) {
         session.user.id = token.sub;
         
-        // Fetch fresh data from DB for professional status
+        // Fetch fresh data from DB for professional status and email reliability
         const dbUser = await prisma.user.findUnique({ 
           where: { id: token.sub },
           select: { 
+            email: true,
             username: true, 
             isProfessional: true, 
             professionalStatus: true,
@@ -25,6 +26,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         
         if (dbUser) {
+          session.user.email = dbUser.email || session.user.email;
           (session.user as any).username = dbUser.username;
           (session.user as any).isProfessional = dbUser.isProfessional;
           (session.user as any).professionalStatus = dbUser.professionalStatus;

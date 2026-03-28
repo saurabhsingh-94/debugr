@@ -87,7 +87,13 @@ export default function PromptCard({
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Payment session failed");
+      if (!res.ok) {
+        if (data.error === "EMAIL_REQUIRED") {
+            toast.error("Identity Verification Required: Please add an email to your profile to receive receipts.", { id: toastId, duration: 5000 });
+            return;
+        }
+        throw new Error(data.error || "Payment session failed");
+      }
 
       if (!(window as any).Cashfree) {
         throw new Error("Payment Gateway not ready. Please refresh or wait a moment.");

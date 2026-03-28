@@ -47,6 +47,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Prompt already purchased" }, { status: 400 });
     }
 
+    // Fetch fresh user data from DB for absolute identity reliability
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true }
+    });
+
+    if (!dbUser?.email) {
+      console.error(`Checkout blocked: User ${session.user.id} has no email address.`);
+      return NextResponse.json({ 
+        error: "EMAIL_REQUIRED", 
+        message: "An email address is required to receive your receipt. Please update your profile settings." 
+      }, { status: 400 });
+    }
+
     const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
     // Create pending transaction
@@ -67,7 +81,7 @@ export async function POST(req: Request) {
       order_currency: "INR",
       customer_details: {
         customer_id: session.user.id,
-        customer_email: session.user.email || "no-email@debugr.platform",
+        customer_email: dbUser.email,
         customer_phone: "9999999999", 
       },
       order_meta: {
