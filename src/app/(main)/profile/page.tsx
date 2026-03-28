@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const [prismaUser, setPrismaUser] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [prompts, setPrompts] = useState<any[]>([]);
+  const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const sessionUser = session?.user;
 
@@ -20,14 +21,16 @@ export default function ProfilePage() {
 
     const fetchAll = async () => {
       try {
-        const [pUser, postsRes, promptsRes] = await Promise.all([
+        const [pUser, postsRes, promptsRes, bookmarksRes] = await Promise.all([
           syncUser(),
           fetch(`/api/user/${sessionUser.id}/posts`).then((r) => r.json()),
           fetch(`/api/user/${sessionUser.id}/prompts`).then((r) => r.json()),
+          fetch(`/api/user/bookmarks`).then((r) => r.json()),
         ]);
         setPrismaUser(pUser);
         setPosts(Array.isArray(postsRes) ? postsRes : postsRes.posts || []);
         setPrompts(Array.isArray(promptsRes) ? promptsRes : promptsRes.prompts || []);
+        setBookmarks(Array.isArray(bookmarksRes) ? bookmarksRes : bookmarksRes.posts || []);
       } catch (e) {
         console.error("Profile fetch error:", e);
       } finally {
@@ -86,6 +89,7 @@ export default function ProfilePage() {
       stats={stats}
       problems={posts}
       prompts={prompts}
+      bookmarks={bookmarks}
     />
   );
 }

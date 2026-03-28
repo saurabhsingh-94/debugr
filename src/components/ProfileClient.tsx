@@ -21,12 +21,13 @@ interface ProfileClientProps {
   stats: any;
   problems?: any[];
   prompts?: any[];
+  bookmarks?: any[];
   isPublic?: boolean;
 }
 
-const TABS = ["Posts", "Marketplace"];
+const TABS = ["Posts", "Marketplace", "Bookmarks"];
 
-export default function ProfileClient({ user: initialUser, stats, problems = [], prompts = [], isPublic = false }: ProfileClientProps) {
+export default function ProfileClient({ user: initialUser, stats, problems = [], prompts = [], bookmarks = [], isPublic = false }: ProfileClientProps) {
   const [user, setUser] = useState(initialUser);
   const [activeTab, setActiveTab] = useState("Posts");
   const [following, setFollowing] = useState(false);
@@ -267,6 +268,16 @@ export default function ProfileClient({ user: initialUser, stats, problems = [],
             </div>
           ) : (
             <EmptyState tab="Marketplace" message={`No intelligence assets listed by @${user?.username || "user"}.`} />
+          )
+        ) : activeTab === "Bookmarks" ? (
+          bookmarks.length > 0 ? (
+            <div className="divide-y divide-white/[0.04]">
+              {bookmarks.map((post: any) => (
+                <ProfilePost key={post.id} post={post} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState tab="Bookmarks" message="No intelligence nodes bookmarked in this sector." />
           )
         ) : (
           <EmptyState tab={activeTab} message={`Sector ${activeTab} is currently dark.`} />

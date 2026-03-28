@@ -26,6 +26,7 @@ model User {
   cashfreeBeneficiaryId String?
   createdAt             DateTime         @default(now())
   accounts              Account[]
+  reposts               Repost[]
   bookmarks             Bookmark[]
   bounties              Bounty[]
   comments              Comment[]
@@ -222,11 +223,24 @@ model Post {
   bookmarks Bookmark[]
   comments  Comment[]
   likes     Like[]
+  reposts   Repost[]
   author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Repost {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
 }
 
 model Like {
   id        String   @id @default(cuid())
+  type      String   @default("LIKE")
   userId    String
   postId    String?
   promptId  String?
@@ -245,9 +259,12 @@ model Comment {
   userId    String
   postId    String?
   promptId  String?
+  parentId  String?
   createdAt DateTime @default(now())
   post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
   prompt    Prompt?  @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 

@@ -8,9 +8,11 @@ import {
   Repeat2, Bookmark, Share, BadgeCheck, Eye, Compass
 } from "lucide-react";
 import Image from "next/image";
-import { useState, useEffect } from "react";
-import { toggleLike, toggleBookmark } from "@/app/actions";
+import { useState, useEffect, useRef } from "react";
+import { toggleLike, toggleBookmark, toggleRepost } from "@/app/actions";
 import toast from "react-hot-toast";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json().catch(() => ({})));
 
@@ -94,18 +96,64 @@ function PostCard({ post, feedParam }: { post: any; feedParam: string }) {
     ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })
     : "recently";
 
-  const handleLike = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newLiked = !liked;
+  const [reposted, setReposted] = useState(post.isReposted || false);
+  const [repostCount, setRepostCount] = useState(post.repostCount || 0);
+  const [showReactions, setShowReactions] = useState(false);
+  const [reactionType, setReactionType] = useState(post.reactionType || "LIKE");
+  const timeoutRef = useRef<any>(null);
+  const router = useRouter();
+
+  const handleLike = async (type: string = "LIKE") => {
+    const isRemoving = liked && reactionType === type;
+    const newLiked = !isRemoving;
+    
     setLiked(newLiked);
-    setLikeCount(prev => newLiked ? prev + 1 : prev - 1);
+    setReactionType(type);
+    setLikeCount((prev: number) => {
+      if (isRemoving) return prev - 1;
+      if (!liked) return prev + 1;
+      return prev; // Change type only
+    });
+    setShowReactions(false);
+
     try {
-      await toggleLike(post.id, 'post');
+      await toggleLike(post.id, 'post', type);
       mutate(`/api/posts?feed=${feedParam}`);
     } catch (err) {
-      setLiked(!newLiked);
-      setLikeCount(prev => !newLiked ? prev + 1 : prev - 1);
-      toast.error("Failed to like post");
+      toast.error("Failed to update reaction");
+      // Revert state on error
+    }
+  };
+
+  const handleRepost = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newReposted = !reposted;
+    setReposted(newReposted);
+    setRepostCount((prev: number) => newReposted ? prev + 1 : prev - 1);
+    try {
+      await toggleRepost(post.id);
+      mutate(`/api/posts?feed=${feedParam}`);
+      toast.success(newReposted ? "Reposted" : "Removed repost");
+    } catch (err) {
+      setReposted(!newReposted);
+      setRepostCount((prev: number) => !newReposted ? prev + 1 : prev - 1);
+      toast.error("Failed to repost");
+    }
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/post/${post.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Check out this post on Debugr',
+          url: url
+        });
+      } catch (err) {}
+    } else {
+      navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard");
     }
   };
 
@@ -129,39 +177,47 @@ function PostCard({ post, feedParam }: { post: any; feedParam: string }) {
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
+      onClick={() => router.push(`/post/${post.id}`)}
       className="nn-card p-6 md:p-8 hover:bg-white/[0.015] transition-all cursor-pointer group rounded-[32px] border border-white/5 hover:border-white/10"
     >
       <div className="flex gap-4">
         {/* AVATAR */}
         <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-2xl overflow-hidden bg-violet-500/10 border border-violet-500/15 relative">
-            {post?.user?.avatarUrl || post?.user?.image ? (
-              <Image src={post.user.avatarUrl || post.user.image} alt={post.user.username || "User"} fill className="object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <User className="w-5 h-5 text-violet-400/50" />
-              </div>
-            )}
-          </div>
+          <Link href={`/u/${post?.user?.username}`} onClick={(e) => e.stopPropagation()}>
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-violet-500/10 border border-violet-500/15 relative">
+              {post?.user?.avatarUrl || post?.user?.image ? (
+                <Image src={post.user.avatarUrl || post.user.image} alt={post.user.username || "User"} fill className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-violet-400/50" />
+                </div>
+              )}
+            </div>
+          </Link>
         </div>
 
         {/* CONTENT */}
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-[15px] font-black text-white leading-tight uppercase tracking-tight">
-              {post?.user?.name || post?.user?.username || "Anonymous"}
-            </span>
+            <Link href={`/u/${post?.user?.username}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
+              <span className="text-[15px] font-black text-white leading-tight uppercase tracking-tight">
+                {post?.user?.name || post?.user?.username || "Anonymous"}
+              </span>
+            </Link>
             <span className="text-[13px] font-bold text-zinc-700 tracking-tight">@{post?.user?.username || "user"}</span>
             <span className="text-zinc-800">·</span>
             <span className="text-[12px] font-medium text-zinc-600">{timeAgo}</span>
-            <button className="ml-auto p-2 rounded-xl opacity-0 group-hover:opacity-100 hover:bg-violet-400/10 text-zinc-600 hover:text-violet-400 transition-all">
+            <button 
+              onClick={(e) => e.stopPropagation()}
+              className="ml-auto p-2 rounded-xl opacity-0 group-hover:opacity-100 hover:bg-violet-400/10 text-zinc-600 hover:text-violet-400 transition-all"
+            >
               <MoreHorizontal className="w-[18px] h-[18px]" />
             </button>
           </div>
 
           {/* Body */}
-          <p className="text-[15px] text-zinc-300 leading-relaxed mb-4">{post.content}</p>
+          <p className="text-[15px] text-zinc-300 leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
 
           {/* Social Stats/Indicators */}
           <div className="flex items-center gap-6 mb-6">
@@ -174,33 +230,72 @@ function PostCard({ post, feedParam }: { post: any; feedParam: string }) {
           {/* Actions */}
           <div className="flex items-center justify-between pt-4 border-t border-white/5">
             <div className="flex items-center gap-4">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-2xl text-zinc-500 hover:text-violet-400 hover:bg-violet-400/10 transition-all group/action">
+              <button 
+                onClick={(e) => { e.stopPropagation(); router.push(`/post/${post.id}`); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-2xl text-zinc-500 hover:text-violet-400 hover:bg-violet-400/10 transition-all group/action"
+              >
                  <MessageSquare className="w-5 h-5 group-hover/action:scale-110 transition-transform" />
                  <span className="text-[13px] font-black">{post.commentCount ?? post.comments?.length ?? 0}</span>
               </button>
               
-              <button
-                onClick={handleLike}
-                className={`flex items-center gap-2 px-4 py-2 rounded-2xl transition-all group/heart ${liked ? "text-rose-500 bg-rose-500/5" : "text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10"}`}
+              <div 
+                className="relative"
+                onMouseEnter={() => {
+                  timeoutRef.current = setTimeout(() => setShowReactions(true), 500);
+                }}
+                onMouseLeave={() => {
+                  clearTimeout(timeoutRef.current);
+                  setShowReactions(false);
+                }}
               >
-                <Heart className={`w-5 h-5 transition-transform group-hover/heart:scale-110 ${liked ? "fill-rose-500" : ""}`} />
-                <span className="text-[13px] font-black">{likeCount || 0}</span>
-              </button>
+                <AnimatePresence>
+                  {showReactions && <ReactionPicker currentType={reactionType} onSelect={(type) => handleLike(type)} />}
+                </AnimatePresence>
+                
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleLike(reactionType); }}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-2xl transition-all group/heart",
+                    liked ? "text-rose-500 bg-rose-500/5" : "text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10"
+                  )}
+                >
+                  {liked && reactionType !== "LIKE" ? (
+                    <span className="text-lg leading-none group-hover/heart:scale-110 transition-transform">
+                      {reactionType === "LOVE" ? "🔥" : reactionType === "INSIGHTFUL" ? "💡" : reactionType === "DEBUGGED" ? "🛠️" : "🚀"}
+                    </span>
+                  ) : (
+                    <Heart className={cn("w-5 h-5 transition-transform group-hover/heart:scale-110", liked && "fill-rose-500")} />
+                  )}
+                  <span className="text-[13px] font-black">{likeCount || 0}</span>
+                </button>
+              </div>
 
-              <button className="flex items-center gap-2 px-4 py-2 rounded-2xl text-zinc-500 hover:text-emerald-400 hover:bg-emerald-400/10 transition-all group/action">
-                 <Repeat2 className="w-5 h-5 group-hover/action:scale-110 transition-transform" />
-                 <span className="text-[13px] font-black">{post.repostsCount || 0}</span>
+              <button 
+                onClick={handleRepost}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-2xl transition-all group/action",
+                  reposted ? "text-emerald-400 bg-emerald-400/5" : "text-zinc-500 hover:text-emerald-400 hover:bg-emerald-400/10"
+                )}
+              >
+                 <Repeat2 className={cn("w-5 h-5 group-hover/action:scale-110 transition-transform", reposted && "scale-110")} />
+                 <span className="text-[13px] font-black">{repostCount || 0}</span>
               </button>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={handleBookmark}
-                className={`p-3 rounded-2xl transition-all ${bookmarked ? "text-violet-400 bg-violet-400/5" : "text-zinc-600 hover:text-violet-400 hover:bg-violet-400/10"}`}
+                className={cn(
+                  "p-3 rounded-2xl transition-all",
+                  bookmarked ? "text-violet-400 bg-violet-400/5" : "text-zinc-600 hover:text-violet-400 hover:bg-violet-400/10"
+                )}
               >
-                <Bookmark className={`w-5 h-5 ${bookmarked ? "fill-violet-400" : ""}`} />
+                <Bookmark className={cn("w-5 h-5", bookmarked && "fill-violet-400")} />
               </button>
-              <button className="p-3 rounded-2xl text-zinc-600 hover:text-white hover:bg-white/5 transition-all">
+              <button 
+                onClick={handleShare}
+                className="p-3 rounded-2xl text-zinc-600 hover:text-white hover:bg-white/5 transition-all"
+              >
                 <Share2 className="w-5 h-5" />
               </button>
             </div>
@@ -236,3 +331,40 @@ function LoadingCard({ delay = 0 }: { delay?: number }) {
     </motion.div>
   );
 }
+
+function ReactionPicker({ onSelect, currentType }: { onSelect: (type: string) => void, currentType: string }) {
+  const reactions = [
+    { type: "LIKE", icon: "❤️", label: "Like" },
+    { type: "LOVE", icon: "🔥", label: "Love" },
+    { type: "INSIGHTFUL", icon: "💡", label: "Insight" },
+    { type: "DEBUGGED", icon: "🛠️", label: "Debug" },
+    { type: "ROCKET", icon: "🚀", label: "Rocket" },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      className="absolute bottom-full left-0 mb-2 flex gap-1 p-1.5 bg-[#0c0c12]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50"
+    >
+      {reactions.map((r) => (
+        <button
+          key={r.type}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(r.type);
+          }}
+          className={cn(
+            "p-2 hover:bg-white/5 rounded-xl transition-all hover:scale-125 active:scale-95",
+            currentType === r.type && "bg-white/10"
+          )}
+          title={r.label}
+        >
+          <span className="text-lg leading-none">{r.icon}</span>
+        </button>
+      ))}
+    </motion.div>
+  );
+}
+
+const cn = (...classes: any[]) => classes.filter(Boolean).join(" ");

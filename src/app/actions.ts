@@ -202,7 +202,6 @@ export async function updateBankDetails(formData: FormData) {
       const bankNameFromRecord = verification.data?.accountHolderName?.toLowerCase();
       const providedName = accountHolderName.toLowerCase();
       
-      // Simple word-based matching for robustness
       const bankWords = bankNameFromRecord.split(/\s+/);
       const userWords = providedName.split(/\s+/);
       const matchEntries = userWords.filter(word => bankWords.includes(word));
@@ -263,7 +262,10 @@ export async function postPost(content: string) {
 }
 
 export async function getPendingVerifications() {
-  const user = await getAuthUser();
+  const sessionUser = await getAuthUser();
+  if (!sessionUser?.id) throw new Error("Unauthorized");
+  
+  const user = await prisma.user.findUnique({ where: { id: sessionUser.id } });
   if (!user?.isAdmin) throw new Error("Unauthorized");
 
   return await prisma.user.findMany({
@@ -273,7 +275,10 @@ export async function getPendingVerifications() {
 }
 
 export async function approveUser(userId: string) {
-  const admin = await getAuthUser();
+  const sessionUser = await getAuthUser();
+  if (!sessionUser?.id) throw new Error("Unauthorized");
+
+  const admin = await prisma.user.findUnique({ where: { id: sessionUser.id } });
   if (!admin?.isAdmin) throw new Error("Unauthorized");
 
   await prisma.user.update({
@@ -290,7 +295,10 @@ export async function approveUser(userId: string) {
 }
 
 export async function rejectUser(userId: string) {
-  const admin = await getAuthUser();
+  const sessionUser = await getAuthUser();
+  if (!sessionUser?.id) throw new Error("Unauthorized");
+
+  const admin = await prisma.user.findUnique({ where: { id: sessionUser.id } });
   if (!admin?.isAdmin) throw new Error("Unauthorized");
 
   await prisma.user.update({
@@ -341,7 +349,6 @@ export async function postSignal(formData: FormData) {
   }
 }
 
-// Alias for CreateSignalModal compatibility
 export async function submitProblem(formData: FormData) {
   return await postSignal(formData);
 }
@@ -367,7 +374,7 @@ export async function postBounty(formData: FormData) {
         task,
         reward,
         difficulty: difficulty || "EASY",
-        expiresAt: expiresAtRaw ? new Date(expiresAtRaw) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days
+        expiresAt: expiresAtRaw ? new Date(expiresAtRaw) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
         userId: user.id,
       },
     });
@@ -467,7 +474,7 @@ export async function postPrompt(formData: FormData) {
  * SOCIAL & NOTIFICATION ACTIONS
  */
 
-export async function toggleLike(targetId: string, type: "post" | "prompt") {
+export async function toggleLike(targetId: string, type: "post" | "prompt", reactionType: string = "LIKE") {
   const user = await getAuthUser();
   if (!user?.id) throw new Error("Unauthorized");
 
@@ -481,11 +488,19 @@ export async function toggleLike(targetId: string, type: "post" | "prompt") {
   });
 
   if (existingLike) {
-    await (prisma.like as any).delete({ where: { id: existingLike.id } });
+    if (existingLike.type === reactionType) {
+      await (prisma.like as any).delete({ where: { id: existingLike.id } });
+    } else {
+      await (prisma.like as any).update({
+        where: { id: existingLike.id },
+        data: { type: reactionType },
+      });
+    }
   } else {
     await (prisma.like as any).create({
       data: {
         userId: user.id,
+        type: reactionType,
         [type === "post" ? "postId" : "promptId"]: targetId,
       },
     });
@@ -514,12 +529,11 @@ export async function toggleLike(targetId: string, type: "post" | "prompt") {
             actorId: user.id,
             postId: type === "post" ? targetId : null,
             promptId: type === "prompt" ? targetId : null,
+            message: `reacted ${reactionType} to your ${type}`,
           },
         });
       }
-    } catch (e) {
-      console.error("Notification failed", e);
-    }
+    } catch (e) {}
   }
 
   revalidatePath("/");
@@ -550,6 +564,129 @@ export async function toggleBookmark(targetId: string, type: "post" | "prompt") 
     });
   }
   revalidatePath("/");
+}
+
+export async function toggleRepost(postId: string) {
+  const user = await getAuthUser();
+  if (!user?.id) throw new Error("Unauthorized");
+
+  const existing = await (prisma as any).repost.findUnique({
+    where: { userId_postId: { userId: user.id, postId } },
+  });
+
+  if (existing) {
+    await (prisma as any).repost.delete({ where: { id: existing.id } });
+  } else {
+    await (prisma as any).repost.create({
+      data: { userId: user.id, postId },
+    });
+
+    try {
+      const post = await prisma.post.findUnique({
+        where: { id: postId },
+        select: { authorId: true },
+      });
+      if (post?.authorId && post.authorId !== user.id) {
+        await (prisma.notification as any).create({
+          data: {
+            type: "REPOST",
+            userId: post.authorId,
+            actorId: user.id,
+            postId,
+          },
+        });
+      }
+    } catch (e) {}
+  }
+  revalidatePath("/");
+  revalidatePath("/profile");
+}
+
+export async function getBookmarkedPosts() {
+  const user = await getAuthUser();
+  if (!user?.id) return [];
+
+  const bookmarks = await (prisma as any).bookmark.findMany({
+    where: { userId: user.id, postId: { not: null } },
+    include: {
+      post: {
+        include: {
+          author: {
+            select: { id: true, name: true, username: true, avatarUrl: true, image: true, isProfessional: true },
+          },
+          _count: { select: { likes: true, comments: true, reposts: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return bookmarks.map((b: any) => ({
+    ...b.post,
+    user: b.post.author,
+    likeCount: b.post._count.likes,
+    commentCount: b.post._count.comments,
+    repostCount: b.post._count.reposts,
+    isBookmarked: true,
+  }));
+}
+
+export async function getPostWithComments(postId: string) {
+  const user = await getAuthUser();
+  
+  const post = await (prisma.post as any).findUnique({
+    where: { id: postId },
+    include: {
+      author: {
+        select: { id: true, name: true, username: true, avatarUrl: true, image: true, isProfessional: true },
+      },
+      comments: {
+        where: { parentId: null },
+        include: {
+          user: {
+            select: { id: true, name: true, username: true, avatarUrl: true, image: true },
+          },
+          replies: {
+            include: {
+              user: {
+                select: { id: true, name: true, username: true, avatarUrl: true, image: true },
+              },
+            }
+          }
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      _count: { select: { likes: true, comments: true, reposts: true } },
+    },
+  });
+
+  if (!post) return null;
+
+  let isLiked = false;
+  let isBookmarked = false;
+  let isReposted = false;
+
+  if (user?.id) {
+    const [like, bookmark, repost] = await Promise.all([
+      (prisma.like as any).findUnique({ where: { userId_postId: { userId: user.id, postId } } }),
+      (prisma.bookmark as any).findUnique({ where: { userId_postId: { userId: user.id, postId } } }),
+      (prisma as any).repost.findUnique({ where: { userId_postId: { userId: user.id, postId } } }),
+    ]);
+    isLiked = !!like;
+    isBookmarked = !!bookmark;
+    isReposted = !!repost;
+  }
+
+  return {
+    ...post,
+    user: post.author,
+    likeCount: post._count.likes,
+    commentCount: post._count.comments,
+    repostCount: post._count.reposts,
+    isLiked,
+    isBookmarked,
+    isReposted,
+  };
 }
 
 export async function toggleFollow(followingId: string) {
@@ -590,7 +727,8 @@ export async function toggleFollow(followingId: string) {
 export async function addComment(
   targetId: string,
   type: "post" | "prompt",
-  content: string
+  content: string,
+  parentId?: string
 ) {
   const user = await getAuthUser();
   if (!user?.id) throw new Error("Unauthorized");
@@ -599,6 +737,7 @@ export async function addComment(
     data: {
       content,
       userId: user.id,
+      parentId: parentId || null,
       [type === "post" ? "postId" : "promptId"]: targetId,
     },
   });
@@ -633,6 +772,7 @@ export async function addComment(
   } catch (e) {}
 
   revalidatePath("/");
+  if (type === "post") revalidatePath(`/post/${targetId}`);
 }
 
 /**
@@ -761,7 +901,6 @@ export async function getCreatorStats() {
   if (!user?.id) return null;
 
   const [wallet, followers, profileVisitsResult] = await Promise.all([
-    // Primary source: new Wallet model
     (prisma as any).wallet.findUnique({
       where: { userId: user.id },
       select: {
@@ -778,11 +917,9 @@ export async function getCreatorStats() {
   ]);
 
   return {
-    // Wallet balances — all Decimal, convert to number for client
     pendingBalance:   wallet ? Number(wallet.pendingBalance)   : 0,
     availableBalance: wallet ? Number(wallet.availableBalance) : 0,
     totalEarned:      wallet ? Number(wallet.totalEarned)      : 0,
-    // Keep legacy key for backward compat with existing dashboard references
     totalEarnings:    wallet ? Number(wallet.totalEarned)      : 0,
     followers,
     profileVisits: profileVisitsResult?.profileVisits || 0,

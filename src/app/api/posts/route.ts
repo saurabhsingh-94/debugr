@@ -56,7 +56,10 @@ export async function GET(request: Request) {
             professionalStatus: true,
           },
         },
-        _count: { select: { likes: true, comments: true } },
+        _count: { select: { likes: true, comments: true, reposts: true } },
+        likes: userId ? { where: { userId } } : false,
+        bookmarks: userId ? { where: { userId } } : false,
+        reposts: userId ? { where: { userId } } : false,
       },
       orderBy:
         feed === "hot"
@@ -71,6 +74,10 @@ export async function GET(request: Request) {
       user: p.author,
       likeCount: p._count.likes,
       commentCount: p._count.comments,
+      repostCount: p._count.reposts,
+      isLiked: (p as any).likes?.length > 0,
+      isBookmarked: (p as any).bookmarks?.length > 0,
+      isReposted: (p as any).reposts?.length > 0,
     }));
 
     return NextResponse.json({ posts: normalized, nextCursor });
