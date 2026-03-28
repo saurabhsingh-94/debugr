@@ -75,23 +75,39 @@ export default function PostPromptModal({ isOpen, onClose, onPostSuccess, user }
             </div>
 
             {/* MODAL_FORM */}
-            {!user?.isProfessional || user?.professionalStatus !== "VERIFIED" ? (
+            {!user ? (
               <div className="p-12 flex flex-col items-center justify-center text-center space-y-8 h-[60vh]">
                  <div className="w-20 h-20 rounded-[32px] bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
                     <ShieldCheck className="w-10 h-10 text-violet-400" />
                  </div>
                  <div className="space-y-3">
-                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Verification <span className="text-zinc-700">Required</span></h3>
+                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Sign In <span className="text-zinc-700">Required</span></h3>
                     <p className="text-sm text-zinc-500 font-medium italic max-w-sm mx-auto leading-relaxed">
-                       Prompt listing is restricted to verified professional identities. Complete your creator profile to begin synchronization.
+                       Please sign in to list a prompt on the marketplace.
                     </p>
                  </div>
-                 <Link href="/dashboard/creator" onClick={onClose} className="px-10 py-4 bg-white text-black text-[11px] font-black uppercase tracking-[0.4em] rounded-full hover:bg-zinc-200 transition-all flex items-center gap-3">
-                    Setup Creator Profile <ArrowRight className="w-4 h-4" />
+                 <Link href="/login" onClick={onClose} className="px-10 py-4 bg-white text-black text-[11px] font-black uppercase tracking-[0.4em] rounded-full hover:bg-zinc-200 transition-all flex items-center gap-3">
+                    Sign In <ArrowRight className="w-4 h-4" />
                  </Link>
               </div>
             ) : (
-              <form action={handleSubmit} className="p-8 space-y-8 overflow-y-auto scrollbar-none">
+              <form action={handleSubmit} className="p-8 space-y-6 overflow-y-auto scrollbar-none">
+
+              {/* Earnings hold banner for unverified users */}
+              {user?.professionalStatus !== "VERIFIED" && (
+                <div className="flex items-start gap-3 p-4 bg-amber-500/8 border border-amber-500/20 rounded-2xl">
+                  <span className="text-lg flex-shrink-0">💰</span>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Earnings held until verified</p>
+                    <p className="text-[10px] text-zinc-500 leading-relaxed">
+                      You can list and sell prompts right now. Your earnings will show in your wallet but payouts are locked until you{" "}
+                      <Link href="/dashboard/creator" onClick={onClose} className="text-amber-400 underline underline-offset-2 hover:text-amber-300 transition-colors">
+                        verify your bank account
+                      </Link>.
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-3">
