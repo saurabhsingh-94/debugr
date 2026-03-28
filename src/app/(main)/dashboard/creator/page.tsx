@@ -2,6 +2,8 @@ import { getAuthUser, getCreatorStats, syncUser } from "@/app/actions";
 import { redirect } from "next/navigation";
 import CreatorDashboard from "@/components/CreatorDashboard";
 
+export const dynamic = "force-dynamic";
+
 export default async function CreatorDashboardPage() {
   const authUser = await getAuthUser();
   if (!authUser) redirect("/login");

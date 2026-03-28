@@ -1,5 +1,7 @@
 import { getAuthUser, getPersonalStats, getPlatformStats } from "@/app/actions";
 import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 import { 
   Zap, ShoppingBag, Database, ArrowUpRight, 
   BarChart3, Users, IndianRupee, Globe
