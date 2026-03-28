@@ -112,19 +112,24 @@ export async function updateUserProfile(formData: FormData) {
 
     const newUsername = (formData.get("username") as string)?.trim().toLowerCase();
     
-    const data: any = {
-      name: formData.get("name") as string,
-      bio: formData.get("bio") as string,
-      location: formData.get("location") as string,
-      website: formData.get("website") as string,
-      githubProfile: formData.get("githubProfile") as string,
-      xProfile: formData.get("xProfile") as string,
-      instagramProfile: formData.get("instagramProfile") as string,
-      gender: formData.get("gender") as string,
-      isPrivate: formData.get("isPrivate") === "true",
-      expertise: formData.get("expertise") as string,
-      mentionPrivacy: formData.get("mentionPrivacy") as string,
-    };
+    const data: any = {};
+    const fields = [
+      "name", "bio", "location", "website", 
+      "githubProfile", "xProfile", "instagramProfile", 
+      "gender", "expertise", "mentionPrivacy"
+    ];
+
+    fields.forEach(field => {
+      const value = formData.get(field);
+      if (value !== null) {
+        data[field] = value as string;
+      }
+    });
+
+    const isPrivate = formData.get("isPrivate");
+    if (isPrivate !== null) {
+      data.isPrivate = isPrivate === "true";
+    }
 
     // Only update username if its a valid, non-empty string
     if (newUsername && newUsername.length >= 3) {
