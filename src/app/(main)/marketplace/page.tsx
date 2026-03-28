@@ -27,16 +27,19 @@ export default async function MarketplacePage() {
     select: { isProfessional: true, professionalStatus: true }
   }) : null;
 
-  // Security: Mask fullContent if not owned or purchased
+  // Security: strip fullContent, only expose it as 'content' if owned/purchased
   const sanitizedPrompts = prompts.map(p => {
     const isOwner = userId === p.authorId;
     const isPurchased = (p as any).purchases?.length > 0;
     const isUnlocked = isOwner || isPurchased;
 
+    // Destructure to explicitly exclude fullContent from the spread
+    const { fullContent, purchases, ...safePrompt } = p as any;
+
     return {
-      ...p,
-      content: isUnlocked ? p.fullContent : p.previewContent,
-      initialLocked: !isUnlocked
+      ...safePrompt,
+      content: isUnlocked ? fullContent : (p.previewContent || p.description),
+      initialLocked: !isUnlocked,
     };
   });
 
