@@ -382,8 +382,138 @@
   animation: pulseGlow 2s ease-in-out infinite;
 }
 
-/* THEME TRANSITION OVERLAY */
-.theme-transition-overlay {
+/* ─── GLASS THEME — iOS frosted effect ─────────────────────────────────── */
+[data-theme="glass"] .nn-background {
+  background-color: #06060e;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(79, 70, 229, 0.08) 0%, transparent 50%);
+}
+
+/* Glass: make all cards and surfaces frosted */
+[data-theme="glass"] .nn-card,
+[data-theme="glass"] .glass-morphism {
+  background: rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(32px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="glass"] aside,
+[data-theme="glass"] nav {
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+}
+
+/* ─── LIGHT THEME — ensure all text and surfaces are readable ─────────── */
+[data-theme="light"] body {
+  background-color: #f0f0f5 !important;
+  color: #0f0f1a !important;
+}
+
+[data-theme="light"] .nn-background {
+  background-color: #f0f0f5 !important;
+  background-image: radial-gradient(circle at 50% -20%, rgba(124, 58, 237, 0.06) 0%, transparent 60%);
+}
+
+/* Light: cards become white */
+[data-theme="light"] .nn-card {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .nn-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+[data-theme="light"] .glass-morphism {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Light: sidebar */
+[data-theme="light"] aside {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-right-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Light: fix hardcoded dark text colors */
+[data-theme="light"] .text-zinc-300,
+[data-theme="light"] .text-zinc-400 {
+  color: #374151 !important;
+}
+
+[data-theme="light"] .text-zinc-500,
+[data-theme="light"] .text-zinc-600 {
+  color: #6b7280 !important;
+}
+
+[data-theme="light"] .text-zinc-700,
+[data-theme="light"] .text-zinc-800 {
+  color: #9ca3af !important;
+}
+
+[data-theme="light"] .text-white {
+  color: #0f0f1a !important;
+}
+
+/* Light: fix hardcoded dark backgrounds */
+[data-theme="light"] .bg-\[\#050505\],
+[data-theme="light"] .bg-\[\#05050a\],
+[data-theme="light"] .bg-\[\#080808\],
+[data-theme="light"] .bg-\[\#0c0c12\],
+[data-theme="light"] .bg-\[\#0c0c14\],
+[data-theme="light"] .bg-\[\#0c0c18\],
+[data-theme="light"] .bg-\[\#08080A\],
+[data-theme="light"] .bg-\[\#111118\] {
+  background-color: #ffffff !important;
+}
+
+/* Light: sticky headers */
+[data-theme="light"] .bg-\[\#05050a\]\/60,
+[data-theme="light"] .bg-\[\#05050a\]\/80 {
+  background-color: rgba(240, 240, 245, 0.85) !important;
+}
+
+/* Light: borders */
+[data-theme="light"] .border-white\/5,
+[data-theme="light"] .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Light: inputs */
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  color: #0f0f1a !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Light: bottom nav */
+[data-theme="light"] .bg-black\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-top-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Light: nav links */
+[data-theme="light"] .nn-nav-link:hover {
+  color: #0f0f1a;
+  background: rgba(124, 58, 237, 0.08);
+}
+
+/* Light: dividers */
+[data-theme="light"] .nn-divider {
+  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.2), transparent);
+}
   position: fixed;
   inset: 0;
   pointer-events: none;

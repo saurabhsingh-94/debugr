@@ -120,7 +120,6 @@ export default function SettingsPage() {
     { label: "Account", icon: User },
     { label: "Appearance", icon: Palette },
     { label: "Security", icon: Key },
-    { label: "Security", icon: Key },
     { label: "Privacy", icon: Eye },
     { label: "Payments", icon: CreditCard },
     { label: "Contact Us", icon: Headphones },
@@ -128,7 +127,7 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg-base)" }}>
         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
           <SettingsIcon className="w-10 h-10 text-violet-500 opacity-40" />
         </motion.div>
@@ -137,7 +136,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08080A] pt-32 pb-32 px-6 relative overflow-hidden font-grotesk">
+    <div className="min-h-screen pt-32 pb-32 px-6 relative overflow-hidden font-grotesk" style={{ backgroundColor: "var(--bg-base)", color: "var(--text-primary)" }}>
       {/* Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-violet-600/10 blur-[120px] rounded-full" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
