@@ -87,9 +87,17 @@ export default function PromptCard({
       });
 
       const data = await res.json();
+
+      // Free prompt — unlock immediately without payment
+      if (data.free) {
+        setIsLocked(false);
+        toast.success("Free prompt unlocked!", { id: toastId });
+        return;
+      }
+
       if (!res.ok) {
         if (data.error === "EMAIL_REQUIRED") {
-            toast.error("Identity Verification Required: Please add an email to your profile to receive receipts.", { id: toastId, duration: 5000 });
+            toast.error("Please add an email to your profile to make purchases.", { id: toastId, duration: 5000 });
             return;
         }
         throw new Error(data.error || "Payment session failed");
