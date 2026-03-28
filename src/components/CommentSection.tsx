@@ -87,6 +87,7 @@ function CommentItem({ comment, postId, depth }: { comment: any; postId: string;
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replies, setReplies] = useState(comment.replies || []);
+  const [showReplies, setShowReplies] = useState(false);
 
   const timeAgo = comment.createdAt
     ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
@@ -200,20 +201,38 @@ function CommentItem({ comment, postId, depth }: { comment: any; postId: string;
 
           {/* RENDER REPLIES */}
           {replies.length > 0 && (
-            <div className="relative">
-              {/* Thread line */}
-              <div className="absolute left-[-26px] top-0 bottom-0 w-[1px] bg-white/[0.05]" />
-              
-              <div className="space-y-2">
-                {replies.map((reply: any) => (
-                  <CommentItem 
-                    key={reply.id} 
-                    comment={reply} 
-                    postId={postId} 
-                    depth={depth + 1} 
-                  />
-                ))}
-              </div>
+            <div className="mt-4">
+              {!showReplies ? (
+                <button
+                  onClick={() => setShowReplies(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-500/5 hover:bg-violet-500/10 border border-violet-500/10 text-[10px] font-black uppercase tracking-widest text-violet-400 transition-all group"
+                >
+                  <CornerDownRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  Show {replies.length} {replies.length === 1 ? "reply" : "replies"}
+                </button>
+              ) : (
+                <div className="relative">
+                  {/* Thread line */}
+                  <div className="absolute left-[-26px] top-0 bottom-0 w-[1px] bg-white/[0.05]" />
+                  
+                  <div className="space-y-4">
+                    {replies.map((reply: any) => (
+                      <CommentItem 
+                        key={reply.id} 
+                        comment={reply} 
+                        postId={postId} 
+                        depth={depth + 1} 
+                      />
+                    ))}
+                    <button
+                      onClick={() => setShowReplies(false)}
+                      className="text-[9px] font-bold uppercase tracking-wider text-zinc-700 hover:text-zinc-500 transition-colors ml-6"
+                    >
+                      Hide replies
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

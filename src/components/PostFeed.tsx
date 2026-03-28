@@ -110,7 +110,7 @@ function PostCard({ post, feedParam }: { post: any; feedParam: string }) {
     setLiked(newLiked);
     setReactionType(type);
     setLikeCount((prev: number) => {
-      if (isRemoving) return prev - 1;
+      if (isRemoving) return Math.max(0, prev - 1);
       if (!liked) return prev + 1;
       return prev; // Change type only
     });
@@ -261,7 +261,7 @@ function PostCard({ post, feedParam }: { post: any; feedParam: string }) {
                 >
                   {liked && reactionType !== "LIKE" ? (
                     <span className="text-lg leading-none group-hover/heart:scale-110 transition-transform">
-                      {reactionType === "LOVE" ? "🔥" : reactionType === "INSIGHTFUL" ? "💡" : reactionType === "DEBUGGED" ? "🛠️" : "🚀"}
+                      {reactionType === "LOVE" ? "🔥" : reactionType === "INSIGHTFUL" ? "💡" : reactionType === "DEBUGGED" ? "🛠️" : reactionType === "THINKING" ? "🤔" : reactionType === "LAUGH" ? "😂" : "🚀"}
                     </span>
                   ) : (
                     <Heart className={cn("w-5 h-5 transition-transform group-hover/heart:scale-110", liked && "fill-rose-500")} />
@@ -332,20 +332,23 @@ function LoadingCard({ delay = 0 }: { delay?: number }) {
   );
 }
 
-function ReactionPicker({ onSelect, currentType }: { onSelect: (type: string) => void, currentType: string }) {
+function ReactionPicker({ currentType, onSelect }: { currentType: string; onSelect: (type: string) => void }) {
   const reactions = [
-    { type: "LIKE", icon: "❤️", label: "Like" },
-    { type: "LOVE", icon: "🔥", label: "Love" },
-    { type: "INSIGHTFUL", icon: "💡", label: "Insight" },
-    { type: "DEBUGGED", icon: "🛠️", label: "Debug" },
-    { type: "ROCKET", icon: "🚀", label: "Rocket" },
+    { type: "LIKE", icon: "❤️" },
+    { type: "LOVE", icon: "🔥" },
+    { type: "INSIGHTFUL", icon: "💡" },
+    { type: "LAUGH", icon: "😂" },
+    { type: "THINKING", icon: "🤔" },
+    { type: "DEBUGGED", icon: "🛠️" },
+    { type: "ROCKET", icon: "🚀" },
   ];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.9 }}
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="absolute bottom-full left-0 mb-2 flex gap-1 p-1.5 bg-[#0c0c12]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50"
+      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+      className="absolute bottom-full left-0 mb-2 p-2 bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl flex gap-2 z-50 shadow-2xl"
     >
       {reactions.map((r) => (
         <button
@@ -355,12 +358,11 @@ function ReactionPicker({ onSelect, currentType }: { onSelect: (type: string) =>
             onSelect(r.type);
           }}
           className={cn(
-            "p-2 hover:bg-white/5 rounded-xl transition-all hover:scale-125 active:scale-95",
-            currentType === r.type && "bg-white/10"
+            "w-10 h-10 flex items-center justify-center rounded-xl transition-all hover:scale-125 hover:bg-white/5",
+            currentType === r.type && "bg-violet-500/20"
           )}
-          title={r.label}
         >
-          <span className="text-lg leading-none">{r.icon}</span>
+          <span className="text-xl">{r.icon}</span>
         </button>
       ))}
     </motion.div>

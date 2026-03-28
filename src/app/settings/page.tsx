@@ -70,6 +70,7 @@ export default function SettingsPage() {
     githubProfile: "",
     xProfile: "",
     instagramProfile: "",
+    mentionPrivacy: "EVERYONE",
   });
 
   const { data: session } = useSession();
@@ -92,6 +93,7 @@ export default function SettingsPage() {
             githubProfile: (prismaUser as any).githubProfile || "",
             xProfile: (prismaUser as any).xProfile || "",
             instagramProfile: (prismaUser as any).instagramProfile || "",
+            mentionPrivacy: (prismaUser as any).mentionPrivacy || "EVERYONE",
           });
         }
         setConnectedProviders(accountsRes.accounts || []);
@@ -410,6 +412,60 @@ export default function SettingsPage() {
                              <div className="w-12 h-6 bg-zinc-800 rounded-full relative cursor-pointer">
                                 <div className="absolute left-1 top-1 w-4 h-4 bg-zinc-400 rounded-full" />
                              </div>
+                          </div>
+
+                          <div className="nn-divider" />
+
+                          <div className="space-y-8">
+                             <div className="space-y-2">
+                                <h4 className="text-[14px] font-black text-white uppercase tracking-tight flex items-center gap-2">
+                                   <Target className="w-4 h-4 text-violet-400" /> Mentions & Tagging
+                                </h4>
+                                <p className="text-zinc-600 text-[11px] font-bold uppercase tracking-widest">Control who can mention you in transmissions</p>
+                             </div>
+
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {[
+                                  { id: "EVERYONE", label: "Everyone", desc: "Allow anyone to tag you" },
+                                  { id: "FOLLOWERS", label: "Followers", desc: "Only people you follow" },
+                                  { id: "NONE", label: "No One", desc: "Disable all mentions" },
+                                ].map((opt) => (
+                                  <button
+                                    key={opt.id}
+                                    onClick={() => setFormData({ ...formData, mentionPrivacy: opt.id })}
+                                    className={cn(
+                                      "p-6 rounded-3xl border transition-all text-left group",
+                                      formData.mentionPrivacy === opt.id
+                                        ? "bg-violet-500/10 border-violet-500/30"
+                                        : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                                    )}
+                                  >
+                                    <div className="flex items-center justify-between mb-3">
+                                       <span className={cn(
+                                         "text-[12px] font-black uppercase tracking-widest",
+                                         formData.mentionPrivacy === opt.id ? "text-violet-400" : "text-zinc-500"
+                                       )}>{opt.label}</span>
+                                       {formData.mentionPrivacy === opt.id && <div className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.5)]" />}
+                                    </div>
+                                    <p className="text-[10px] text-zinc-600 font-medium leading-tight">{opt.desc}</p>
+                                  </button>
+                                ))}
+                             </div>
+                          </div>
+
+                          <div className="pt-8 flex justify-end">
+                             <button
+                               onClick={handleSubmit}
+                               disabled={isSaving}
+                               className="px-10 py-5 bg-white text-black text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-zinc-200 transition-all flex items-center gap-2 disabled:opacity-50"
+                             >
+                               {isSaving ? (
+                                 <Loader2 className="w-4 h-4 animate-spin" />
+                               ) : (
+                                 <Save className="w-4 h-4" />
+                               )}
+                               Save Permissions
+                             </button>
                           </div>
                        </div>
                     </motion.div>

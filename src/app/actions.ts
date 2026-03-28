@@ -120,6 +120,7 @@ export async function updateUserProfile(formData: FormData) {
       gender: formData.get("gender") as string,
       isPrivate: formData.get("isPrivate") === "true",
       expertise: formData.get("expertise") as string,
+      mentionPrivacy: formData.get("mentionPrivacy") as string,
     };
 
     const avatarUrl = formData.get("avatarUrl");
@@ -251,12 +252,14 @@ export async function postPost(content: string) {
   const user = await getAuthUser();
   if (!user?.id) throw new Error("Unauthorized");
 
-  await (prisma.post as any).create({
+  const post = await (prisma.post as any).create({
     data: {
       content,
       authorId: user.id,
     },
   });
+
+  await handleMentions(content, user.id, post.id);
 
   revalidatePath("/");
 }
@@ -586,6 +589,7 @@ export async function toggleRepost(postId: string) {
         where: { id: postId },
         select: { authorId: true },
       });
+
       if (post?.authorId && post.authorId !== user.id) {
         await (prisma.notification as any).create({
           data: {
@@ -593,13 +597,80 @@ export async function toggleRepost(postId: string) {
             userId: post.authorId,
             actorId: user.id,
             postId,
+            message: "reposted your intel",
           },
         });
       }
     } catch (e) {}
   }
+
   revalidatePath("/");
   revalidatePath("/profile");
+}
+
+/**
+ * MENTION LOGIC
+ */
+
+async function handleMentions(content: string, actorId: string, postId?: string, commentId?: string) {
+  const mentions = content.match(/@(\w+)/g);
+  if (!mentions) return;
+
+  const usernames = Array.from(new Set(mentions.map(m => m.slice(1).toLowerCase())));
+  
+  for (const username of usernames) {
+    const user = await (prisma.user as any).findUnique({
+      where: { username },
+      select: { 
+        id: true, 
+        mentionPrivacy: true, 
+        following: { where: { followingId: actorId } } // Check if the target user follows the actor
+      },
+    });
+
+    if (!user || user.id === actorId) continue;
+
+    let canMention = false;
+    if ((user as any).mentionPrivacy === "EVERYONE") {
+      canMention = true;
+    } else if ((user as any).mentionPrivacy === "FOLLOWERS") {
+      canMention = (user as any).followers.length > 0;
+    }
+
+    if (canMention) {
+      await (prisma as any).mention.create({
+        data: {
+          userId: user.id,
+          actorId,
+          postId,
+          commentId,
+        },
+      });
+
+      await (prisma.notification as any).create({
+        data: {
+          type: "MENTION",
+          userId: user.id,
+          actorId,
+          postId,
+          message: "mentioned you in a transmission",
+        },
+      });
+    }
+  }
+}
+
+export async function updatePrivacySettings(mentionPrivacy: string) {
+  const user = await getAuthUser();
+  if (!user?.id) throw new Error("Unauthorized");
+
+  await (prisma.user as any).update({
+    where: { id: user.id },
+    data: { mentionPrivacy },
+  });
+  
+  revalidatePath("/settings");
+  return { success: true };
 }
 
 export async function getBookmarkedPosts() {
@@ -733,7 +804,7 @@ export async function addComment(
   const user = await getAuthUser();
   if (!user?.id) throw new Error("Unauthorized");
 
-  await (prisma.comment as any).create({
+  const comment = await (prisma.comment as any).create({
     data: {
       content,
       userId: user.id,
@@ -770,6 +841,8 @@ export async function addComment(
       });
     }
   } catch (e) {}
+
+  await handleMentions(content, user.id, type === "post" ? targetId : undefined, comment.id);
 
   revalidatePath("/");
   if (type === "post") revalidatePath(`/post/${targetId}`);

@@ -55,6 +55,8 @@ model User {
   isPrivate             Boolean          @default(false)
   gender                String?
   wallet                Wallet?
+  mentionPrivacy        String           @default("EVERYONE") // EVERYONE, FOLLOWERS, NONE
+  mentions              Mention[]        @relation("MentionedUser")
 }
 
 model Wallet {
@@ -224,6 +226,7 @@ model Post {
   comments  Comment[]
   likes     Like[]
   reposts   Repost[]
+  mentions  Mention[]
   author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
@@ -265,6 +268,7 @@ model Comment {
   prompt    Prompt?  @relation(fields: [promptId], references: [id], onDelete: Cascade)
   parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("CommentReplies")
+  mentions  Mention[]
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -305,6 +309,18 @@ model Notification {
   createdAt DateTime @default(now())
   actor     User     @relation("Actor", fields: [actorId], references: [id], onDelete: Cascade)
   user      User     @relation("Receiver", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Mention {
+  id        String   @id @default(cuid())
+  userId    String   // The user being mentioned
+  actorId   String   // The user who mentioned someone
+  postId    String?
+  commentId String?
+  createdAt DateTime @default(now())
+  user      User     @relation("MentionedUser", fields: [userId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {

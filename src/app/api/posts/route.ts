@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { postPost } from "@/app/actions";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
           },
         },
         _count: { select: { likes: true, comments: true, reposts: true } },
-        likes: userId ? { where: { userId } } : false,
+        likes: userId ? { where: { userId }, select: { type: true } } : false,
         bookmarks: userId ? { where: { userId } } : false,
         reposts: userId ? { where: { userId } } : false,
       },
@@ -76,6 +77,7 @@ export async function GET(request: Request) {
       commentCount: p._count.comments,
       repostCount: p._count.reposts,
       isLiked: (p as any).likes?.length > 0,
+      reactionType: (p as any).likes?.[0]?.type || "LIKE",
       isBookmarked: (p as any).bookmarks?.length > 0,
       isReposted: (p as any).reposts?.length > 0,
     }));
@@ -106,25 +108,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const post = await prisma.post.create({
-      data: {
-        content: content.trim(),
-        authorId: user.id,
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            avatarUrl: true,
-            image: true,
-            name: true,
-          },
-        },
-      },
-    });
-
-    return NextResponse.json({ ...post, user: post.author });
+    // Instead of raw prisma create, use the server action to ensure mentions/revalidate work
+    await postPost(content.trim());
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Post creation error:", error);
     return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
