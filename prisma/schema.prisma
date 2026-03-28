@@ -9,54 +9,54 @@ datasource db {
 }
 
 model User {
-  id                    String           @id @default(cuid())
+  id                    String             @id @default(cuid())
   name                  String?
-  email                 String?          @unique
+  email                 String?            @unique
   emailVerified         DateTime?
   image                 String?
-  username              String?          @unique
+  username              String?            @unique
   bio                   String?
-  website               String?          @unique
+  website               String?            @unique
   location              String?
-  theme                 String           @default("dark")
+  theme                 String             @default("dark")
   githubProfile         String?
   xProfile              String?
   instagramProfile      String?
   avatarUrl             String?
   cashfreeBeneficiaryId String?
-  createdAt             DateTime         @default(now())
+  createdAt             DateTime           @default(now())
   accounts              Account[]
   reposts               Repost[]
   bookmarks             Bookmark[]
   bounties              Bounty[]
   comments              Comment[]
   earnings              CreatorEarning[]
-  following             Follow[]         @relation("Following")
-  followers             Follow[]         @relation("Followers")
+  following             Follow[]           @relation("Following")
+  followers             Follow[]           @relation("Followers")
   intelAssets           IntelAsset[]
   likes                 Like[]
-  actedNotifications    Notification[]   @relation("Actor")
-  receivedNotifications Notification[]   @relation("Receiver")
+  actedNotifications    Notification[]     @relation("Actor")
+  receivedNotifications Notification[]     @relation("Receiver")
   payouts               Payout[]
   posts                 Post[]
-  prompts               Prompt[]         @relation("CreatedPrompts")
+  prompts               Prompt[]           @relation("CreatedPrompts")
   purchases             Purchase[]
   sessions              Session[]
   signals               Signal[]
-  isProfessional        Boolean          @default(false)
-  professionalStatus    String           @default("UNCONFIGURED")
-  role                  AdminRole        @default(USER)
+  isProfessional        Boolean            @default(false)
+  professionalStatus    String             @default("UNCONFIGURED")
+  role                  AdminRole          @default(USER)
   bankName              String?
   accountNumber         String?
   ifscCode              String?
   accountHolderName     String?
   expertise             String?
-  profileVisits         Int              @default(0)
-  isPrivate             Boolean          @default(false)
+  profileVisits         Int                @default(0)
+  isPrivate             Boolean            @default(false)
   gender                String?
-  wallet                Wallet?
-  mentionPrivacy        String           @default("EVERYONE") // EVERYONE, FOLLOWERS, NONE
-  mentions              Mention[]        @relation("MentionedUser")
+  financialAccounts     FinancialAccount[]
+  mentionPrivacy        String             @default("EVERYONE") // EVERYONE, FOLLOWERS, NONE
+  mentions              Mention[]          @relation("MentionedUser")
 }
 
 enum AdminRole {
@@ -67,10 +67,16 @@ enum AdminRole {
 }
 
 enum AccountType {
-  USER_PERSONAL
-  PLATFORM_REVENUE
+  USER
   PLATFORM_ESCROW
   EXTERNAL_CASHFREE
+}
+
+enum LedgerGroupType {
+  PAYOUT_REQUEST
+  PAYOUT_FINALIZED
+  REVERSAL
+  MIGRATION
 }
 
 enum PayoutStatus {
@@ -81,78 +87,39 @@ enum PayoutStatus {
   REJECTED
 }
 
-model Wallet {
-  id               String              @id @default(cuid())
-  userId           String              @unique
-  pendingBalance   Decimal             @default(0) @db.Decimal(18, 2)
-  availableBalance Decimal             @default(0) @db.Decimal(18, 2)
-  totalEarned      Decimal             @default(0) @db.Decimal(18, 2)
-  isFrozen         Boolean             @default(false)
-  kycStatus        String              @default("PENDING")
-  updatedAt        DateTime            @updatedAt
-  user             User                @relation(fields: [userId], references: [id])
-  transactions     WalletTransaction[]
-  ledgerEntries    LedgerEntry[]       // Relation to double-entry ledger
+model FinancialAccount {
+  id        String        @id @default(cuid())
+  userId    String?
+  type      AccountType   @default(USER)
+  balance   Decimal       @default(0) @db.Decimal(18, 2)
+  isFrozen  Boolean       @default(false)
+  kycStatus String        @default("PENDING")
+  entries   LedgerEntry[]
+  User      User?         @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model LedgerGroup {
-  id          String        @id @default(cuid())
-  type        String        // SALE, PAYOUT, REFUND, ADJUSTMENT
+  id          String          @id @default(cuid())
+  type        LedgerGroupType
+  status      PayoutStatus? // Nullable, only for payout groups
+  transferId  String?         @unique // Locked before API call
   description String?
-  metadata    Json?
   entries     LedgerEntry[]
-  createdAt   DateTime      @default(now())
+  createdAt   DateTime        @default(now())
 }
 
 model LedgerEntry {
-  id           String      @id @default(cuid())
-  groupId      String
-  walletId     String      // The internal identifier for the account/wallet
-  amount       Decimal     @db.Decimal(18, 2) // Negative for Debit, Positive for Credit
-  accountId    String      // Reference to FinancialAccount (or legacy Wallet)
-  group        LedgerGroup @relation(fields: [groupId], references: [id])
-  wallet       Wallet      @relation(fields: [walletId], references: [id])
-  createdAt    DateTime    @default(now())
-}
+  id        String           @id @default(cuid())
+  groupId   String
+  accountId String
+  amount    Decimal          @db.Decimal(18, 2)
+  group     LedgerGroup      @relation(fields: [groupId], references: [id])
+  account   FinancialAccount @relation(fields: [accountId], references: [id])
 
-model WalletTransaction {
-  id          String    @id @default(cuid())
-  walletId    String
-  userId      String
-  amount      Decimal   @db.Decimal(18, 2)
-  platformFee Decimal   @default(0) @db.Decimal(18, 2)
-  type        String    // "sale_credit" | "payout_debit"
-  status      String    @default("pending") // "pending" | "available" | "completed"
-  source      String    // "sale" | "payout"
-  orderId     String?
-  transferId  String?   @unique // For payout idempotency
-  promptId    String?
-  releaseAt   DateTime?
-  createdAt   DateTime  @default(now())
-  wallet      Wallet    @relation(fields: [walletId], references: [id])
-
-  @@unique([orderId, type])
-}
-
-model InboundWebhook {
-  id            String   @id @default(cuid())
-  eventId       String   @unique // Cashfree/Provider Event ID
-  provider      String   // cashfree
-  payload       Json
-  status        String   // RECEIVED, PROCESSED, FAILED, DEAD_LETTER
-  errorMessage  String?
-  attempts      Int      @default(0)
-  lastAttemptAt DateTime?
-  createdAt     DateTime @default(now())
-}
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  adminId   String
-  action    String   // PAYOUT_APPROVED, USER_FROZEN, etc.
-  targetId  String?  // ID of the user or transaction affected
-  metadata  Json?
-  createdAt DateTime @default(now())
+  @@index([accountId])
+  @@index([groupId])
 }
 
 model Prompt {
@@ -245,13 +212,13 @@ model CreatorEarning {
 }
 
 model Payout {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
   amount    Float
   month     String
   status    PayoutStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
+  user      User         @relation(fields: [userId], references: [id])
 
   @@unique([userId, month])
 }
@@ -324,19 +291,19 @@ model Like {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   content   String
   userId    String
   postId    String?
   promptId  String?
   parentId  String?
-  createdAt DateTime @default(now())
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  prompt    Prompt?  @relation(fields: [promptId], references: [id], onDelete: Cascade)
-  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  post      Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  prompt    Prompt?   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("CommentReplies")
   mentions  Mention[]
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Bookmark {
@@ -380,8 +347,8 @@ model Notification {
 
 model Mention {
   id        String   @id @default(cuid())
-  userId    String   // The user being mentioned
-  actorId   String   // The user who mentioned someone
+  userId    String // The user being mentioned
+  actorId   String // The user who mentioned someone
   postId    String?
   commentId String?
   createdAt DateTime @default(now())

@@ -5,7 +5,8 @@ import { useState, useEffect, useTransition } from "react";
 import {
   User, AtSign, MapPin, Globe, Github, Twitter, Instagram,
   Save, Loader2, AlertCircle, Palette, Shield, LogOut,
-  CheckCircle2, ChevronRight, Camera, Mail, Lock, Eye, Smartphone
+  CheckCircle2, ChevronRight, Camera, Mail, Lock, Eye, Smartphone,
+  Bell, MessageCircle, HelpCircle, ExternalLink
 } from "lucide-react";
 import { updateUserProfile, syncUser } from "@/app/actions";
 import { useTheme } from "@/components/ThemeContext";
@@ -13,13 +14,13 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-type Tab = "profile" | "account" | "appearance" | "privacy";
+type Tab = "account" | "appearance" | "privacy" | "notifications" | "contact";
 
 export default function SettingsPage() {
   const { data: session, update, status } = useSession();
   const { theme, setTheme } = useTheme();
   const [isPending, startTransition] = useTransition();
-  const [activeTab, setActiveTab] = useState<Tab>("profile");
+  const [activeTab, setActiveTab] = useState<Tab>("account");
   const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
@@ -104,10 +105,11 @@ export default function SettingsPage() {
   }
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "profile", label: "Edit Profile", icon: <User className="w-4 h-4" /> },
     { id: "account", label: "Account", icon: <Shield className="w-4 h-4" /> },
     { id: "appearance", label: "Appearance", icon: <Palette className="w-4 h-4" /> },
     { id: "privacy", label: "Privacy", icon: <Eye className="w-4 h-4" /> },
+    { id: "notifications", label: "Notifications", icon: <Bell className="w-4 h-4" /> },
+    { id: "contact", label: "Contact Us", icon: <MessageCircle className="w-4 h-4" /> },
   ];
 
   return (
@@ -138,120 +140,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 py-8">
-        {/* ── EDIT PROFILE ── */}
-        {activeTab === "profile" && (
-          <form onSubmit={handleSave} className="space-y-6">
-            {/* Avatar */}
-            <div className="flex items-center gap-4 pb-6 border-b border-white/5">
-              <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-900 border border-white/10 relative flex-shrink-0">
-                {session.user.image ? (
-                  <Image src={session.user.image} alt="avatar" fill className="object-cover" />
-                ) : (
-                  <User className="w-8 h-8 text-zinc-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white">{form.username || session.user.name}</p>
-                <button type="button" className="text-[12px] text-violet-400 font-bold hover:text-violet-300 transition-colors mt-1">
-                  Change photo
-                </button>
-              </div>
-            </div>
-
-            <Field label="Name" icon={<User className="w-4 h-4" />}>
-              <input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Your name"
-                className="settings-input"
-              />
-            </Field>
-
-            <Field
-              label="Username"
-              icon={<AtSign className="w-4 h-4" />}
-              hint={
-                checkingUsername ? "Checking..." :
-                usernameAvailable === true ? "✓ Available" :
-                usernameAvailable === false ? "✗ Already taken" : undefined
-              }
-              hintColor={usernameAvailable === true ? "text-emerald-400" : "text-rose-400"}
-            >
-              <input
-                value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })}
-                placeholder="username"
-                className="settings-input"
-              />
-            </Field>
-
-            <Field label="Bio" icon={<User className="w-4 h-4" />}>
-              <textarea
-                value={form.bio}
-                onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                placeholder="Tell people about yourself"
-                rows={3}
-                className="settings-input resize-none"
-              />
-            </Field>
-
-            <Field label="Location" icon={<MapPin className="w-4 h-4" />}>
-              <input
-                value={form.location}
-                onChange={(e) => setForm({ ...form, location: e.target.value })}
-                placeholder="City, Country"
-                className="settings-input"
-              />
-            </Field>
-
-            <Field label="Website" icon={<Globe className="w-4 h-4" />}>
-              <input
-                value={form.website}
-                onChange={(e) => setForm({ ...form, website: e.target.value })}
-                placeholder="https://yoursite.com"
-                type="url"
-                className="settings-input"
-              />
-            </Field>
-
-            <Field label="Expertise" icon={<User className="w-4 h-4" />}>
-              <input
-                value={form.expertise}
-                onChange={(e) => setForm({ ...form, expertise: e.target.value })}
-                placeholder="e.g. React, AI, Design (comma separated)"
-                className="settings-input"
-              />
-            </Field>
-
-            <div className="pt-2 border-t border-white/5">
-              <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-4">Social Links</p>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Github className="w-4 h-4 text-zinc-500 flex-shrink-0" />
-                  <input value={form.githubProfile} onChange={(e) => setForm({ ...form, githubProfile: e.target.value })} placeholder="GitHub username" className="settings-input" />
-                </div>
-                <div className="flex items-center gap-3">
-                  <Twitter className="w-4 h-4 text-sky-500 flex-shrink-0" />
-                  <input value={form.xProfile} onChange={(e) => setForm({ ...form, xProfile: e.target.value })} placeholder="X (Twitter) username" className="settings-input" />
-                </div>
-                <div className="flex items-center gap-3">
-                  <Instagram className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                  <input value={form.instagramProfile} onChange={(e) => setForm({ ...form, instagramProfile: e.target.value })} placeholder="Instagram username" className="settings-input" />
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm font-black rounded-2xl transition-all flex items-center justify-center gap-2"
-            >
-              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save Changes
-            </button>
-          </form>
-        )}
-
         {/* ── ACCOUNT ── */}
         {activeTab === "account" && (
           <div className="space-y-6">
@@ -406,7 +294,88 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <style jsx>{`
+        {/* ── NOTIFICATIONS ── */}
+        {activeTab === "notifications" && (
+          <div className="space-y-6">
+            <p className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">Notification Preferences</p>
+            <div className="space-y-3">
+              <ToggleRow label="New Followers" desc="When someone follows you" defaultOn={true} />
+              <ToggleRow label="Post Likes" desc="When someone likes your post" defaultOn={true} />
+              <ToggleRow label="Comments" desc="When someone comments on your post" defaultOn={true} />
+              <ToggleRow label="Prompt Sales" desc="When someone buys your prompt" defaultOn={true} />
+              <ToggleRow label="Mentions" desc="When someone mentions you" defaultOn={true} />
+              <ToggleRow label="Bounty Updates" desc="Updates on bounties you posted" defaultOn={false} />
+            </div>
+
+            <div className="border-t border-white/5 pt-6">
+              <p className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">Email Notifications</p>
+              <div className="space-y-3">
+                <ToggleRow label="Weekly Digest" desc="A summary of your activity each week" defaultOn={false} />
+                <ToggleRow label="Marketplace Updates" desc="New prompts in categories you follow" defaultOn={false} />
+                <ToggleRow label="Security Alerts" desc="Sign-ins from new devices" defaultOn={true} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── CONTACT US ── */}
+        {activeTab === "contact" && (
+          <div className="space-y-6">
+            <p className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">Get in Touch</p>
+
+            {/* Email support card */}
+            <a
+              href="mailto:work.debugr@gmail.com"
+              className="flex items-center justify-between p-5 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] hover:border-violet-500/20 transition-all group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-violet-500/10 rounded-xl flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-violet-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Email Support</p>
+                  <p className="text-[11px] text-zinc-500">work.debugr@gmail.com</p>
+                </div>
+              </div>
+              <ExternalLink className="w-4 h-4 text-zinc-700 group-hover:text-white transition-colors" />
+            </a>
+
+            {/* Report a bug */}
+            <a
+              href="mailto:work.debugr@gmail.com?subject=Bug Report"
+              className="flex items-center justify-between p-5 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] hover:border-rose-500/20 transition-all group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center">
+                  <HelpCircle className="w-5 h-5 text-rose-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Report a Bug</p>
+                  <p className="text-[11px] text-zinc-500">Found something broken? Let us know</p>
+                </div>
+              </div>
+              <ExternalLink className="w-4 h-4 text-zinc-700 group-hover:text-white transition-colors" />
+            </a>
+
+            {/* Legal links */}
+            <div className="border-t border-white/5 pt-6 space-y-3">
+              <p className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-2">Legal</p>
+              <a href="/terms" className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/[0.02] transition-all group">
+                <p className="text-sm text-zinc-400 group-hover:text-white transition-colors">Terms of Service</p>
+                <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-white transition-colors" />
+              </a>
+              <a href="/privacy" className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/[0.02] transition-all group">
+                <p className="text-sm text-zinc-400 group-hover:text-white transition-colors">Privacy Policy</p>
+                <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-white transition-colors" />
+              </a>
+            </div>
+
+            <div className="border-t border-white/5 pt-6 text-center">
+              <p className="text-[10px] text-zinc-700 uppercase tracking-widest">Debugr v1.0 · © 2026</p>
+              <p className="text-[10px] text-zinc-800 mt-1">Made with ❤️ by Saurabh & Dennis</p>
+            </div>
+          </div>
+        )}
         .settings-input {
           width: 100%;
           background: rgba(255,255,255,0.03);
