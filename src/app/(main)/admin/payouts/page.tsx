@@ -7,7 +7,7 @@ import {
   ArrowRight, CreditCard, ShieldCheck, AlertTriangle 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 export default function AdminPayoutsPage() {
   const [payouts, setPayouts] = useState<any[]>([]);

@@ -65,40 +65,40 @@ export async function approvePayout(groupId: string) {
   const isAdmin = session?.user?.role === 'SUPER_ADMIN' || session?.user?.role === 'FINANCE_ADMIN';
   if (!isAdmin) throw new Error('Unauthorized: Admin access required');
 
-  // 1. Fetch Group & Guard Status
-  const group = await prisma.ledgerGroup.findUnique({
-    where: { id: groupId },
-    include: { entries: true, account: true }, // wait, account relation?? - No, entries lead to accounts
+  // 1. ATOMIC LOCK: Find-Check-Update
+  const group = await prisma.$transaction(async (tx) => {
+    const g = await tx.ledgerGroup.findUnique({
+      where: { id: groupId },
+      include: { entries: true },
+    });
+
+    if (!g || g.type !== LedgerGroupType.PAYOUT_REQUEST) {
+      throw new Error('Invalid Payout Request');
+    }
+
+    if (g.status !== PayoutStatus.PENDING) {
+      throw new Error(`Invalid Status: Payout is already ${g.status}`);
+    }
+
+    const transferId = `trf_${g.id}`;
+
+    return await tx.ledgerGroup.update({
+      where: { id: g.id },
+      data: {
+        status: PayoutStatus.PROCESSING,
+        transferId,
+      },
+      include: { entries: true },
+    });
   });
 
-  if (!group || group.type !== LedgerGroupType.PAYOUT_REQUEST) {
-    throw new Error('Invalid Payout Request');
-  }
-
-  if (group.status !== PayoutStatus.PENDING) {
-    throw new Error(`Invalid Status: Payout is already ${group.status}`);
-  }
-
-  // 2. Generate Transfer ID for Idempotency
-  const transferId = `trf_${group.id}`;
-
-  // 3. LOCK BEFORE API: Update Status to PROCESSING
-  await prisma.ledgerGroup.update({
-    where: { id: group.id },
-    data: { 
-      status: PayoutStatus.PROCESSING,
-      transferId 
-    },
-  });
-
-  // 4. CALL CASHFREE API
+  // 2. CALL CASHFREE API
   try {
-    const userEntry = group.entries.find(e => e.amount.toNumber() < 0);
+    const userEntry = group.entries.find((e) => e.amount.toNumber() < 0);
     const userAccount = await prisma.financialAccount.findUnique({
       where: { id: userEntry?.accountId },
     });
-    
-    // We expect cashfreeBeneficiaryId on the User record linked to this financial account
+
     const user = await prisma.user.findUnique({
       where: { id: userAccount?.userId || '' },
     });
@@ -110,7 +110,7 @@ export async function approvePayout(groupId: string) {
     const amount = Math.abs(userEntry?.amount.toNumber() || 0);
 
     const response = await cashfreePayout.requestTransfer({
-      transferId,
+      transferId: group.transferId,
       amount,
       beneId: user.cashfreeBeneficiaryId,
     });
@@ -121,8 +121,21 @@ export async function approvePayout(groupId: string) {
 
     return { success: true, message: 'Payout processing started', cfResponse: response };
   } catch (error) {
-    // If API fails BEFORE generating a success/fail response, we might need a retry mechanism.
-    // For Phase 1, we manually handle or wait for webhook to fix.
+    // 3. SAFE ROLLBACK: Only reverse if still in PROCESSING
+    // This prevents double reversals if a webhook already updated the status concurrently
+    const latestGroup = await prisma.ledgerGroup.findUnique({
+      where: { id: groupId },
+    });
+
+    if (latestGroup?.status === PayoutStatus.PROCESSING) {
+      console.log(`Reversing stuck payout: ${groupId} due to API delivery failure.`);
+      await LedgerService.reverseMovement(groupId, 'API Delivery Failure');
+      await prisma.ledgerGroup.update({
+        where: { id: groupId },
+        data: { status: PayoutStatus.FAILED },
+      });
+    }
+
     console.error('Payout Approval Error:', error);
     throw error;
   }

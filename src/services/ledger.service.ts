@@ -1,15 +1,16 @@
 import { prisma } from '@/lib/db';
 import { LedgerGroupType, Prisma } from '@prisma/client';
+import Decimal from 'decimal.js';
 
 export type LedgerEntryInput = {
   accountId: string;
-  amount: number | Prisma.Decimal;
+  amount: number | Prisma.Decimal | string;
 };
 
 export class LedgerService {
   /**
    * Executes a firm double-entry movement across accounts.
-   * GUARANTEE: Zero-sum rule enforced at code level.
+   * GUARANTEE: Zero-sum rule enforced at code level with Decimal precision.
    */
   static async executeMovement(
     type: LedgerGroupType,
@@ -17,12 +18,14 @@ export class LedgerService {
     description?: string,
     transferId?: string
   ) {
-    // 1. Mandatory ZERO-SUM Guard
-    const total = entries.reduce((sum, e) => sum + Number(e.amount), 0);
-    
-    // Using a tiny epsilon for floating point safety if amounts are numbers
-    if (Math.abs(total) > 0.0001) {
-      throw new Error(`Ledger Imbalance: Total movement sum must be exactly 0. Current sum: ${total}`);
+    // 1. Mandatory ZERO-SUM Guard (Decimal.js for precision)
+    const total = entries.reduce(
+      (sum, e) => sum.plus(new Decimal(e.amount.toString())),
+      new Decimal(0)
+    );
+
+    if (!total.equals(0)) {
+      throw new Error(`Ledger Imbalance: Total movement sum must be exactly 0. Current sum: ${total.toString()}`);
     }
 
     return await prisma.$transaction(async (tx) => {
