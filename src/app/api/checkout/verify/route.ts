@@ -2,11 +2,8 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCashfreeOrder } from "@/lib/cashfree";
-import { sendPurchaseConfirmation, sendSaleNotification } from "@/lib/resend";
 
 const CREATOR_SHARE = 0.80;
-const PLATFORM_SHARE = 0.20;
-const RELEASE_DAYS = 7;
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -18,126 +15,83 @@ export async function GET(req: Request) {
 
   try {
     // 1. Check current status in DB
-    const transaction = await (prisma.transaction as any).findUnique({
+    const transaction = await prisma.transaction.findUnique({
       where: { orderId },
-      include: { prompt: true }
     });
 
     if (!transaction) {
       return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
     }
 
+    // Already processed — just confirm access exists
     if (transaction.status === "SUCCESS") {
+      const purchase = await prisma.purchase.findUnique({
+        where: { userId_promptId: { userId: transaction.userId, promptId: transaction.promptId } },
+      });
+      // If purchase record is missing for some reason, create it
+      if (!purchase) {
+        await prisma.purchase.create({
+          data: { userId: transaction.userId, promptId: transaction.promptId },
+        });
+      }
+      revalidatePath("/marketplace");
       return NextResponse.json({ status: "SUCCESS", already_processed: true });
     }
 
     // 2. Fetch real-time status from Cashfree
     const cfOrder = await getCashfreeOrder(orderId);
-    
+
     if (cfOrder.order_status !== "PAID") {
-      return NextResponse.json({ 
-        status: transaction.status, 
+      return NextResponse.json({
+        status: transaction.status,
         cf_status: cfOrder.order_status,
-        message: "Order not paid yet" 
+        message: "Payment not completed yet",
       });
     }
 
-    // 3. IF PAID -> FULFILL (Idempotent logic similar to webhook)
-    const prompt = (transaction as any).prompt;
-    const creatorId = prompt.authorId;
-    const buyerId = transaction.userId;
+    // 3. Payment confirmed — fulfill atomically
     const rawAmount = Number(cfOrder.order_amount);
-    const cfPaymentId = "VERIFIED_VIA_API"; 
-
-    // Fetch Emails
-    const buyer = await prisma.user.findUnique({
-      where: { id: buyerId },
-      select: { email: true }
-    });
-    
-    const promptWithAuthor = await prisma.prompt.findUnique({
-      where: { id: transaction.promptId },
-      select: { author: { select: { email: true } } }
-    });
-
-    const buyerEmail = buyer?.email || "";
-    const creatorEmail = promptWithAuthor?.author.email || "";
-
     const creatorShare = parseFloat((rawAmount * CREATOR_SHARE).toFixed(2));
-    const platformFee  = parseFloat((rawAmount * PLATFORM_SHARE).toFixed(2));
-    const releaseAt = new Date(Date.now() + RELEASE_DAYS * 24 * 60 * 60 * 1000);
+
+    const prompt = await prisma.prompt.findUnique({
+      where: { id: transaction.promptId },
+      select: { authorId: true, title: true },
+    });
+
+    if (!prompt) {
+      return NextResponse.json({ error: "Prompt not found" }, { status: 404 });
+    }
 
     await prisma.$transaction(async (tx) => {
       // Mark transaction SUCCESS
       await tx.transaction.update({
         where: { id: transaction.id },
-        data: { status: "SUCCESS", paymentId: cfPaymentId },
+        data: { status: "SUCCESS", paymentId: "VERIFIED_VIA_API" },
       });
 
-      // Grant access
+      // Grant buyer access (idempotent)
       await tx.purchase.upsert({
-        where: { userId_promptId: { userId: buyerId, promptId: transaction.promptId } },
+        where: { userId_promptId: { userId: transaction.userId, promptId: transaction.promptId } },
         update: {},
-        create: { userId: buyerId, promptId: transaction.promptId },
+        create: { userId: transaction.userId, promptId: transaction.promptId },
       });
 
-      // Wallet Updates
-      const wallet = await (tx as any).wallet.upsert({
-        where: { userId: creatorId },
-        update: {
-          pendingBalance: { increment: creatorShare },
-          totalEarned:    { increment: creatorShare },
-        },
-        create: {
-          userId: creatorId,
-          pendingBalance:   creatorShare,
-          availableBalance: 0,
-          totalEarned:      creatorShare,
-        },
-      });
-
-      await (tx as any).walletTransaction.create({
+      // Credit creator earnings
+      await tx.creatorEarning.create({
         data: {
-          walletId:    wallet.id,
-          userId:      creatorId,
-          amount:      creatorShare,
-          type:        "sale_credit",
-          status:      "pending",
-          source:      "sale",
-          orderId,
-          promptId:    transaction.promptId,
-          releaseAt,
-        },
-      });
-
-      await (tx as any).walletTransaction.create({
-        data: {
-          walletId:    wallet.id,
-          userId:      creatorId,
-          amount:      platformFee,
-          platformFee: platformFee,
-          type:        "platform_fee",
-          status:      "available",
-          source:      "sale",
-          orderId:     `${orderId}_fee`,
-          promptId:    transaction.promptId,
+          userId: prompt.authorId,
+          promptId: transaction.promptId,
+          amount: creatorShare,
+          status: "PENDING",
         },
       });
     });
 
-    // ── SEND EMAILS ────────────────────────────────────────────────────────
-    if (buyerEmail) {
-        await Promise.allSettled([
-            sendPurchaseConfirmation(buyerEmail, prompt.title, orderId, rawAmount),
-            sendSaleNotification(creatorEmail, prompt.title, creatorShare)
-        ]);
-    }
-
+    // Force Next.js to re-render marketplace with updated purchase state
     revalidatePath("/marketplace");
     revalidatePath("/dashboard");
 
-    return NextResponse.json({ status: "SUCCESS", message: "Purchase fulfilled manually and notified" });
-
+    return NextResponse.json({ status: "SUCCESS", message: "Purchase fulfilled" });
   } catch (error: any) {
     console.error("Verification Error:", error);
     return NextResponse.json({ error: error.message || "Verification failed" }, { status: 500 });

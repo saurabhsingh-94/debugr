@@ -2,6 +2,9 @@ import { prisma } from "@/lib/db";
 import MarketplaceClient from "@/components/MarketplaceClient";
 import { auth } from "@/auth";
 
+// Always fetch fresh data — purchase status must be current
+export const dynamic = "force-dynamic";
+
 export default async function MarketplacePage() {
   const session = await auth();
   const userId = session?.user?.id;
