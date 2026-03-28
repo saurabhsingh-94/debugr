@@ -1000,59 +1000,71 @@ export async function getCreatorStats() {
   const user = await getAuthUser();
   if (!user?.id) return null;
 
-  const [wallet, followers, profileVisitsResult] = await Promise.all([
-    (prisma as any).wallet.findUnique({
-      where: { userId: user.id },
-      select: {
-        pendingBalance:   true,
-        availableBalance: true,
-        totalEarned:      true,
-      },
-    }),
-    prisma.follow.count({ where: { followingId: user.id } }),
-    (prisma as any).user.findUnique({
-      where: { id: user.id },
-      select: { profileVisits: true },
-    }),
-  ]);
+  try {
+    const [earningsAgg, followers, profileVisitsResult] = await Promise.all([
+      prisma.creatorEarning.aggregate({
+        where: { userId: user.id },
+        _sum: { amount: true },
+      }),
+      prisma.follow.count({ where: { followingId: user.id } }),
+      prisma.user.findUnique({
+        where: { id: user.id },
+        select: { profileVisits: true },
+      }),
+    ]);
 
-  return {
-    pendingBalance:   wallet ? Number(wallet.pendingBalance)   : 0,
-    availableBalance: wallet ? Number(wallet.availableBalance) : 0,
-    totalEarned:      wallet ? Number(wallet.totalEarned)      : 0,
-    totalEarnings:    wallet ? Number(wallet.totalEarned)      : 0,
-    followers,
-    profileVisits: profileVisitsResult?.profileVisits || 0,
-  };
+    const totalEarned = earningsAgg._sum.amount || 0;
+
+    return {
+      pendingBalance:   0,
+      availableBalance: totalEarned,
+      totalEarned:      totalEarned,
+      totalEarnings:    totalEarned,
+      followers,
+      profileVisits: profileVisitsResult?.profileVisits || 0,
+    };
+  } catch {
+    return {
+      pendingBalance: 0, availableBalance: 0,
+      totalEarned: 0, totalEarnings: 0,
+      followers: 0, profileVisits: 0,
+    };
+  }
 }
 
 export async function getWalletTransactions(limit = 20) {
   const user = await getAuthUser();
   if (!user?.id) return [];
 
-  const txns = await (prisma as any).walletTransaction.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-    select: {
-      id:          true,
-      amount:      true,
-      platformFee: true,
-      type:        true,
-      status:      true,
-      source:      true,
-      orderId:     true,
-      promptId:    true,
-      releaseAt:   true,
-      createdAt:   true,
-    },
-  });
+  try {
+    const earnings = await prisma.creatorEarning.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        amount: true,
+        status: true,
+        createdAt: true,
+        promptId: true,
+      },
+    });
 
-  return txns.map((t: any) => ({
-    ...t,
-    amount:      Number(t.amount),
-    platformFee: Number(t.platformFee),
-  }));
+    return earnings.map((e) => ({
+      id: e.id,
+      amount: Number(e.amount),
+      platformFee: 0,
+      type: "sale_credit",
+      status: e.status === "PAID" ? "available" : "pending",
+      source: "sale",
+      orderId: null,
+      promptId: e.promptId,
+      releaseAt: null,
+      createdAt: e.createdAt,
+    }));
+  } catch {
+    return [];
+  }
 }
 export async function getUserPurchases() {
   const session = await auth();

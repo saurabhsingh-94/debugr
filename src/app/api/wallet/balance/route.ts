@@ -5,43 +5,41 @@ import { prisma } from "@/lib/db";
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ pendingBalance: 0, availableBalance: 0, totalEarned: 0, transactions: [] });
   }
 
   const userId = session.user.id;
 
-  // Upsert wallet so every user always has one
-  const wallet = await (prisma as any).wallet.upsert({
-    where: { userId },
-    update: {},
-    create: {
-      userId,
-      pendingBalance: 0,
-      availableBalance: 0,
-      totalEarned: 0,
-    },
-    include: {
-      transactions: {
-        where: {
-          type: { in: ["sale_credit", "payout_debit", "refund_debit"] },
-        },
+  try {
+    const [earningsAgg, recentEarnings] = await Promise.all([
+      prisma.creatorEarning.aggregate({
+        where: { userId },
+        _sum: { amount: true },
+      }),
+      prisma.creatorEarning.findMany({
+        where: { userId },
         orderBy: { createdAt: "desc" },
         take: 20,
-      },
-    },
-  });
+        select: { id: true, amount: true, status: true, createdAt: true, promptId: true },
+      }),
+    ]);
 
-  return NextResponse.json({
-    pendingBalance: Number(wallet.pendingBalance),
-    availableBalance: Number(wallet.availableBalance),
-    totalEarned: Number(wallet.totalEarned),
-    transactions: wallet.transactions.map((t: any) => ({
-      id: t.id,
-      type: t.type,
-      amount: Number(t.amount),
-      status: t.status,
-      createdAt: t.createdAt,
-      promptId: t.promptId,
-    })),
-  });
+    const totalEarned = Number(earningsAgg._sum.amount || 0);
+
+    return NextResponse.json({
+      pendingBalance: 0,
+      availableBalance: totalEarned,
+      totalEarned,
+      transactions: recentEarnings.map((e) => ({
+        id: e.id,
+        type: "sale_credit",
+        amount: Number(e.amount),
+        status: e.status === "PAID" ? "available" : "pending",
+        createdAt: e.createdAt,
+        promptId: e.promptId,
+      })),
+    });
+  } catch {
+    return NextResponse.json({ pendingBalance: 0, availableBalance: 0, totalEarned: 0, transactions: [] });
+  }
 }
